@@ -36,7 +36,7 @@ class RSchedule(object):
 
         # Set attribute.
         self.rwechat = rwechat
-        self.rrschedule = RRSchedule(1)
+        self.rrschedule = RRSchedule()
 
         # Start.
         self.rrschedule.start()
