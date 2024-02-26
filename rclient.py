@@ -344,7 +344,7 @@ class RClient(object):
         }
         response = self.request(api, data, [0, 2])
 
-        # Check.
+        # Retry.
         if response["code"] == 2:
             self.unhook_message()
             self.hook_message(
@@ -354,12 +354,13 @@ class RClient(object):
             )
 
         # Report.
-        print(
-            "Hook message successfully, address is '%s:%s'." % (
-                host,
-                port
+        else:
+            print(
+                "Hook message successfully, address is '%s:%s'." % (
+                    host,
+                    port
+                )
             )
-        )
 
 
     def unhook_message(self) -> None:
