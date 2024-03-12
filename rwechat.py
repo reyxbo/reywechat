@@ -10,7 +10,8 @@
 
 
 from typing import Dict, Literal, Optional, Union, Final
-from os.path import abspath as os_abspath
+from os import getcwd as os_getcwd
+from os.path import abspath as os_abspath, join as os_join
 from reydb.rconnection import RDatabase as RRDatabase
 from reytool.ros import create_folder as reytool_create_folder
 from reytool.rsystem import block
@@ -44,7 +45,8 @@ class RWeChat(object):
         rrdatabase: Optional[Union[RRDatabase, Dict[Literal["wechat", "file"], RRDatabase]]] = None,
         max_receiver: int = 2,
         bandwidth_downstream: float = 5,
-        bandwidth_upstream: float = 5
+        bandwidth_upstream: float = 5,
+        project_dir: Optional[str] = None
     ) -> None:
         """
         Build `WeChat` instance.
@@ -60,6 +62,9 @@ class RWeChat(object):
         max_receiver : Maximum number of receivers.
         bandwidth_downstream : Download bandwidth, impact receive timeout, unit Mpbs.
         bandwidth_upstream : Upload bandwidth, impact send interval, unit Mpbs.
+        project_dir: Project directory, will create sub folders.
+            - `None` : Use working directory.
+            - `str` : Use this directory.
         """
 
         # Import.
@@ -72,7 +77,9 @@ class RWeChat(object):
         from .rsend import RSend
 
         # Create folder.
-        self._create_folder()
+        if project_dir is None:
+            project_dir = os_getcwd()
+        self._create_folder(project_dir)
 
         # Set attribute.
 
@@ -106,23 +113,35 @@ class RWeChat(object):
         self.schedule_resume = self.rschedule.resume
 
 
-    def _create_folder(self) -> None:
+    def _create_folder(
+        self,
+        project_dir: str
+    ) -> None:
         """
         Create project standard folders.
+
+        Parameters
+        ----------
+        project_dir: Project directory, will create sub folders.
         """
 
         # Set parameter.
-        paths = [
+        folders = (
             "Log",
             "File"
-        ]
+        )
+        folder_dict = {
+            folder: os_join(project_dir, folder)
+            for folder in folders
+        }
 
         # Create.
+        paths = folder_dict.values()
         reytool_create_folder(*paths)
 
         # Set attribute.
-        self.dir_log = os_abspath("Log")
-        self.dir_file = os_abspath("File")
+        self.dir_log = folder_dict["Log"]
+        self.dir_file = folder_dict["File"]
 
 
     def start(self) -> None:
