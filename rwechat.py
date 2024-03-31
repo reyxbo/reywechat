@@ -32,6 +32,8 @@ class RWeChat(object):
     Warnings, only applicable to WeChat clients with version `3.9.5.81`.
 
     Warnings, must close file automatic file download.
+
+    Warnings, the operating system version cannot be lower than `Windows 10 version 1709` or `Windows Server 2016 version 1709`.
     """
 
     # Environment.
