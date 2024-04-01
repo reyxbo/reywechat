@@ -106,7 +106,9 @@ class RSchedule(object):
 
         # Get parameter.
         params = task(self)
-        if params.__class__ == dict:
+        if params is None:
+            params = []
+        elif params.__class__ == dict:
             params = [params]
 
         # Send.
