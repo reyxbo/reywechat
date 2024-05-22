@@ -89,6 +89,7 @@ class RMessage(object):
         self.user = user
         self.room = room
         self.file = file
+        self._user_name = None
         self._is_quote: Optional[bool] = None
         self._is_quote_self: Optional[bool] = None
         self._quote_info: Optional[Dict[Literal["text", "quote_id", "quote_type", "quote_user", "quote_user_name", "quote_data"], Any]] = None
@@ -156,6 +157,28 @@ class RMessage(object):
         params_str = str(self.params)
 
         return params_str
+
+
+    @property
+    def user_name(self) -> str:
+        """
+        Message sender user name.
+
+        Returns
+        -------
+        User name.
+        """
+
+        # Judged.
+        if self._user_name is not None:
+            return self._user_name
+
+        # Set.
+        self._user_name = self.rreceive.rwechat.rclient.get_contact_name(
+            self.user
+        )
+
+        return self._user_name
 
 
     @property
