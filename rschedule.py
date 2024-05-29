@@ -48,7 +48,7 @@ class RSchedule(object):
         trigger_kwargs: Dict,
         send_type: Literal[0, 1, 2, 3, 4, 5, 6, 7],
         receive_id: str,
-        **params: Dict[str, Union[Callable[[], Any], Any]]
+        **params: Union[Callable[[], Any], Any]
     ) -> None:
         """
         Schedule send message.
@@ -120,7 +120,7 @@ class RSchedule(object):
         self,
         trigger: Literal['date', 'interval', 'cron'],
         task: Callable[[RSchedule], Optional[Union[Dict, List[Dict]]]],
-        **trigger_kwargs: Dict
+        **trigger_kwargs: Any
     ) -> None:
         """
         Add schedule send message task.

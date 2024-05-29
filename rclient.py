@@ -680,6 +680,10 @@ class RClient(object):
         # Get parameter.
         api = "sendAtText"
 
+        # Handle parameter.
+        if user_id.__class__ != str:
+            user_id = ",".join(user_id)
+
         # Request.
         data = {
             "chatRoomId": room_id,
@@ -767,7 +771,7 @@ class RClient(object):
     def send_pat(
         self,
         receive_id: str,
-        user_id: Union[str, List[str]],
+        user_id: str,
     ) -> None:
         """
         Send pat message.

@@ -284,9 +284,56 @@ class RSend(object):
     @overload
     def send(
         self,
-        send_type: Literal[0, 1, 2, 3, 4, 5, 6, 7],
+        send_type: Literal[0],
         receive_id: str,
-        **params: Dict[str, Any]
+        text: str
+    ) -> None: ...
+
+    @overload
+    def send(
+        self,
+        send_type: Literal[1],
+        receive_id: str,
+        user_id: str | List[str],
+        text: str
+    ) -> None: ...
+
+    @overload
+    def send(
+        self,
+        send_type: Literal[2, 3, 4],
+        receive_id: str,
+        path: str,
+        file_name: Optional[str] = None
+    ) -> None: ...
+
+    @overload
+    def send(
+        self,
+        send_type: Literal[5],
+        receive_id: str,
+        user_id: str
+    ) -> None: ...
+
+    @overload
+    def send(
+        self,
+        send_type: Literal[6],
+        receive_id: str,
+        page_url: str,
+        title: str,
+        text: Optional[str] = None,
+        image_url: Optional[str] = None,
+        public_name: Optional[str] = None,
+        public_id: Optional[str] = None
+    ) -> None: ...
+
+    @overload
+    def send(
+        self,
+        send_type: Literal[7],
+        receive_id: str,
+        message_id: str
     ) -> None: ...
 
     @overload
@@ -294,14 +341,14 @@ class RSend(object):
         self,
         send_type: Any,
         receive_id: str,
-        **params: Dict[str, Any]
+        **params: Any
     ) -> NoReturn: ...
 
     def send(
         self,
         send_type: Literal[0, 1, 2, 3, 4, 5, 6, 7],
         receive_id: str,
-        **params: Dict[str, Any]
+        **params: Any
     ) -> None:
         """
         Put parameters into the send queue.
@@ -322,6 +369,7 @@ class RSend(object):
         params : Send parameters.
             - `Callable` : Use execute return value.
             - `Any` : Use this value.
+                * `Key 'file_name'` : Given file name.
         """
 
         # Check parameter.
