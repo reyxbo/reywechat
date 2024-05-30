@@ -112,7 +112,7 @@ class RDatabase(object):
                     },
                     {
                         "name": "user_id",
-                        "type_": "varchar(20)",
+                        "type_": "varchar(24)",
                         "constraint": "NOT NULL",
                         "comment": "User ID."
                     },
@@ -196,7 +196,7 @@ class RDatabase(object):
                     },
                     {
                         "name": "user_id",
-                        "type_": "varchar(20)",
+                        "type_": "varchar(24)",
                         "constraint": "NOT NULL",
                         "comment": "Chat room user ID."
                     },
@@ -248,7 +248,7 @@ class RDatabase(object):
                     },
                     {
                         "name": "user_id",
-                        "type_": "varchar(20)",
+                        "type_": "varchar(24)",
                         "constraint": "DEFAULT NULL",
                         "comment": "Message sender user ID, null for system message."
                     },
