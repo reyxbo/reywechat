@@ -557,7 +557,7 @@ class RClient(object):
         data = {"chatRoomId": room_id}
 
         # Request.
-        response = self.request(api, data, 1)
+        response = self.request(api, data, [0, 1])
 
         # Convert.
         data: Dict = response["data"]

@@ -642,7 +642,7 @@ class RDatabase(object):
         conn = self.rrdatabase_wechat.connect()
 
         ## Insert.
-        if contact_table != []:
+        if room_user_data != []:
             conn.execute_insert(
                 ("wechat", "contact_room_user"),
                 room_user_data,
