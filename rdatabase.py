@@ -119,7 +119,7 @@ class RDatabase(object):
                     {
                         "name": "name",
                         "type_": "varchar(32)",
-                        "constraint": "CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL",
+                        "constraint": "CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL",
                         "comment": "User name."
                     },
                     {
@@ -158,7 +158,7 @@ class RDatabase(object):
                     {
                         "name": "name",
                         "type_": "varchar(32)",
-                        "constraint": "CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL",
+                        "constraint": "CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL",
                         "comment": "Chat room name."
                     },
                     {
@@ -203,7 +203,7 @@ class RDatabase(object):
                     {
                         "name": "name",
                         "type_": "varchar(32)",
-                        "constraint": "CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL",
+                        "constraint": "CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL",
                         "comment": "Chat room user name."
                     },
                     {
@@ -767,8 +767,6 @@ class RDatabase(object):
                 ## Generate data.
                 _, name = message.data.rsplit("“", 1)
                 name = name[:-1]
-                if name == "":
-                    name = "群聊"
                 data = {
                     "room_id": message.room,
                     "name": name,

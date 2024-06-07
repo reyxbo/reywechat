@@ -497,11 +497,6 @@ class RClient(object):
             if row["name"] == "":
                 table_user.remove(row)
 
-        # Chat room default name.
-        for row in table_room:
-            if row["name"] == "":
-                row["name"] = "群聊"
-
         # Merge table.
         table = table_user + table_room
 
@@ -558,13 +553,6 @@ class RClient(object):
         # Extract.
         data: dict = response["data"]
         name = data["nickname"]
-
-        # Chat room default name.
-        if (
-            name == ""
-            and "@chatroom" in id_
-        ):
-            name = "群聊"
 
         return name
 
