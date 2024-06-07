@@ -334,14 +334,14 @@ class RClient(object):
         api = "hookSyncMsg"
         port = str(port)
         timeout_ms_str = str(int(timeout * 1000))
-
-        # Request.
         data = {
             "ip": host,
             "port": port,
             "timeout": timeout_ms_str,
             "enableHttp": "0"
         }
+
+        # Request.
         response = self.request(api, data, [0, 2])
 
         # Retry.
@@ -392,9 +392,9 @@ class RClient(object):
 
         # Get parameter.
         api = "downloadAttach"
+        data = {"msgId": id_}
 
         # Request.
-        data = {"msgId": id_}
         self.request(api, data, 0)
 
 
@@ -415,12 +415,12 @@ class RClient(object):
         # Get parameter.
         api = "getVoiceByMsgId"
         dir_ = os_abspath(dir_)
-
-        # Request.
         data = {
             "msgId": id_,
             "storeDir": dir_
         }
+
+        # Request.
         self.request(api, data, [0, 1])
 
 
@@ -503,32 +503,16 @@ class RClient(object):
         return table
 
 
-    @overload
     def get_contact_name(
         self,
-        id_: str,
-        full: Literal[False] = False
-    ) -> str: ...
-
-    @overload
-    def get_contact_name(
-        self,
-        id_: str,
-        full: Literal[True] = False
-    ) -> Response: ...
-
-    def get_contact_name(
-        self,
-        id_: str,
-        full: bool = False
-    ) -> Union[str, Response]:
+        id_: str
+    ) -> str:
         """
         Get contact name, can be friend and chat room and chat room member.
 
         Parameters
         ----------
         id_ : User ID or chat room ID.
-        full : Whether return full response content.
 
         Returns
         -------
@@ -537,22 +521,17 @@ class RClient(object):
 
         # Get parameter.
         api = "getContactProfile"
-
-        # Request.
         data = {"wxid": id_}
 
-        ## Not check.
-        if full:
-            response = self.request(api, data)
-            return response
-
-        ## Check.
-        else:
-            response = self.request(api, data, 1)
+        # Request.
+        response = self.request(api, data, [0, 1])
 
         # Extract.
-        data: dict = response["data"]
-        name = data["nickname"]
+        data: Optional[dict] = response["data"]
+        if data is None:
+            name = None
+        else:
+            name = data["nickname"]
 
         return name
 
@@ -575,9 +554,9 @@ class RClient(object):
 
         # Get parameter.
         api = "getMemberFromChatRoom"
+        data = {"chatRoomId": room_id}
 
         # Request.
-        data = {"chatRoomId": room_id}
         response = self.request(api, data, 1)
 
         # Convert.
@@ -614,12 +593,7 @@ class RClient(object):
         # Loop.
         table = {}
         for member in members:
-            response = self.get_contact_name(member, True)
-            if response["code"] == 0:
-                name = member
-            else:
-                name = response["data"]["nickname"]
-            table[member] = name
+            table[member] = self.get_contact_name(member)
 
         return table
 
@@ -640,12 +614,12 @@ class RClient(object):
 
         # Get parameter.
         api = "sendTextMsg"
-
-        # Request.
         data = {
             "wxid": receive_id,
             "msg": text
         }
+
+        # Request.
         self.request(api, data, 1)
 
 
@@ -667,17 +641,15 @@ class RClient(object):
 
         # Get parameter.
         api = "sendAtText"
-
-        # Handle parameter.
         if user_id.__class__ != str:
             user_id = ",".join(user_id)
-
-        # Request.
         data = {
             "chatRoomId": room_id,
             "wxids": user_id,
             "msg": text
         }
+
+        # Request.
         self.request(api, data, fail_code=-1)
 
 
@@ -697,12 +669,12 @@ class RClient(object):
 
         # Get parameter.
         api = "sendFileMsg"
-
-        # Request.
         data = {
             "wxid": receive_id,
             "filePath": path
         }
+
+        # Request.
         self.request(api, data, fail_code=-1)
 
 
@@ -722,12 +694,12 @@ class RClient(object):
 
         # Get parameter.
         api = "sendImagesMsg"
-
-        # Request.
         data = {
             "wxid": receive_id,
             "imagePath": path
         }
+
+        # Request.
         self.request(api, data, success_code=1)
 
 
@@ -747,12 +719,12 @@ class RClient(object):
 
         # Get parameter.
         api = "sendCustomEmotion"
-
-        # Request.
         data = {
             "wxid": receive_id,
             "filePath": path
         }
+
+        # Request.
         self.request(api, data, success_code=1)
 
 
@@ -772,12 +744,12 @@ class RClient(object):
 
         # Get parameter.
         api = "sendPatMsg"
-
-        # Request.
         data = {
             "wxid": receive_id,
             "receiver": user_id
         }
+
+        # Request.
         self.request(api, data, success_code=1)
 
 
@@ -815,8 +787,6 @@ class RClient(object):
         if public_id is None:
             public_id = ""
         api = "forwardPublicMsg"
-
-        # Request.
         data = {
             "wxid": receive_id,
             "url": page_url,
@@ -826,6 +796,8 @@ class RClient(object):
             "appName": public_name,
             "userName": public_id
         }
+
+        # Request.
         self.request(api, data, success_code=1)
 
 
@@ -845,10 +817,10 @@ class RClient(object):
 
         # Get parameter.
         api = "sendImagesMsg"
-
-        # Request.
         data = {
             "wxid": receive_id,
             "forwardMsg": message_id
         }
+
+        # Request.
         self.request(api, data, success_code=1)
