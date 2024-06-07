@@ -77,11 +77,11 @@ class RReply(object):
                         receive_id = message.user
                     else:
                         receive_id = message.room
-                    _, _, exc_instance, _ = catch_exc()
+                    _, _, exc, _ = catch_exc()
                     text = "\n".join(
                         [
                             str(arg)
-                            for arg in exc_instance.args
+                            for arg in exc.args
                         ]
                     )
                     self.rwechat.rsend.send(
