@@ -124,7 +124,7 @@ class RDatabase(object):
                     },
                     {
                         "name": "valid",
-                        "type_": "int unsigned",
+                        "type_": "tinyint unsigned",
                         "constraint": "NOT NULL",
                         "comment": "Is the valid, 0 is invalid, 1 is valid."
                     }
@@ -163,7 +163,7 @@ class RDatabase(object):
                     },
                     {
                         "name": "valid",
-                        "type_": "int unsigned",
+                        "type_": "tinyint unsigned",
                         "constraint": "NOT NULL",
                         "comment": "Is the valid, 0 is invalid, 1 is valid."
                     }
@@ -208,7 +208,7 @@ class RDatabase(object):
                     },
                     {
                         "name": "valid",
-                        "type_": "int unsigned",
+                        "type_": "tinyint unsigned",
                         "constraint": "NOT NULL",
                         "comment": "Is the valid, 0 is invalid, 1 is valid."
                     }
