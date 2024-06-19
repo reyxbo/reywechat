@@ -151,7 +151,7 @@ class RDatabase(object):
                     },
                     {
                         "name": "room_id",
-                        "type_": "varchar(20)",
+                        "type_": "varchar(31)",
                         "constraint": "NOT NULL",
                         "comment": "Chat room ID."
                     },
@@ -190,7 +190,7 @@ class RDatabase(object):
                     },
                     {
                         "name": "room_id",
-                        "type_": "varchar(20)",
+                        "type_": "varchar(31)",
                         "constraint": "NOT NULL",
                         "comment": "Chat room ID."
                     },
@@ -367,7 +367,7 @@ class RDatabase(object):
                     },
                     {
                         "name": "receive_id",
-                        "type_": "varchar(20)",
+                        "type_": "varchar(31)",
                         "constraint": "NOT NULL",
                         "comment": "Receive to user ID or chat room ID."
                     },
