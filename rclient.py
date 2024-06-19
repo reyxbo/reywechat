@@ -467,7 +467,7 @@ class RClient(object):
         table_user = []
         table_room = []
         for info in data:
-            id_ = info["wxid"]
+            id_: str = info["wxid"]
 
             # Filter system user.
             if id_ in filter_names:
@@ -480,7 +480,7 @@ class RClient(object):
             }
 
             ## Chat room table.
-            if "@chatroom" in id_:
+            if id_.endswith("chatroom"):
                 if (
                     type_ in (None, "room")
                     and id_[-1] == "m"

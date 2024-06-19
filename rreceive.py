@@ -745,7 +745,7 @@ class RReceive(object):
         # Break.
         if (
             message.user.__class__ != str
-            or not message.user.endswith("@chatroom")
+            or not message.user.endswith("chatroom")
         ):
             return
 
