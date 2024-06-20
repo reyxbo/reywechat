@@ -776,7 +776,7 @@ class RReceive(object):
 
             ### Get attribute.
             file_name = f"{message.id}.jpg"
-            pattern = "length=\"(\d+)\" md5=\"([\da-f]{32})\""
+            pattern = "length=\"(\d+)\".*?md5=\"([\da-f]{32})\""
             file_size, file_md5 = search(pattern, message.data)
             file_size = int(file_size)
 
