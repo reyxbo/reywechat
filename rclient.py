@@ -395,7 +395,7 @@ class RClient(object):
         data = {"msgId": id_}
 
         # Request.
-        self.request(api, data, 0)
+        self.request(api, data, [0, 1000])
 
 
     def download_voice(
