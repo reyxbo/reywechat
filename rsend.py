@@ -247,7 +247,7 @@ class RSend(object):
                 params["message_id"]
             )
 
-        ## Raise.
+        ## Throw exception.
         else:
             throw(ValueError, send_type)
 

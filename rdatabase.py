@@ -242,7 +242,7 @@ class RDatabase(object):
                     },
                     {
                         "name": "room_id",
-                        "type_": "char(20)",
+                        "type_": "varchar(31)",
                         "constraint": "DEFAULT NULL",
                         "comment": "Message chat room ID, null for private chat."
                     },
@@ -372,7 +372,7 @@ class RDatabase(object):
                         "comment": "Receive to user ID or chat room ID."
                     },
                     {
-                        "name": "parameters",
+                        "name": "parameter",
                         "type_": "json",
                         "constraint": "NOT NULL",
                         "comment": (
@@ -941,7 +941,7 @@ class RDatabase(object):
                 "status": status,
                 "type": send_type,
                 "receive_id": receive_id,
-                "parameters": params
+                "parameter": params
             }
 
             # Insert.
@@ -1017,7 +1017,7 @@ class RDatabase(object):
         )
         result = conn.execute_select(
             ("wechat", "message_send"),
-            ["send_id", "type", "receive_id", "parameters"],
+            ["send_id", "type", "receive_id", "parameter"],
             where,
             order="`plan_time` DESC, `send_id`"
         )
@@ -1044,21 +1044,21 @@ class RDatabase(object):
 
         # Put.
         for row in table:
-            parameters: Dict = json_loads(row["parameters"])
-            parameters["is_from_db"] = True
+            parameter: Dict = json_loads(row["parameter"])
+            parameter["is_from_db"] = True
 
             ## Save file.
-            file_id = parameters.get("file_id")
+            file_id = parameter.get("file_id")
             if file_id is not None:
                 file_path, file_name = self._download_file(file_id)
-                parameters["path"] = file_path
-                parameters["file_name"] = file_name
+                parameter["path"] = file_path
+                parameter["file_name"] = file_name
 
             self.rwechat.send(
                 row["type"],
                 row["receive_id"],
                 send_id=row["send_id"],
-                **parameters
+                **parameter
             )
 
         # Commit.

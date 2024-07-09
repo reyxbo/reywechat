@@ -10,7 +10,6 @@
 
 
 from typing import Any, List, Dict, Literal, Callable, Union, Optional
-from reytool.rsystem import catch_exc
 
 from .rreceive import RMessage
 from .rwechat import RWeChat
@@ -68,29 +67,7 @@ class RReply(object):
                 judge: Callable[[RMessage], Optional[Union[Dict, List[Dict]]]] = rule["judge"]
 
                 # Judge.
-                try:
-                    result = judge(message)
-
-                ## Assertion Error.
-                except AssertionError:
-                    if message.room is None:
-                        receive_id = message.user
-                    else:
-                        receive_id = message.room
-                    _, _, exc, _ = catch_exc()
-                    text = "\n".join(
-                        [
-                            str(arg)
-                            for arg in exc.args
-                        ]
-                    )
-                    self.rwechat.rsend.send(
-                        0,
-                        receive_id,
-                        text=text
-                    )
-
-                    break
+                result = judge(message)
 
                 # Fail.
                 if result is None:

@@ -204,7 +204,7 @@ class RClient(object):
             "data": response_data["data"]
         }
 
-        # Raise.
+        # Throw exception.
         if (
             (
                 success_code is not None
