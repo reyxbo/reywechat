@@ -26,7 +26,7 @@ from .rwechat import RWeChat
 
 
 __all__ = (
-    "MessageSendParam",
+    "SendParam",
     "RSend"
 )
 
