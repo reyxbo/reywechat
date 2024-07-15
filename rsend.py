@@ -155,7 +155,7 @@ class RSend(object):
 
     def _send(
         self,
-        params: Any
+        params: Dict
     ) -> None:
         """
         Send message.
@@ -257,7 +257,7 @@ class RSend(object):
 
     def _wait(
         self,
-        params: Any
+        params: Dict
     ) -> None:
         """
         Waiting after sending.
