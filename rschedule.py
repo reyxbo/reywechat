@@ -10,7 +10,7 @@
 
 
 from __future__ import annotations
-from typing import Any, List, Dict, Literal, Callable, Union, Optional
+from typing import Any, Dict, Literal, Callable, Union
 from reytool.rschedule import RSchedule as RRSchedule
 
 from .rsend import SendParam
