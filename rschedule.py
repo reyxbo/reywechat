@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Any, List, Dict, Literal, Callable, Union, Optional
 from reytool.rschedule import RSchedule as RRSchedule
 
+from .rsend import SendParam
 from .rwechat import RWeChat
 
 
@@ -91,7 +92,7 @@ class RSchedule(object):
 
     def _task(
         self,
-        task: Callable[[RSchedule], Optional[Union[Dict, List[Dict]]]]
+        task: Callable[[RSchedule], SendParam]
     ) -> None:
         """
         Schedule task.
@@ -119,7 +120,7 @@ class RSchedule(object):
     def add(
         self,
         trigger: Literal['date', 'interval', 'cron'],
-        task: Callable[[RSchedule], Optional[Union[Dict, List[Dict]]]],
+        task: Callable[[RSchedule], SendParam],
         **trigger_kwargs: Any
     ) -> None:
         """

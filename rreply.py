@@ -12,6 +12,7 @@
 from typing import Any, List, Dict, Literal, Callable, Union, Optional
 
 from .rreceive import RMessage
+from .rsend import SendParam
 from .rwechat import RWeChat
 
 
@@ -64,7 +65,7 @@ class RReply(object):
 
             # Loop.
             for rule in self.rules:
-                judge: Callable[[RMessage], Optional[Union[Dict, List[Dict]]]] = rule["judge"]
+                judge: Callable[[RMessage], SendParam] = rule["judge"]
 
                 # Judge.
                 result = judge(message)
@@ -88,7 +89,7 @@ class RReply(object):
 
     def add_rule(
         self,
-        judge: Callable[[RMessage], Optional[Union[Dict, List[Dict]]]],
+        judge: Callable[[RMessage], SendParam],
         level: float = 0
     ) -> None:
         """

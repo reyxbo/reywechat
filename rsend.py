@@ -10,7 +10,7 @@
 
 
 from __future__ import annotations
-from typing import Any, List, Dict, Literal, Callable, Optional, NoReturn, overload
+from typing import Any, List, Dict, Literal, Callable, Optional, Union, NoReturn, overload
 from os.path import join as os_join
 from queue import Queue
 from re import escape as re_escape
@@ -26,8 +26,13 @@ from .rwechat import RWeChat
 
 
 __all__ = (
-    "RSend",
+    "MessageSendParam",
+    "RSend"
 )
+
+
+# Send parameters type.
+SendParam = Optional[Union[Dict, List[Dict]]]
 
 
 class RSend(object):
