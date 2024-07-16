@@ -25,16 +25,16 @@ from .rwechat import RWeChat
 
 
 __all__ = (
-    "RStop",
+    "RStopError",
     "RMessage",
     "RReceive",
     "is_valid"
 )
 
 
-class RStop(AssertionError):
+class RStopError(AssertionError):
     """
-    Rey's `stop` type.
+    Rey's `stop error` type.
     """
 
 

@@ -9,21 +9,21 @@
 """
 
 
-from typing import Any, List, Dict, Literal, Callable
+from typing import Any, List, Dict, Literal, Callable, NoReturn
 
-from .rreceive import RMessage, RStop, is_valid
+from .rreceive import RMessage, RStopError, is_valid
 from .rwechat import RWeChat
 
 
 __all__ = (
-    "RStopExecuter",
+    "RExecuteStopError",
     "RExecute"
 )
 
 
-class RStopExecuter(RStop):
+class RExecuteStopError(RStopError):
     """
-    Rey's `stop execute` type.
+    Rey's `execute stop error` type.
     """
 
 
@@ -82,7 +82,7 @@ class RExecute(object):
                     executer(message)
 
                 # Stop.
-                except RStopExecuter:
+                except RExecuteStopError:
                     break
 
 
@@ -101,7 +101,7 @@ class RExecute(object):
         Parameters
         ----------
         executer : Function of execute. The parameter is the `RMessage` instance.
-        When throw `RStopExecuter` type exception, then stop executes.
+        When throw `RExecuteStopError` type exception, then stop executes.
         level : Priority level, sort from large to small.
         """
 
@@ -120,3 +120,12 @@ class RExecute(object):
             key=fund_sort,
             reverse=True
         )
+
+
+    def stop(self) -> NoReturn:
+        """
+        Stop reply by throwing `RExecuteStopError` type exception.
+        """
+
+        # Raise.
+        raise RExecuteStopError

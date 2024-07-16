@@ -9,22 +9,22 @@
 """
 
 
-from typing import Any, List, Dict, Literal, Callable
+from typing import Any, List, Dict, Literal, Callable, NoReturn
 
-from .rreceive import RMessage, RStop, is_valid
+from .rreceive import RStopError, RMessage, is_valid
 from .rsend import SendParam
 from .rwechat import RWeChat
 
 
 __all__ = (
-    "RStopReply",
+    "RReplyStopError",
     "RReply"
 )
 
 
-class RStopReply(RStop):
+class RReplyStopError(RStopError):
     """
-    Rey's `stop reply` type.
+    Rey's `reply stop error` type.
     """
 
 
@@ -83,7 +83,7 @@ class RReply(object):
                     result = judge(message)
 
                 # Stop.
-                except RStopReply:
+                except RReplyStopError:
                     break
 
                 # Fail.
@@ -114,7 +114,7 @@ class RReply(object):
         Parameters
         ----------
         judge : Function of judgment and generate send message parameters. The parameter is the `RMessage` instance.
-        When throw `RStopReply` type exception, then stop executes.
+        When throw `RReplyStopError` type exception, then stop executes.
             - `Return None` : Judgment failed, continue next rule.
             - `Return Dict` : Send a message and breaking judgment.
             - `Return List[Dict]` : Send multiple messages and breaking judgment.
@@ -137,3 +137,12 @@ class RReply(object):
             key=fund_sort,
             reverse=True
         )
+
+
+    def stop(self) -> NoReturn:
+        """
+        Stop reply by throwing `RReplyStopError` type exception.
+        """
+
+        # Raise.
+        raise RReplyStopError
