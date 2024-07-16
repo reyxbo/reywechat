@@ -17,14 +17,14 @@ from .rwechat import RWeChat
 
 
 __all__ = (
-    "ReplyStop",
+    "RReplyStop",
     "RReply"
 )
 
 
-class ReplyStop(AssertionError):
+class RReplyStop(AssertionError):
     """
-    `Reply stop` type.
+    Rey's `reply stop` type.
     """
 
 
@@ -79,7 +79,7 @@ class RReply(object):
                     result = judge(message)
 
                 # Stop.
-                except ReplyStop:
+                except RReplyStop:
                     break
 
                 # Fail.
@@ -110,7 +110,7 @@ class RReply(object):
         Parameters
         ----------
         judge : Function of judgment and generate send message parameters. The parameter is the `RMessage` instance.
-        When throw `ReplyStop` type exception, then stop executes.
+        When throw `RReplyStop` type exception, then stop executes.
             - `Return None` : Judgment failed, continue next rule.
             - `Return Dict` : Send a message and breaking judgment.
             - `Return List[Dict]` : Send multiple messages and breaking judgment.

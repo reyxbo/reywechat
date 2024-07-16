@@ -16,14 +16,14 @@ from .rwechat import RWeChat
 
 
 __all__ = (
-    "ExecuterStop",
+    "RExecuterStop",
     "RExecute"
 )
 
 
-class ExecuterStop(AssertionError):
+class RExecuterStop(AssertionError):
     """
-    `Execute stop` type.
+    Rey's `execute stop` type.
     """
 
 
@@ -78,7 +78,7 @@ class RExecute(object):
                     executer(message)
 
                 # Stop.
-                except ExecuterStop:
+                except RExecuterStop:
                     break
 
 
@@ -97,7 +97,7 @@ class RExecute(object):
         Parameters
         ----------
         executer : Function of execute. The parameter is the `RMessage` instance.
-        When throw `ExecuterStop` type exception, then stop executes.
+        When throw `RExecuterStop` type exception, then stop executes.
         level : Priority level, sort from large to small.
         """
 
