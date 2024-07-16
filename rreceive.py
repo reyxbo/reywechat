@@ -25,9 +25,17 @@ from .rwechat import RWeChat
 
 
 __all__ = (
+    "RStop",
     "RMessage",
-    "RReceive"
+    "RReceive",
+    "is_valid"
 )
+
+
+class RStop(AssertionError):
+    """
+    Rey's `stop` type.
+    """
 
 
 class RMessage(object):
@@ -949,3 +957,46 @@ class RReceive(object):
 
 
     __del__ = end
+
+
+def is_valid(message: RMessage) -> Optional[bool]:
+    """
+    Judge if is valid user or chat room from database.
+
+    Parameters
+    ----------
+    message : `RMessage` instance.
+
+    Returns
+    -------
+    Judgment result.
+        - `True` : Valid.
+        - `False` : Invalid or no record.
+        - `None` : Not using database.
+    """
+
+    # Break.
+    if not hasattr(message.rreceive.rwechat, "rdatabase"):
+        return
+
+    # Judge.
+
+    ## User.
+    if message.room is None:
+        judge = message.rreceive.rwechat.rdatabase.rrdatabase_wechat.execute_exist(
+            ("wechat", "contact_user"),
+            "`user_id` = :user_id AND `valid` = 1"
+        )
+
+    ## Room.
+    else:
+        judge = message.rreceive.rwechat.rdatabase.rrdatabase_wechat.execute_exist(
+            ("wechat", "contact_room"),
+            "`room_id` = :room_id AND `valid` = 1"
+        )
+
+    # Convert.
+    if judge is None:
+        judge = False
+
+    return judge

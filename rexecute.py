@@ -11,19 +11,19 @@
 
 from typing import Any, List, Dict, Literal, Callable
 
-from .rreceive import RMessage
+from .rreceive import RMessage, RStop, is_valid
 from .rwechat import RWeChat
 
 
 __all__ = (
-    "RExecuterStop",
+    "RStopExecuter",
     "RExecute"
 )
 
 
-class RExecuterStop(AssertionError):
+class RStopExecuter(RStop):
     """
-    Rey's `execute stop` type.
+    Rey's `stop execute` type.
     """
 
 
@@ -69,6 +69,10 @@ class RExecute(object):
             message : `RMessage` instance.
             """
 
+            # Valid.
+            if is_valid(message) is False:
+                return
+
             # Loop.
             for rule in self.rules:
                 executer: Callable[[RMessage], Any] = rule["executer"]
@@ -78,7 +82,7 @@ class RExecute(object):
                     executer(message)
 
                 # Stop.
-                except RExecuterStop:
+                except RStopExecuter:
                     break
 
 
@@ -97,7 +101,7 @@ class RExecute(object):
         Parameters
         ----------
         executer : Function of execute. The parameter is the `RMessage` instance.
-        When throw `RExecuterStop` type exception, then stop executes.
+        When throw `RStopExecuter` type exception, then stop executes.
         level : Priority level, sort from large to small.
         """
 

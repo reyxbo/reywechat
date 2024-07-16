@@ -11,20 +11,20 @@
 
 from typing import Any, List, Dict, Literal, Callable
 
-from .rreceive import RMessage
+from .rreceive import RMessage, RStop, is_valid
 from .rsend import SendParam
 from .rwechat import RWeChat
 
 
 __all__ = (
-    "RReplyStop",
+    "RStopReply",
     "RReply"
 )
 
 
-class RReplyStop(AssertionError):
+class RStopReply(RStop):
     """
-    Rey's `reply stop` type.
+    Rey's `stop reply` type.
     """
 
 
@@ -70,6 +70,10 @@ class RReply(object):
             message : `RMessage` instance.
             """
 
+            # Valid.
+            if is_valid(message) is False:
+                return
+
             # Loop.
             for rule in self.rules:
                 judge: Callable[[RMessage], SendParam] = rule["judge"]
@@ -79,7 +83,7 @@ class RReply(object):
                     result = judge(message)
 
                 # Stop.
-                except RReplyStop:
+                except RStopReply:
                     break
 
                 # Fail.
@@ -110,7 +114,7 @@ class RReply(object):
         Parameters
         ----------
         judge : Function of judgment and generate send message parameters. The parameter is the `RMessage` instance.
-        When throw `RReplyStop` type exception, then stop executes.
+        When throw `RStopReply` type exception, then stop executes.
             - `Return None` : Judgment failed, continue next rule.
             - `Return Dict` : Send a message and breaking judgment.
             - `Return List[Dict]` : Send multiple messages and breaking judgment.

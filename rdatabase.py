@@ -123,9 +123,15 @@ class RDatabase(object):
                         "comment": "User name."
                     },
                     {
-                        "name": "valid",
+                        "name": "contact",
                         "type_": "tinyint unsigned",
                         "constraint": "NOT NULL",
+                        "comment": "Is the contact, 0 is contact, 1 is no contact."
+                    },
+                    {
+                        "name": "valid",
+                        "type_": "tinyint unsigned",
+                        "constraint": "DEFAULT 1",
                         "comment": "Is the valid, 0 is invalid, 1 is valid."
                     }
                 ],
@@ -162,9 +168,15 @@ class RDatabase(object):
                         "comment": "Chat room name."
                     },
                     {
-                        "name": "valid",
+                        "name": "contact",
                         "type_": "tinyint unsigned",
                         "constraint": "NOT NULL",
+                        "comment": "Is the contact, 0 is contact, 1 is no contact."
+                    },
+                    {
+                        "name": "valid",
+                        "type_": "tinyint unsigned",
+                        "constraint": "DEFAULT 1",
                         "comment": "Is the valid, 0 is invalid, 1 is valid."
                     }
                 ],
@@ -207,9 +219,15 @@ class RDatabase(object):
                         "comment": "Chat room user name."
                     },
                     {
-                        "name": "valid",
+                        "name": "contact",
                         "type_": "tinyint unsigned",
                         "constraint": "NOT NULL",
+                        "comment": "Is the contact, 0 is contact, 1 is no contact."
+                    },
+                    {
+                        "name": "valid",
+                        "type_": "tinyint unsigned",
+                        "constraint": "DEFAULT 1",
                         "comment": "Is the valid, 0 is invalid, 1 is valid."
                     }
                 ],
@@ -495,7 +513,7 @@ class RDatabase(object):
             {
                 "user_id": row["id"],
                 "name": row["name"],
-                "valid": 1
+                "contact": 1
             }
             for row in contact_table
         ]
@@ -519,12 +537,12 @@ class RDatabase(object):
         if user_ids == []:
             sql = (
                 "UPDATE `wechat`.`contact_user`\n"
-                "SET `valid` = 0"
+                "SET `contact` = 0"
             )
         else:
             sql = (
                 "UPDATE `wechat`.`contact_user`\n"
-                "SET `valid` = 0\n"
+                "SET `contact` = 0\n"
                 "WHERE `user_id` NOT IN :user_ids"
             )
         conn.execute(
@@ -551,7 +569,7 @@ class RDatabase(object):
             {
                 "room_id": row["id"],
                 "name": row["name"],
-                "valid": 1
+                "contact": 1
             }
             for row in contact_table
         ]
@@ -575,12 +593,12 @@ class RDatabase(object):
         if room_ids == []:
             sql = (
                 "UPDATE `wechat`.`contact_room`\n"
-                "SET `valid` = 0"
+                "SET `contact` = 0"
             )
         else:
             sql = (
                 "UPDATE `wechat`.`contact_room`\n"
-                "SET `valid` = 0\n"
+                "SET `contact` = 0\n"
                 "WHERE `room_id` NOT IN :room_ids"
             )
         conn.execute(
@@ -624,7 +642,7 @@ class RDatabase(object):
                 "room_id": row["id"],
                 "user_id": user_id,
                 "name": name,
-                "valid": 1
+                "contact": 1
             }
             for row in contact_table
             for user_id, name
@@ -653,18 +671,18 @@ class RDatabase(object):
         if room_user_ids == []:
             sql = (
                 "UPDATE `wechat`.`contact_room_user`\n"
-                "SET `valid` = 0"
+                "SET `contact` = 0"
             )
         elif room_id is None:
             sql = (
                 "UPDATE `wechat`.`contact_room_user`\n"
-                "SET `valid` = 0\n"
+                "SET `contact` = 0\n"
                 "WHERE CONCAT(`room_id`, ',', `user_id`) NOT IN :room_user_ids"
             )
         else:
             sql = (
                 "UPDATE `wechat`.`contact_room_user`\n"
-                "SET `valid` = 0\n"
+                "SET `contact` = 0\n"
                 "WHERE (\n"
                 "    `room_id` = :room_id\n"
                 "    AND CONCAT(`room_id`, ',', `user_id`) NOT IN :room_user_ids\n"
@@ -707,7 +725,7 @@ class RDatabase(object):
                 data = {
                     "user_id": message.user,
                     "name": name,
-                    "valid": 1
+                    "contact": 1
                 }
 
                 ## Insert.
@@ -746,7 +764,7 @@ class RDatabase(object):
                 data = {
                     "room_id": message.room,
                     "name": name,
-                    "valid": 1
+                    "contact": 1
                 }
 
                 ## Insert.
@@ -791,7 +809,7 @@ class RDatabase(object):
                 ## Generate data.
                 data = {
                     "room_id": message.room,
-                    "valid": 0,
+                    "contact": 0,
                     "limit": 1
                 }
 
