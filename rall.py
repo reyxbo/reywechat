@@ -11,6 +11,7 @@
 
 from .rclient import *
 from .rdatabase import *
+from .rexecute import *
 from .rlog import *
 from .rreceive import *
 from .rreply import *
