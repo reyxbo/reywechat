@@ -71,6 +71,7 @@ class RWeChat(object):
         # Import.
         from .rclient import RClient
         from .rdatabase import RDatabase
+        from .rexecute import RExecute
         from .rlog import RLog
         from .rreceive import RReceive
         from .rreply import RReply
@@ -92,6 +93,7 @@ class RWeChat(object):
         if rrdatabase is not None:
             self.rdatabase = RDatabase(self, rrdatabase)
         self.rreply = RReply(self)
+        self.rexecute = RExecute(self)
         self.rschedule = RSchedule(self)
 
         ## Receive.
@@ -107,6 +109,9 @@ class RWeChat(object):
 
         ## Reply.
         self.reply_add_rule = self.rreply.add_rule
+
+        ## Execute.
+        self.execute_add_rule = self.rexecute.add_rule
 
         ## Schedule.
         self.schedule_add = self.rschedule.add
