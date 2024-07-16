@@ -985,14 +985,16 @@ def is_valid(message: RMessage) -> Optional[bool]:
     if message.room is None:
         judge = message.rreceive.rwechat.rdatabase.rrdatabase_wechat.execute_exist(
             ("wechat", "contact_user"),
-            "`user_id` = :user_id AND `valid` = 1"
+            "`user_id` = :user_id AND `valid` = 1",
+            user_id=message.user
         )
 
     ## Room.
     else:
         judge = message.rreceive.rwechat.rdatabase.rrdatabase_wechat.execute_exist(
             ("wechat", "contact_room"),
-            "`room_id` = :room_id AND `valid` = 1"
+            "`room_id` = :room_id AND `valid` = 1",
+            room_id=message.room
         )
 
     # Convert.
