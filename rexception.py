@@ -12,6 +12,19 @@
 from reytool.rexception import RError
 
 
+__all__ = (
+    "RWeChatError",
+    "RWeChatReplyError",
+    "RWeChatExecuteError",
+    "RWeChatContinueError",
+    "RWeChatBreakError",
+    "RWeChatReplyContinueError",
+    "RWeChatReplyBreakError",
+    "RWeChatExecuteContinueError",
+    "RWeChatExecuteBreakError"
+)
+
+
 class RWeChatError(RError):
     """
     Rey's `WeChat error` type.
@@ -30,13 +43,13 @@ class RWeChatExecuteError(RWeChatError):
     """
 
 
-class RWeChatContinueError(RWeChatError):
+class RWeChatContinueError(RWeChatError, AssertionError):
     """
     Rey's `WeChat continue error` type.
     """
 
 
-class RWeChatBreakError(RWeChatError):
+class RWeChatBreakError(RWeChatError, AssertionError):
     """
     Rey's `WeChat break error` type.
     """

@@ -13,6 +13,7 @@ from typing import Any, List, Callable, Union
 from functools import wraps as functools_wraps
 from reytool.rexception import catch_exc
 
+from .rexception import RWeChatContinueError, RWeChatBreakError
 from .rwechat import RWeChat
 
 
@@ -74,9 +75,13 @@ def wrap_try_send(
                 *arg,
                 **kwargs
             )
-        except:
 
-            ## Report.
+        # Continue and Break.
+        except (RWeChatContinueError, RWeChatBreakError):
+            pass
+
+        # Report.
+        except:
             _, _, exc, _ = catch_exc()
             text = "\n".join(
                 [
@@ -91,7 +96,7 @@ def wrap_try_send(
                     text=text
                 )
 
-            ## Throw exception.
+            # Throw exception.
             raise exc
 
         return result
