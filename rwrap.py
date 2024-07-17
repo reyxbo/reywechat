@@ -75,29 +75,29 @@ def wrap_try_send(
                 *arg,
                 **kwargs
             )
-
-        # Continue and Break.
-        except (RWeChatContinueError, RWeChatBreakError):
-            pass
-
-        # Report.
         except:
-            _, _, exc, _ = catch_exc()
-            text = "\n".join(
-                [
-                    str(arg)
-                    for arg in exc.args
-                ]
-            )
-            for receive_id in receive_ids:
-                rwechat.rsend.send(
-                    0,
-                    receive_id,
-                    text=text
+            _, _, exc_instance, _ = catch_exc()
+
+            # Report.
+            if not isinstance(
+                exc_instance,
+                (RWeChatContinueError, RWeChatBreakError)
+            ):
+                text = "\n".join(
+                    [
+                        str(arg)
+                        for arg in exc_instance.args
+                    ]
                 )
+                for receive_id in receive_ids:
+                    rwechat.rsend.send(
+                        0,
+                        receive_id,
+                        text=text
+                    )
 
             # Throw exception.
-            raise exc
+            raise exc_instance
 
         return result
 
