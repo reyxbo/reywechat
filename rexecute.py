@@ -11,20 +11,14 @@
 
 from typing import Any, List, Dict, Literal, Callable, NoReturn
 
+from .rexception import RWeChatExecuteContinueError, RWeChatExecuteBreakError
 from .rreceive import RMessage, RStopError, is_valid
 from .rwechat import RWeChat
 
 
 __all__ = (
-    "RExecuteStopError",
-    "RExecute"
+    "RExecute",
 )
-
-
-class RExecuteStopError(RStopError):
-    """
-    Rey's `execute stop error` type.
-    """
 
 
 class RExecute(object):
@@ -81,8 +75,12 @@ class RExecute(object):
                 try:
                     executer(message)
 
-                # Stop.
-                except RExecuteStopError:
+                # Continue.
+                except RWeChatExecuteContinueError:
+                    continue
+
+                # Break.
+                except RWeChatExecuteBreakError:
                     break
 
 
@@ -101,7 +99,7 @@ class RExecute(object):
         Parameters
         ----------
         executer : Function of execute. The parameter is the `RMessage` instance.
-        When throw `RExecuteStopError` type exception, then stop executes.
+        When throw `RExecuteBreakError` type exception, then stop executes.
         level : Priority level, sort from large to small.
         """
 
@@ -122,10 +120,19 @@ class RExecute(object):
         )
 
 
-    def stop(self) -> NoReturn:
+    def continue_(self) -> NoReturn:
         """
-        Stop reply by throwing `RExecuteStopError` type exception.
+        Continue reply by throwing `RWeChatExecuteContinueError` type exception.
         """
 
         # Raise.
-        raise RExecuteStopError
+        raise RWeChatExecuteContinueError
+
+
+    def break_(self) -> NoReturn:
+        """
+        Break reply by throwing `RWeChatExecuteBreakError` type exception.
+        """
+
+        # Raise.
+        raise RWeChatExecuteBreakError

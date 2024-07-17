@@ -12,8 +12,8 @@
 from typing import Tuple, Dict, Literal, Union, Optional
 from json import loads as json_loads
 from reydb.rconnection import RDatabase as RRDatabase
+from reytool.rexception import throw
 from reytool.ros import RFolder
-from reytool.rsystem import throw
 from reytool.rtime import to_time, time_to, sleep
 from reytool.rwrap import wrap_thread
 

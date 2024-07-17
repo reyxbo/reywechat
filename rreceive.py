@@ -14,9 +14,9 @@ from typing import Any, List, Dict, Literal, Callable, Optional
 from queue import Queue
 from json import loads as json_loads
 from reytool.rcomm import get_file_stream_time, listen_socket
+from reytool.rexception import catch_exc
 from reytool.ros import RFile, RFolder, os_exists
 from reytool.rregex import search
-from reytool.rsystem import catch_exc
 from reytool.rtime import sleep, wait
 from reytool.rwrap import wrap_thread, wrap_exc
 from reytool.rmultitask import RThreadPool
@@ -25,17 +25,10 @@ from .rwechat import RWeChat
 
 
 __all__ = (
-    "RStopError",
     "RMessage",
     "RReceive",
     "is_valid"
 )
-
-
-class RStopError(AssertionError):
-    """
-    Rey's `stop error` type.
-    """
 
 
 class RMessage(object):
@@ -111,6 +104,10 @@ class RMessage(object):
         self._change_room_name: Optional[str] = None
         self._is_kick_out_room: Optional[bool] = None
         self._is_dissolve_room: Optional[bool] = None
+        self.reply_continue = self.rreceive.rwechat.rreply.continue_
+        self.reply_break = self.rreceive.rwechat.rreply.break_
+        self.execute_continue = self.rreceive.rwechat.rexecute.continue_
+        self.execute_break = self.rreceive.rwechat.rexecute.break_
 
 
     @property

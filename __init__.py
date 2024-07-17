@@ -15,7 +15,8 @@ Modules
 -------
 rall : All methods.
 rclient : Client methods.
-rdatabase: Database methods.
+rdatabase : Database methods.
+rexception : Exception methods.
 rexecute: Execute methods.
 rlog : Log methods.
 rreceive : Receive methods.
@@ -30,4 +31,4 @@ rwrap : Decorator methods.
 from typing import Final
 
 
-__version__: Final[str] = "0.146"
+__version__: Final[str] = "0.147"

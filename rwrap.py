@@ -11,7 +11,7 @@
 
 from typing import Any, List, Callable, Union
 from functools import wraps as functools_wraps
-from reytool.rsystem import catch_exc
+from reytool.rexception import catch_exc
 
 from .rwechat import RWeChat
 

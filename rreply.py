@@ -11,21 +11,15 @@
 
 from typing import Any, List, Dict, Literal, Callable, NoReturn
 
-from .rreceive import RStopError, RMessage, is_valid
+from .rexception import RWeChatReplyContinueError, RWeChatReplyBreakError
+from .rreceive import RMessage, is_valid
 from .rsend import SendParam
 from .rwechat import RWeChat
 
 
 __all__ = (
-    "RReplyStopError",
-    "RReply"
+    "RReply",
 )
-
-
-class RReplyStopError(RStopError):
-    """
-    Rey's `reply stop error` type.
-    """
 
 
 class RReply(object):
@@ -82,8 +76,12 @@ class RReply(object):
                 try:
                     result = judge(message)
 
-                # Stop.
-                except RReplyStopError:
+                # Continue.
+                except RWeChatReplyContinueError:
+                    continue
+
+                # Break.
+                except RWeChatReplyBreakError:
                     break
 
                 # Fail.
@@ -114,7 +112,7 @@ class RReply(object):
         Parameters
         ----------
         judge : Function of judgment and generate send message parameters. The parameter is the `RMessage` instance.
-        When throw `RReplyStopError` type exception, then stop executes.
+        When throw `RReplyBreakError` type exception, then stop executes.
             - `Return None` : Judgment failed, continue next rule.
             - `Return Dict` : Send a message and breaking judgment.
             - `Return List[Dict]` : Send multiple messages and breaking judgment.
@@ -139,10 +137,19 @@ class RReply(object):
         )
 
 
-    def stop(self) -> NoReturn:
+    def continue_(self) -> NoReturn:
         """
-        Stop reply by throwing `RReplyStopError` type exception.
+        Continue reply by throwing `RWeChatReplyContinueError` type exception.
         """
 
         # Raise.
-        raise RReplyStopError
+        raise RWeChatReplyContinueError
+
+
+    def break_(self) -> NoReturn:
+        """
+        Break reply by throwing `RWeChatReplyBreakError` type exception.
+        """
+
+        # Raise.
+        raise RWeChatReplyBreakError

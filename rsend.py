@@ -15,10 +15,10 @@ from os.path import join as os_join
 from queue import Queue
 from re import escape as re_escape
 from reytool.rcomm import get_file_stream_time
+from reytool.rexception import throw, catch_exc
 from reytool.rrandom import randn
 from reytool.rregex import sub
 from reytool.ros import RFile
-from reytool.rsystem import throw, catch_exc
 from reytool.rtime import sleep
 from reytool.rwrap import wrap_thread, wrap_exc
 
