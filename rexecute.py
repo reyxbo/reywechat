@@ -12,7 +12,7 @@
 from typing import Any, List, Dict, Literal, Callable, NoReturn
 
 from .rexception import RWeChatExecuteContinueError, RWeChatExecuteBreakError
-from .rreceive import RMessage, RStopError, is_valid
+from .rreceive import RMessage, is_valid
 from .rwechat import RWeChat
 
 
