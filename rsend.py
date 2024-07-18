@@ -171,16 +171,12 @@ class RSend(object):
             - `Key 'file_name'` : Given file name.
         """
 
-        # Get parameter.
-        send_type: int = params["send_type"]
-        receive_id: str = params["receive_id"]
-
         # File.
-        path = params.get("path")
-        file_name = params.get("file_name")
+        if (file_id := params.get("file_id")) is not None:
+            params["path"], params["file_name"] = self.rwechat.rdatabase._download_file(file_id)
         if (
-            path is not None
-            and file_name is not None
+            (path := params.get("path")) is not None
+            and (file_name := params.get("file_name")) is not None
         ):
             rfile = RFile(path)
             copy_path = os_join(self.rwechat.dir_file, file_name)
@@ -191,16 +187,16 @@ class RSend(object):
         # Send.
 
         ## Text.
-        if send_type == 0:
+        if (send_type := params["send_type"]) == 0:
             self.rwechat.rclient.send_text(
-                receive_id,
+                params["receive_id"],
                 params["text"]
             )
 
         ## Text with "@".
         elif send_type == 1:
             self.rwechat.rclient.send_text_at(
-                receive_id,
+                params["receive_id"],
                 params["user_id"],
                 params["text"]
             )
@@ -208,35 +204,35 @@ class RSend(object):
         ## File.
         elif send_type == 2:
             self.rwechat.rclient.send_file(
-                receive_id,
+                params["receive_id"],
                 path
             )
 
         ## Image.
         elif send_type == 3:
             self.rwechat.rclient.send_image(
-                receive_id,
+                params["receive_id"],
                 path
             )
 
         ## Emotion.
         elif send_type == 4:
             self.rwechat.rclient.send_emotion(
-                receive_id,
+                params["receive_id"],
                 path
             )
 
         ## Pat.
         elif send_type == 5:
             self.rwechat.rclient.send_pat(
-                receive_id,
+                params["receive_id"],
                 params["user_id"]
             )
 
         ## Public account.
         elif send_type == 6:
             self.rwechat.rclient.send_public(
-                receive_id,
+                params["receive_id"],
                 params["page_url"],
                 params["title"],
                 params["text"],
@@ -248,7 +244,7 @@ class RSend(object):
         ## Forward.
         elif send_type == 7:
             self.rwechat.rclient.send_forward(
-                receive_id,
+                params["receive_id"],
                 params["message_id"]
             )
 
