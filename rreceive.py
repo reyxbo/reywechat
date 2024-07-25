@@ -91,6 +91,7 @@ class RMessage(object):
         self.room = room
         self.file = file
         self._user_name = None
+        self._room_name = None
         self._is_quote: Optional[bool] = None
         self._is_quote_self: Optional[bool] = None
         self._quote_info: Optional[Dict[Literal["text", "quote_id", "quote_type", "quote_user", "quote_user_name", "quote_data"], Any]] = None
@@ -184,6 +185,32 @@ class RMessage(object):
         )
 
         return self._user_name
+
+
+    @property
+    def room_name(self) -> str:
+        """
+        Message sender chat room name.
+
+        Returns
+        -------
+        Chat room name.
+        """
+
+        # Break.
+        if self.room is None:
+            return
+
+        # Judged.
+        if self._room_name is not None:
+            return self._room_name
+
+        # Set.
+        self._room_name = self.rreceive.rwechat.rclient.get_contact_name(
+            self.room
+        )
+
+        return self._room_name
 
 
     @property
@@ -971,10 +998,6 @@ def is_valid(message: RMessage) -> Optional[bool]:
         - `False` : Invalid or no record.
         - `None` : Not using database.
     """
-
-    # Break.
-    if not hasattr(message.rreceive.rwechat, "rdatabase"):
-        return
 
     # Judge.
 

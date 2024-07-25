@@ -1004,7 +1004,7 @@ class RDatabase(object):
                 self.rwechat.dir_file,
                 file_md5
             )
-            self.rrdatabase_file.file.download(
+            save_path = self.rrdatabase_file.file.download(
                 file_id,
                 save_path
             )

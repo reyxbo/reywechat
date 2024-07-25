@@ -43,7 +43,7 @@ class RWeChat(object):
 
     def __init__(
         self,
-        rrdatabase: Optional[Union[RRDatabase, Dict[Literal["wechat", "file"], RRDatabase]]] = None,
+        rrdatabase: Optional[Union[RRDatabase, Dict[Literal["wechat", "file"], RRDatabase]]],
         max_receiver: int = 2,
         bandwidth_downstream: float = 5,
         bandwidth_upstream: float = 5,
@@ -90,8 +90,7 @@ class RWeChat(object):
         self.rlog = RLog(self)
         self.rreceive = RReceive(self, max_receiver, bandwidth_downstream)
         self.rsend = RSend(self, bandwidth_upstream)
-        if rrdatabase is not None:
-            self.rdatabase = RDatabase(self, rrdatabase)
+        self.rdatabase = RDatabase(self, rrdatabase)
         self.rreply = RReply(self)
         self.rexecute = RExecute(self)
         self.rschedule = RSchedule(self)

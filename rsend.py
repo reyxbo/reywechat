@@ -172,8 +172,12 @@ class RSend(object):
         """
 
         # File.
+
+        ## From file ID.
         if (file_id := params.get("file_id")) is not None:
             params["path"], params["file_name"] = self.rwechat.rdatabase._download_file(file_id)
+
+        ## Set file name.
         if (
             (path := params.get("path")) is not None
             and (file_name := params.get("file_name")) is not None
