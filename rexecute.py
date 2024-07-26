@@ -12,8 +12,7 @@
 from typing import Any, List, Dict, Literal, Callable, NoReturn
 
 from .rexception import RWeChatExecuteContinueError, RWeChatExecuteBreakError
-from .rreceive import RMessage, is_valid
-from .rwechat import RWeChat
+from .rreceive import RMessage, RReceive, is_valid
 
 
 __all__ = (
@@ -29,18 +28,18 @@ class RExecute(object):
 
     def __init__(
         self,
-        rwechat: RWeChat
+        rreceive: RReceive
     ) -> None:
         """
         Build `execute` instance.
 
         Parameters
         ----------
-        rwechat : `RWeChat` instance.
+        rreceive : `RReceive` instance.
         """
 
         # Set attribute.
-        self.rwechat = rwechat
+        self.rreceive = rreceive
         self.rules: List[Dict[Literal["executer", "level"], Any]] = []
 
         # Add handler.
@@ -89,7 +88,7 @@ class RExecute(object):
 
 
         # Add handler.
-        self.rwechat.rreceive.add_handler(handler_execute_by_rule)
+        self.rreceive.add_handler(handler_execute_by_rule)
 
         return handler_execute_by_rule
 

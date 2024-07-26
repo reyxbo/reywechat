@@ -12,9 +12,8 @@
 from typing import Any, List, Dict, Literal, Callable, NoReturn
 
 from .rexception import RWeChatReplyContinueError, RWeChatReplyBreakError
-from .rreceive import RMessage, is_valid
+from .rreceive import RMessage, RReceive, is_valid
 from .rsend import SendParam
-from .rwechat import RWeChat
 
 
 __all__ = (
@@ -30,18 +29,18 @@ class RReply(object):
 
     def __init__(
         self,
-        rwechat: RWeChat
+        rreceive: RReceive
     ) -> None:
         """
         Build `reply` instance.
 
         Parameters
         ----------
-        rwechat : `RWeChat` instance.
+        rreceive : `RReceive` instance.
         """
 
         # Set attribute.
-        self.rwechat = rwechat
+        self.rreceive = rreceive
         self.rules: List[Dict[Literal["judge", "level"], Any]] = []
 
         # Add handler.
@@ -96,13 +95,13 @@ class RReply(object):
                 if result.__class__ == dict:
                     result = [result]
                 for params in result:
-                    self.rwechat.rsend.send(**params)
+                    self.rreceive.rwechat.rsend.send(**params)
 
                 break
 
 
         # Add handler.
-        self.rwechat.rreceive.add_handler(handler_reply_by_rule)
+        self.rreceive.add_handler(handler_reply_by_rule)
 
         return handler_reply_by_rule
 
