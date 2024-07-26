@@ -110,10 +110,10 @@ class RMessage(object):
         self._is_xml: Optional[bool] = None
         self._is_app: Optional[bool] = None
         self._app_params: Optional[Dict] = None
-        self.reply_continue = self.rreceive.rwechat.rreply.continue_
-        self.reply_break = self.rreceive.rwechat.rreply.break_
-        self.execute_continue = self.rreceive.rwechat.rexecute.continue_
-        self.execute_break = self.rreceive.rwechat.rexecute.break_
+        self.reply_continue = self.rreceive.rreply.continue_
+        self.reply_break = self.rreceive.rreply.break_
+        self.execute_continue = self.rreceive.rexecute.continue_
+        self.execute_break = self.rreceive.rexecute.break_
 
 
     @property
@@ -661,6 +661,10 @@ class RReceive(object):
         bandwidth_downstream : Download bandwidth, impact receive timeout, unit Mpbs.
         """
 
+        # Import.
+        from .rexecute import RExecute
+        from .rreply import RReply
+
         # Set attribute.
         self.rwechat = rwechat
         self.max_receiver = max_receiver
@@ -668,6 +672,8 @@ class RReceive(object):
         self.queue: Queue[RMessage] = Queue()
         self.handlers: List[Callable[[RMessage], Any]] = []
         self.started: Optional[bool] = False
+        self.rreply = RReply(self)
+        self.rexecute = RExecute(self)
 
         # Start.
         self._start_callback()

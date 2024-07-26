@@ -31,4 +31,4 @@ rwrap : Decorator methods.
 from typing import Final
 
 
-__version__: Final[str] = "0.152"
+__version__: Final[str] = "0.154"

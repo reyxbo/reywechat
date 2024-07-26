@@ -44,12 +44,16 @@ class RExecute(object):
         self.rules: List[Dict[Literal["executer", "level"], Any]] = []
 
         # Add handler.
-        self._execute_by_rule()
+        self.handler = self._execute_by_rule()
 
 
-    def _execute_by_rule(self) -> None:
+    def _execute_by_rule(self) -> Callable[[RMessage], None]:
         """
         Add handler, execute message by rules.
+
+        Returns
+        -------
+        Handler.
         """
 
 
@@ -86,6 +90,8 @@ class RExecute(object):
 
         # Add handler.
         self.rwechat.rreceive.add_handler(handler_execute_by_rule)
+
+        return handler_execute_by_rule
 
 
     def add_rule(

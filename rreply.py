@@ -45,12 +45,16 @@ class RReply(object):
         self.rules: List[Dict[Literal["judge", "level"], Any]] = []
 
         # Add handler.
-        self._reply_by_rule()
+        self.handler = self._reply_by_rule()
 
 
-    def _reply_by_rule(self) -> None:
+    def _reply_by_rule(self) -> Callable[[RMessage], None]:
         """
         Add handler, reply message by rules.
+
+        Returns
+        -------
+        Handler.
         """
 
 
@@ -99,6 +103,8 @@ class RReply(object):
 
         # Add handler.
         self.rwechat.rreceive.add_handler(handler_reply_by_rule)
+
+        return handler_reply_by_rule
 
 
     def add_rule(

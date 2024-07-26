@@ -71,10 +71,8 @@ class RWeChat(object):
         # Import.
         from .rclient import RClient
         from .rdatabase import RDatabase
-        from .rexecute import RExecute
         from .rlog import RLog
         from .rreceive import RReceive
-        from .rreply import RReply
         from .rschedule import RSchedule
         from .rsend import RSend
 
@@ -91,8 +89,6 @@ class RWeChat(object):
         self.rreceive = RReceive(self, max_receiver, bandwidth_downstream)
         self.rsend = RSend(self, bandwidth_upstream)
         self.rdatabase = RDatabase(self, rrdatabase)
-        self.rreply = RReply(self)
-        self.rexecute = RExecute(self)
         self.rschedule = RSchedule(self)
 
         ## Receive.
@@ -107,9 +103,11 @@ class RWeChat(object):
         self.send_stop = self.rsend.stop
 
         ## Reply.
+        self.rreply = self.rreceive.rreply
         self.reply_add_rule = self.rreply.add_rule
 
         ## Execute.
+        self.rexecute = self.rreceive.rexecute
         self.execute_add_rule = self.rexecute.add_rule
 
         ## Schedule.
