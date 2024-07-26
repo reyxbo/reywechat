@@ -13,8 +13,10 @@ from __future__ import annotations
 from typing import Any, List, Dict, Literal, Callable, Optional
 from queue import Queue
 from json import loads as json_loads
+from bs4 import BeautifulSoup as BSBeautifulSoup
+from bs4.element import Tag as BSTag
 from reytool.rcomm import get_file_stream_time, listen_socket
-from reytool.rexception import catch_exc
+from reytool.rexception import throw, catch_exc
 from reytool.ros import RFile, RFolder, os_exists
 from reytool.rregex import search
 from reytool.rtime import sleep, wait
@@ -94,7 +96,7 @@ class RMessage(object):
         self._room_name = None
         self._is_quote: Optional[bool] = None
         self._is_quote_self: Optional[bool] = None
-        self._quote_info: Optional[Dict[Literal["text", "quote_id", "quote_type", "quote_user", "quote_user_name", "quote_data"], Any]] = None
+        self._quote_params: Optional[Dict[Literal["text", "quote_id", "quote_type", "quote_user", "quote_user_name", "quote_data"], Any]] = None
         self._is_at: Optional[bool] = None
         self._is_at_self: Optional[bool] = None
         self._is_new_user: Optional[bool] = None
@@ -105,6 +107,9 @@ class RMessage(object):
         self._change_room_name: Optional[str] = None
         self._is_kick_out_room: Optional[bool] = None
         self._is_dissolve_room: Optional[bool] = None
+        self._is_xml: Optional[bool] = None
+        self._is_app: Optional[bool] = None
+        self._app_params: Optional[Dict] = None
         self.reply_continue = self.rreceive.rwechat.rreply.continue_
         self.reply_break = self.rreceive.rwechat.rreply.break_
         self.execute_continue = self.rreceive.rwechat.rexecute.continue_
@@ -251,14 +256,10 @@ class RMessage(object):
             return self._is_quote_self
 
         # Judge.
-        if self.is_quote:
-            keyword = "<chatusr>%s</chatusr>" % self.rreceive.rwechat.rclient.login_info["id"]
-            if keyword in self.data:
-                self._is_quote_self = True
-            else:
-                self._is_quote_self = False
-        else:
-            self._is_quote_self = False
+        self._is_quote_self = (
+            self.is_quote
+            and "<chatusr>%s</chatusr>" % self.rreceive.rwechat.rclient.login_info["id"] in self.data
+        )
 
         return self._is_quote_self
 
@@ -283,8 +284,12 @@ class RMessage(object):
         """
 
         # Extracted.
-        if self._quote_info is not None:
-            return self._quote_info
+        if self._quote_params is not None:
+            return self._quote_params
+
+        # Check.
+        if not self.is_quote:
+            throw(value=self.is_quote)
 
         # Extract.
         pattern = "<title>(.+?)</title>"
@@ -299,7 +304,7 @@ class RMessage(object):
         quote_user_name = search(pattern, self.data)
         pattern = "<content>(.+?)</content>"
         quote_data = search(pattern, self.data)
-        self._quote_info = {
+        self._quote_params = {
             "text": text,
             "quote_id": quote_id,
             "quote_type": quote_type,
@@ -308,7 +313,7 @@ class RMessage(object):
             "quote_data": quote_data
         }
 
-        return self._quote_info
+        return self._quote_params
 
 
     @property
@@ -332,10 +337,7 @@ class RMessage(object):
             text = self.quote_params["text"]
         pattern = "@\w+ "
         result = search(pattern, text)
-        if result is None:
-            self._is_at = False
-        else:
-            self._is_at = True
+        self._is_at = result is not None
 
         return self._is_at
 
@@ -361,10 +363,7 @@ class RMessage(object):
             text = self.quote_params["text"]
         pattern = "@%s " % self.rreceive.rwechat.rclient.login_info["name"]
         result = search(pattern, text)
-        if result is None:
-            self._is_at_self = False
-        else:
-            self._is_at_self = True
+        self._is_at_self = result is not None
 
         return self._is_at_self
 
@@ -384,16 +383,13 @@ class RMessage(object):
             return self._is_new_user
 
         # Judge.
-        if (
+        self._is_new_user = (
             self.type == 10000
             and (
                 self.data == "以上是打招呼的内容"
                 or self.data.startswith("你已添加了")
             )
-        ):
-            self._is_new_user = True
-        else:
-            self._is_new_user = False
+        )
 
         return self._is_new_user
 
@@ -413,16 +409,13 @@ class RMessage(object):
             return self._is_new_room
 
         # Judge.
-        if (
+        self._is_new_room = (
             self.type == 10000
             and (
                 "邀请你和" in self.data[:38]
                 or "邀请你加入了群聊" in self.data[:42]
             )
-        ):
-            self._is_new_room = True
-        else:
-            self._is_new_room = False
+        )
 
         return self._is_new_room
 
@@ -442,26 +435,23 @@ class RMessage(object):
             return self._is_new_room_user
 
         # Judge.
-        if (
+        self._is_new_room_user = (
             self.type == 10000
             and "邀请\"" in self.data[:37]
             and self.data.endswith("\"加入了群聊")
-        ):
-            self._is_new_room_user = True
-        else:
-            self._is_new_room_user = False
+        )
 
         return self._is_new_room_user
 
 
     @property
-    def new_room_user_name(self) -> bool:
+    def new_room_user_name(self) -> Optional[str]:
         """
         Return new chat room user name.
 
         Returns
         -------
-        Judge result.
+        New chat room user name.
         """
 
         # Extracted.
@@ -491,25 +481,22 @@ class RMessage(object):
             return self._is_change_room_name
 
         # Judge.
-        if (
+        self._is_change_room_name = (
             self.type == 10000
             and "修改群名为“" in self.data[:40]
-        ):
-            self._is_change_room_name = True
-        else:
-            self._is_change_room_name = False
+        )
 
         return self._is_change_room_name
 
 
     @property
-    def change_room_name(self) -> bool:
+    def change_room_name(self) -> Optional[str]:
         """
         Return change chat room name.
 
         Returns
         -------
-        Judge result.
+        Change chat room name.
         """
 
         # Extracted.
@@ -521,7 +508,7 @@ class RMessage(object):
         result = search(pattern, self.data)
         self._change_room_name = result
 
-        return result
+        return self._change_room_name
 
 
     @property
@@ -539,14 +526,11 @@ class RMessage(object):
             return self._is_kick_out_room
 
         # Judge.
-        if (
+        self._is_kick_out_room = (
             self.type == 10000
             and self.data.startswith("你被")
             and self.data.endswith("移出群聊")
-        ):
-            self._is_kick_out_room = True
-        else:
-            self._is_kick_out_room = False
+        )
 
         return self._is_kick_out_room
 
@@ -566,16 +550,93 @@ class RMessage(object):
             return self._is_dissolve_room
 
         # Judge.
-        if (
+        self._is_dissolve_room = (
             self.type == 10000
             and self.data.startswith("群主")
             and self.data.endswith("已解散该群聊")
-        ):
-            self._is_dissolve_room = True
-        else:
-            self._is_dissolve_room = False
+        )
 
         return self._is_dissolve_room
+
+
+    @property
+    def is_xml(self) -> bool:
+        """
+        Whether if is XML format.
+
+        Returns
+        -------
+        Judge result.
+        """
+
+        # Judged.
+        if self._is_xml is not None:
+            return self._is_xml
+
+        # Judge.
+        self._is_xml = (
+            self.type != 1
+            and self.data.startswith("<?xml ")
+        )
+
+        return self._is_xml
+
+
+    @property
+    def is_app(self) -> bool:
+        """
+        Whether if is application share.
+
+        Returns
+        -------
+        Judge result.
+        """
+
+        # Judged.
+        if self._is_app is not None:
+            return self._is_app
+
+        # Judge.
+        self.is_app = (
+            self.type == 49
+            and self.is_xml
+            and "<appmsg " in self.data[:50]
+        )
+
+        return self.is_app
+
+
+    @property
+    def app_params(self) -> Dict:
+        """
+        Return application share parameters.
+
+        Returns
+        -------
+        Application share parameters.
+        """
+
+        # Extracted.
+        if self._app_params is not None:
+            return self._app_params
+
+        # Check.
+        if not self.is_app:
+            throw(value=self.is_app)
+
+        # Extract.
+        bs_document = BSBeautifulSoup(
+            self.data,
+            "xml"
+        )
+        bs_appmsg = bs_document.find("appmsg")
+        self._app_params = {
+            bs_element.name: bs_element.text
+            for bs_element in bs_appmsg.contents
+            if bs_element.__class__ == BSTag
+        }
+
+        return self._app_params
 
 
 class RReceive(object):
