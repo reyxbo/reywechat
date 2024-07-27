@@ -18,6 +18,7 @@ from reytool.rtime import to_time, time_to, sleep
 from reytool.rwrap import wrap_thread
 
 from .rreceive import RMessage
+from .rsend import RSendParam
 from .rwechat import RWeChat
 
 
@@ -708,22 +709,22 @@ class RDatabase(object):
 
 
         # Define.
-        def handler_to_contact_user(message: RMessage) -> None:
+        def handler_to_contact_user(rmessage: RMessage) -> None:
             """
             Write record to table `contact_user`.
 
             Parameters
             ----------
-            message : `RMessage` instance.
+            rmessage : `RMessage` instance.
             """
 
             # Add friend.
-            if message.is_new_user:
+            if rmessage.is_new_user:
 
                 ## Generate data.
-                name = self.rwechat.rclient.get_contact_name(message.user)
+                name = self.rwechat.rclient.get_contact_name(rmessage.user)
                 data = {
-                    "user_id": message.user,
+                    "user_id": rmessage.user,
                     "name": name,
                     "contact": 1
                 }
@@ -747,22 +748,22 @@ class RDatabase(object):
 
 
         # Define.
-        def handler_to_contact_room(message: RMessage) -> None:
+        def handler_to_contact_room(rmessage: RMessage) -> None:
             """
             Write record to table `contact_room`.
 
             Parameters
             ----------
-            message : `RMessage` instance.
+            rmessage : `RMessage` instance.
             """
 
             # Invite.
-            if message.is_new_room:
+            if rmessage.is_new_room:
 
                 ## Generate data.
-                name = self.rwechat.rclient.get_contact_name(message.room)
+                name = self.rwechat.rclient.get_contact_name(rmessage.room)
                 data = {
-                    "room_id": message.room,
+                    "room_id": rmessage.room,
                     "name": name,
                     "contact": 1
                 }
@@ -777,16 +778,16 @@ class RDatabase(object):
                 )
 
                 ### "contact_room_user".
-                self.update_contact_room_user(message.room)
+                self.update_contact_room_user(rmessage.room)
 
             # Modify room name.
-            elif message.is_change_room_name:
+            elif rmessage.is_change_room_name:
 
                 ## Generate data.
-                _, name = message.data.rsplit("“", 1)
+                _, name = rmessage.data.rsplit("“", 1)
                 name = name[:-1]
                 data = {
-                    "room_id": message.room,
+                    "room_id": rmessage.room,
                     "name": name,
                     "limit": 1
                 }
@@ -800,15 +801,15 @@ class RDatabase(object):
             elif (
 
                 # Kick out.
-                message.is_kick_out_room
+                rmessage.is_kick_out_room
 
                 # Dissolve.
-                or message.is_dissolve_room
+                or rmessage.is_dissolve_room
             ):
 
                 ## Generate data.
                 data = {
-                    "room_id": message.room,
+                    "room_id": rmessage.room,
                     "contact": 0,
                     "limit": 1
                 }
@@ -831,23 +832,23 @@ class RDatabase(object):
 
 
         # Define.
-        def handler_to_contact_room_user(message: RMessage) -> None:
+        def handler_to_contact_room_user(rmessage: RMessage) -> None:
             """
             Write record to table `contact_room_user`.
 
             Parameters
             ----------
-            message : `RMessage` instance.
+            rmessage : `RMessage` instance.
             """
 
             # Add memeber.
-            if message.is_new_room_user:
+            if rmessage.is_new_room_user:
 
                 ## Sleep.
                 sleep(1)
 
                 ## Insert.
-                self.update_contact_room_user(message.room)
+                self.update_contact_room_user(rmessage.room)
 
 
         # Add handler.
@@ -861,35 +862,35 @@ class RDatabase(object):
 
 
         # Define.
-        def handler_to_message_receive(message: RMessage) -> None:
+        def handler_to_message_receive(rmessage: RMessage) -> None:
             """
             Write record to table `message_receive`.
 
             Parameters
             ----------
-            message : `RMessage` instance.
+            rmessage : `RMessage` instance.
             """
 
             # Upload file.
-            if message.file is None:
+            if rmessage.file is None:
                 file_id = None
             else:
                 file_id = self.rrdatabase_file.file.upload(
-                    message.file["path"],
-                    message.file["name"],
+                    rmessage.file["path"],
+                    rmessage.file["name"],
                     "WeChat"
                 )
 
             # Generate data.
-            message_time_obj = to_time(message.time)
+            message_time_obj = to_time(rmessage.time)
             message_time_str = time_to(message_time_obj)
             data = {
                 "message_time": message_time_str,
-                "message_id": message.id,
-                "room_id": message.room,
-                "user_id": message.user,
-                "type": message.type,
-                "data": message.data,
+                "message_id": rmessage.id,
+                "room_id": rmessage.room,
+                "user_id": rmessage.user,
+                "type": rmessage.type,
+                "data": rmessage.data,
                 "file_id": file_id
             }
 
@@ -912,30 +913,23 @@ class RDatabase(object):
 
 
         # Define.
-        def handler_to_message_send(
-            params: Dict,
-            success: bool
-        ) -> None:
+        def handler_to_message_send(rsparam: RSendParam) -> None:
             """
             Write record to table `message_send`.
 
             Parameters
             ----------
-            params : Send parameters.
-            success : Whether the sending was successful.
+            rsparam : `RSendParams` instance.
             """
 
             # Break.
-            is_from_db: Optional[bool] = params.get("is_from_db")
-            if is_from_db is True: return
+            if rsparam.send_id is not None: return
 
             # Generate data.
-            send_type = params["send_type"]
-            receive_id = params["receive_id"]
-            path = params.get("path")
+            path = rsparam.params.get("path")
             params = {
                 key: value
-                for key, value in params.items()
+                for key, value in rsparam.params.items()
                 if key not in (
                     "send_type",
                     "receive_id",
@@ -951,14 +945,14 @@ class RDatabase(object):
                 )
                 params["file_id"] = file_id
 
-            if success:
+            if rsparam.exc_reports == []:
                 status = 2
             else:
                 status = 3
             data = {
                 "status": status,
-                "type": send_type,
-                "receive_id": receive_id,
+                "type": rsparam.send_type,
+                "receive_id": rsparam.receive_id,
                 "parameter": params
             }
 
@@ -1060,10 +1054,9 @@ class RDatabase(object):
             send_ids=send_ids
         )
 
-        # Put.
-        for row in table:
-            parameter: Dict = json_loads(row["parameter"])
-            parameter["is_from_db"] = True
+        # Send.
+        for send_id, type_, receive_id, parameter in table:
+            parameter: Dict = json_loads(parameter)
 
             ## Save file.
             file_id = parameter.get("file_id")
@@ -1073,9 +1066,9 @@ class RDatabase(object):
                 parameter["file_name"] = file_name
 
             self.rwechat.send(
-                row["type"],
-                row["receive_id"],
-                send_id=row["send_id"],
+                type_,
+                receive_id,
+                send_id,
                 **parameter
             )
 
@@ -1091,31 +1084,26 @@ class RDatabase(object):
 
 
         # Define.
-        def handler_update_send_status(
-            params: Dict,
-            success: bool
-        ) -> None:
+        def handler_update_send_status(rsparam: RSendParam) -> None:
             """
             Update field `status` of table `message_send`.
 
             Parameters
             ----------
-            params : Send parameters.
-            success : Whether the sending was successful.
+            rsparam : `RSendParams` instance.
             """
 
             # Break.
-            send_id = params.get("send_id")
-            if send_id is None:
+            if rsparam.send_id is None:
                 return
 
             # Get parameter.
-            if success:
+            if rsparam.exc_reports == []:
                 status = 2
             else:
                 status = 3
             data = {
-                "send_id": send_id,
+                "send_id": rsparam.send_id,
                 "status": status,
                 "limit": 1
             }
@@ -1138,3 +1126,59 @@ class RDatabase(object):
 
             # Wait.
             sleep(1)
+
+
+def is_valid(rmessage: RMessage) -> bool:
+    """
+    Judge if is valid user or chat room from database.
+
+    Parameters
+    ----------
+    rmessage : `RMessage` instance.
+
+    Returns
+    -------
+    Judgment result.
+        - `True` : Valid.
+        - `False` : Invalid or no record.
+    """
+
+    # Judge.
+
+    ## User.
+    if rmessage.room is None:
+        result = rmessage.rreceive.rwechat.rdatabase.rrdatabase_wechat.execute_select(
+            ("wechat", "contact_user"),
+            ["valid"],
+            "`user_id` = :user_id",
+            limit=1,
+            user_id=rmessage.user
+        )
+
+    ## Room.
+    else:
+        sql = (
+        "SELECT (\n"
+        "    SELECT `valid`\n"
+        "    FROM `wechat`.`contact_room_user`\n"
+        "    WHERE `room_id` = :room_id AND `user_id` = :user_id\n"
+        "    LIMIT 1\n"
+        ") AS `valid`\n"
+        "FROM (\n"
+        "    SELECT `valid`\n"
+        "    FROM `wechat`.`contact_room`\n"
+        "    WHERE `room_id` = :room_id\n"
+        "    LIMIT 1\n"
+        ") AS `a`\n"
+        "WHERE `valid` = 1"
+        )
+        result = rmessage.rreceive.rwechat.rdatabase.rrdatabase_wechat.execute(
+            sql,
+            room_id=rmessage.room,
+            user_id=rmessage.user
+        )
+
+    valid = result.scalar()
+    judge = valid == 1
+
+    return judge

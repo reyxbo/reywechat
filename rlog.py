@@ -14,6 +14,7 @@ from os.path import join as os_join
 from reytool.rlog import RLog as RRLog
 
 from .rreceive import RMessage
+from .rsend import RSendParam
 from .rwechat import RWeChat
 
 
@@ -115,40 +116,28 @@ class RLog(object):
 
     def log_receive(
         self,
-        message: RMessage,
-        exc_report: Optional[Union[str, List[str]]] = None
+        rmessage: RMessage
     ) -> None:
         """
         Log receive message.
 
         Parameters
         ----------
-        message : `RMessage` instance.
-        exc_report : Exception report.
-            - `str` : One exception report.
-            - `List[str]` : Multiple exception reports.
+        rmessage : `RMessage` instance.
         """
 
-        # Handle parameter.
-        if exc_report is None:
-            exc_reports = []
-        elif exc_report.__class__ == str:
-            exc_reports = [exc_report]
-        else:
-            exc_reports = exc_report
-
         # Generate record.
-        if message.room is None:
-            message_object = message.user
+        if rmessage.room is None:
+            message_object = rmessage.user
         else:
-            message_object = message.room
+            message_object = rmessage.room
         content_print = "RECEIVE | %-20s" % message_object
-        content_file = "RECEIVE | %s" % message.params
-        if exc_reports == []:
+        content_file = "RECEIVE | %s" % rmessage.params
+        if rmessage.exc_reports == []:
             level = self.rrlog.INFO
         else:
             level = self.rrlog.ERROR
-            exc_report = "\n".join(exc_reports)
+            exc_report = "\n".join(rmessage.exc_reports)
             content_print = "%s\n%s" % (content_print, exc_report)
             content_file = "%s\n%s" % (content_file, exc_report)
 
@@ -170,39 +159,27 @@ class RLog(object):
 
     def log_send(
         self,
-        params: Dict,
-        exc_report: Optional[Union[str, List[str]]] = None
+        rsparam: RSendParam
     ) -> None:
         """
         Log send message.
 
         Parameters
         ----------
-        params : Send parameters.
-        exc_report : Exception report.
-            - `str` : One exception report.
-            - `List[str]` : Multiple exception reports.
+        rsparam : `RSendParams` instance.
         """
 
-        # Handle parameter.
-        if exc_report is None:
-            exc_reports = []
-        elif exc_report.__class__ == str:
-            exc_reports = [exc_report]
-        else:
-            exc_reports = exc_report
-
-        # Get parameter.
-        receive_id: str = params["receive_id"]
-
         # Generate record.
-        content_print = "SEND    | %-20s" % receive_id
-        content_file = "SEND    | %s" % params
+        content_print = "SEND    | %-20s" % rsparam.receive_id
+        content_file = "SEND    | %s" % {
+            "receive_id": rsparam.receive_id,
+            **rsparam.params
+        }
         if exc_report == []:
             level = self.rrlog.INFO
         else:
             level = self.rrlog.ERROR
-            exc_report = "\n".join(exc_reports)
+            exc_report = "\n".join(rsparam.exc_reports)
             content_print = "%s\n%s" % (content_print, exc_report)
             content_file = "%s\n%s" % (content_file, exc_report)
 

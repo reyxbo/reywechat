@@ -35,6 +35,51 @@ __all__ = (
 SendParam = Optional[Union[Dict, List[Dict]]]
 
 
+class RSendParam(object):
+    """
+    Rey's `send parameters` type.
+    """
+
+
+    def __init__(
+        self,
+        rsend: RSend,
+        send_type: Literal[0, 1, 2, 3, 4, 5, 6, 7],
+        receive_id: str,
+        params: Dict,
+        send_id: Optional[int]
+    ) -> None:
+        """
+        Build `send parameters` instance.
+
+        Parameters
+        ----------
+        rsend : `RSend` instance.
+        send_type : Send type.
+            - `Literal[0]` : Send text message, use `RClient.send_text` method.
+            - `Literal[1]` : Send text message with `@`, use `RClient.send_text_at` method.
+            - `Literal[2]` : Send file message, use `RClient.send_file` method.
+            - `Literal[3]` : Send image message, use `RClient.send_image` method.
+            - `Literal[4]` : Send emotion message, use `RClient.send_emotion` method.
+            - `Literal[5]` : Send pat message, use `RClient.send_pat` method.
+            - `Literal[6]` : Send public account message, use `RClient.send_public` method.
+            - `Literal[7]` : Forward message, use `RClient.send_forward` method.
+
+        receive_id : User ID or chat room ID of receive message.
+        params : Send parameters.
+        send_id : Send ID of database.
+        """
+
+        # Set attribute.
+        self.rsend = rsend
+        self.send_type = send_type
+        self.receive_id = receive_id
+        self.params = params
+        self.send_id = send_id
+        self.cache_path: Optional[str] = None
+        self.exc_reports: List[str] = []
+
+
 class RSend(object):
     """
     Rey's `send` type.
@@ -58,8 +103,8 @@ class RSend(object):
         # Set attribute.
         self.rwechat = rwechat
         self.bandwidth_upstream = bandwidth_upstream
-        self.queue: Queue[Dict] = Queue()
-        self.handlers: List[Callable[[Dict, bool], Any]] = []
+        self.queue: Queue[RSendParam] = Queue()
+        self.handlers: List[Callable[[RSendParam], Any]] = []
         self.started: Optional[bool] = False
 
         # Start.
@@ -86,16 +131,19 @@ class RSend(object):
                 break
 
             ## Send.
-            exc_reports: List[str] = []
-            params = self.queue.get()
+            rsparam = self.queue.get()
             try:
-                self._send(params)
+                self._send(rsparam)
+
+            ## Exception.
             except:
-                send_success = False
+
+                # Catch exception.
                 exc_report, *_ = catch_exc()
-                exc_reports.append(exc_report)
-            else:
-                send_success = True
+
+                # Save.
+                rsparam.exc_reports.append(exc_report)
+
 
             ## Handle.
 
@@ -109,20 +157,19 @@ class RSend(object):
                 exc_report, *_ = catch_exc()
 
                 # Save.
-                exc_reports.append(exc_report)
+                rsparam.exc_reports.append(exc_report)
 
 
             ### Loop.
             for handler in self.handlers:
                 wrap_exc(
                     handler,
-                    params,
-                    send_success,
+                    rsparam,
                     _handler=handle_handler_exception
                 )
 
             ## Log.
-            self.rwechat.rlog.log_send(params, exc_reports)
+            self.rwechat.rlog.log_send(rsparam)
 
 
     def _delete_cache_file(self) -> None:
@@ -132,25 +179,20 @@ class RSend(object):
 
 
         # Define.
-        def handler_delete_cache_file(
-            params: Dict,
-            success: bool
-        ) -> None:
+        def handler_delete_cache_file(rsparam: RSendParam) -> None:
             """
             Delete cache file.
 
             Parameters
             ----------
-            params : Send parameters.
-            success : Whether the sending was successful.
+            rsparam : `RSendParams` instance.
             """
 
             # Break.
-            cache_path: Optional[str] = params.get("cache_path")
-            if cache_path is None: return
+            if rsparam.cache_path is None: return
 
             # Delete.
-            rfile = RFile(cache_path)
+            rfile = RFile(rsparam.cache_path)
             rfile.remove()
 
 
@@ -160,125 +202,123 @@ class RSend(object):
 
     def _send(
         self,
-        params: Dict
+        rsparam: RSendParam
     ) -> None:
         """
         Send message.
 
         Parameters
         ----------
-        params : Send parameters.
-            - `Key 'file_name'` : Given file name.
+        rsparam : `RSendParams` instance.
         """
 
         # File.
 
         ## From file ID.
-        if (file_id := params.get("file_id")) is not None:
-            params["path"], params["file_name"] = self.rwechat.rdatabase._download_file(file_id)
+        if (file_id := rsparam.params.get("file_id")) is not None:
+            rsparam.params["path"], rsparam.params["file_name"] = self.rwechat.rdatabase._download_file(file_id)
 
         ## Set file name.
         if (
-            (path := params.get("path")) is not None
-            and (file_name := params.get("file_name")) is not None
+            (path := rsparam.params.get("path")) is not None
+            and (file_name := rsparam.params.get("file_name")) is not None
         ):
             rfile = RFile(path)
             copy_path = os_join(self.rwechat.dir_file, file_name)
             rfile.copy(copy_path)
-            params["cache_path"] = copy_path
+            rsparam.cache_path = copy_path
             path = copy_path
 
         # Send.
 
         ## Text.
-        if (send_type := params["send_type"]) == 0:
+        if rsparam.send_type == 0:
             self.rwechat.rclient.send_text(
-                params["receive_id"],
-                params["text"]
+                rsparam.receive_id,
+                rsparam.params["text"]
             )
 
         ## Text with "@".
-        elif send_type == 1:
+        elif rsparam.send_type == 1:
             self.rwechat.rclient.send_text_at(
-                params["receive_id"],
-                params["user_id"],
-                params["text"]
+                rsparam.receive_id,
+                rsparam.params["user_id"],
+                rsparam.params["text"]
             )
 
         ## File.
-        elif send_type == 2:
+        elif rsparam.send_type == 2:
             self.rwechat.rclient.send_file(
-                params["receive_id"],
+                rsparam.receive_id,
                 path
             )
 
         ## Image.
-        elif send_type == 3:
+        elif rsparam.send_type == 3:
             self.rwechat.rclient.send_image(
-                params["receive_id"],
+                rsparam.receive_id,
                 path
             )
 
         ## Emotion.
-        elif send_type == 4:
+        elif rsparam.send_type == 4:
             self.rwechat.rclient.send_emotion(
-                params["receive_id"],
+                rsparam.receive_id,
                 path
             )
 
         ## Pat.
-        elif send_type == 5:
+        elif rsparam.send_type == 5:
             self.rwechat.rclient.send_pat(
-                params["receive_id"],
-                params["user_id"]
+                rsparam.receive_id,
+                rsparam.params["user_id"]
             )
 
         ## Public account.
-        elif send_type == 6:
+        elif rsparam.send_type == 6:
             self.rwechat.rclient.send_public(
-                params["receive_id"],
-                params["page_url"],
-                params["title"],
-                params["text"],
-                params["image_url"],
-                params["public_name"],
-                params["public_id"]
+                rsparam.receive_id,
+                rsparam.params["page_url"],
+                rsparam.params["title"],
+                rsparam.params["text"],
+                rsparam.params["image_url"],
+                rsparam.params["public_name"],
+                rsparam.params["public_id"]
             )
 
         ## Forward.
-        elif send_type == 7:
+        elif rsparam.send_type == 7:
             self.rwechat.rclient.send_forward(
-                params["receive_id"],
-                params["message_id"]
+                rsparam.receive_id,
+                rsparam.params["message_id"]
             )
 
         ## Throw exception.
         else:
-            throw(ValueError, send_type)
+            throw(ValueError, rsparam.send_type)
 
         # Wait.
-        self._wait(params)
+        self._wait(rsparam)
 
 
     def _wait(
         self,
-        params: Dict
+        rsparam: RSendParam
     ) -> None:
         """
         Waiting after sending.
 
         Parameters
         ----------
-        params : Send parameters.
+        rsparam : `RSendParams` instance.
         """
 
         # Get parameter.
-        send_type: str = params["send_type"]
         seconds = randn(0.8, 1.2, precision=2)
 
         ## File.
-        if send_type in (2, 3, 4):
-            stream_time = get_file_stream_time(params["path"], self.bandwidth_upstream)
+        if rsparam.send_type in (2, 3, 4):
+            stream_time = get_file_stream_time(rsparam.params["path"], self.bandwidth_upstream)
             if stream_time > seconds:
                 seconds = stream_time
 
@@ -291,6 +331,8 @@ class RSend(object):
         self,
         send_type: Literal[0],
         receive_id: str,
+        send_id: Optional[int] = None,
+        *,
         text: str
     ) -> None: ...
 
@@ -299,6 +341,8 @@ class RSend(object):
         self,
         send_type: Literal[1],
         receive_id: str,
+        send_id: Optional[int] = None,
+        *,
         user_id: str | List[str],
         text: str
     ) -> None: ...
@@ -308,6 +352,8 @@ class RSend(object):
         self,
         send_type: Literal[2, 3, 4],
         receive_id: str,
+        send_id: Optional[int] = None,
+        *,
         path: str,
         file_name: Optional[str] = None
     ) -> None: ...
@@ -317,6 +363,8 @@ class RSend(object):
         self,
         send_type: Literal[5],
         receive_id: str,
+        send_id: Optional[int] = None,
+        *,
         user_id: str
     ) -> None: ...
 
@@ -325,6 +373,8 @@ class RSend(object):
         self,
         send_type: Literal[6],
         receive_id: str,
+        send_id: Optional[int] = None,
+        *,
         page_url: str,
         title: str,
         text: Optional[str] = None,
@@ -338,6 +388,8 @@ class RSend(object):
         self,
         send_type: Literal[7],
         receive_id: str,
+        send_id: Optional[int] = None,
+        *,
         message_id: str
     ) -> None: ...
 
@@ -346,6 +398,7 @@ class RSend(object):
         self,
         send_type: Any,
         receive_id: str,
+        send_id: Optional[int] = None,
         **params: Any
     ) -> NoReturn: ...
 
@@ -353,6 +406,7 @@ class RSend(object):
         self,
         send_type: Literal[0, 1, 2, 3, 4, 5, 6, 7],
         receive_id: str,
+        send_id: Optional[int] = None,
         **params: Any
     ) -> None:
         """
@@ -371,6 +425,7 @@ class RSend(object):
             - `Literal[7]` : Forward message, use `RClient.send_forward` method.
 
         receive_id : User ID or chat room ID of receive message.
+        send_id : Send ID of database.
         params : Send parameters.
             - `Callable` : Use execute return value.
             - `Any` : Use this value.
@@ -383,28 +438,33 @@ class RSend(object):
 
         # Handle parameters.
         for key, value in params.items():
+
+            ## Callable.
             if callable(value):
                 params[key] = value()
-        params = {
-            "send_type": send_type,
-            "receive_id": receive_id,
-            **params
-        }
+
+        rsparam = RSendParam(
+            self,
+            send_type,
+            receive_id,
+            params,
+            send_id
+        )
 
         # Put.
-        self.queue.put(params)
+        self.queue.put(rsparam)
 
 
     def add_handler(
         self,
-        handler: Callable[[Dict, bool], Any]
+        handler: Callable[[RSendParam], Any]
     ) -> None:
         """
         Add send handler function.
 
         Parameters
         ----------
-        handler : Handler method, input parameters are send parameters and whether the sending was successful.
+        handler : Handler method, input parameter is `RSendParam` instance.
         """
 
         # Add.

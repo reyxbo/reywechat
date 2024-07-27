@@ -10,9 +10,11 @@
 
 
 from typing import Any, List, Dict, Literal, Callable, NoReturn
+from reytool.rexception import catch_exc
 
+from .rdatabase import is_valid
 from .rexception import RWeChatExecuteContinueError, RWeChatExecuteBreakError
-from .rreceive import RMessage, RReceive, is_valid
+from .rreceive import RMessage, RReceive
 
 
 __all__ = (
@@ -57,17 +59,17 @@ class RExecute(object):
 
 
         # Define.
-        def handler_execute_by_rule(message: RMessage) -> None:
+        def handler_execute_by_rule(rmessage: RMessage) -> None:
             """
             Execute message by rules.
 
             Parameters
             ----------
-            message : `RMessage` instance.
+            rmessage : `RMessage` instance.
             """
 
             # Valid.
-            if is_valid(message) is False:
+            if is_valid(rmessage) is False:
                 return
 
             # Loop.
@@ -76,7 +78,7 @@ class RExecute(object):
 
                 # Execute.
                 try:
-                    executer(message)
+                    executer(rmessage)
 
                 # Continue.
                 except RWeChatExecuteContinueError:
@@ -85,6 +87,15 @@ class RExecute(object):
                 # Break.
                 except RWeChatExecuteBreakError:
                     break
+
+                # Exception.
+                except:
+
+                    ## Catch exception.
+                    exc_report, *_ = catch_exc()
+
+                    ## Save.
+                    rmessage.exc_reports.append(exc_report)
 
 
         # Add handler.

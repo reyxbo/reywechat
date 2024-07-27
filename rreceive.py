@@ -28,8 +28,7 @@ from .rwechat import RWeChat
 
 __all__ = (
     "RMessage",
-    "RReceive",
-    "is_valid"
+    "RReceive"
 )
 
 
@@ -114,6 +113,7 @@ class RMessage(object):
         self.reply_break = self.rreceive.rreply.break_
         self.execute_continue = self.rreceive.rexecute.continue_
         self.execute_break = self.rreceive.rexecute.break_
+        self.exc_reports: List[str] = []
 
 
     @property
@@ -709,7 +709,7 @@ class RReceive(object):
             if "msgId" not in data: return
 
             # Extract.
-            message = RMessage(
+            rmessage = RMessage(
                 self,
                 data["createTime"],
                 data["msgId"],
@@ -721,7 +721,7 @@ class RReceive(object):
             )
 
             # Put.
-            self.queue.put(message)
+            self.queue.put(rmessage)
 
 
         # Listen socket.
@@ -747,17 +747,16 @@ class RReceive(object):
 
 
         # Define.
-        def handles(message: RMessage) -> None:
+        def handles(rmessage: RMessage) -> None:
             """
             Use handlers to handle message.
 
             Parameters
             ----------
-            message : `RMessage` instance.
+            rmessage : `RMessage` instance.
             """
 
             # Set parameter.
-            exc_reports: List[str] = []
             handlers = [
                 self._handler_room,
                 self._handler_file,
@@ -776,22 +775,19 @@ class RReceive(object):
                 exc_report, *_ = catch_exc()
 
                 # Save.
-                exc_reports.append(exc_report)
+                rmessage.exc_reports.append(exc_report)
 
 
             ## Loop.
             for handler in handlers:
                 wrap_exc(
                     handler,
-                    message,
+                    rmessage,
                     _handler=handle_handler_exception
                 )
 
             # Log.
-            self.rwechat.rlog.log_receive(
-                message,
-                exc_reports
-            )
+            self.rwechat.rlog.log_receive(rmessage)
 
 
         # Thread pool.
@@ -813,8 +809,8 @@ class RReceive(object):
                 break
 
             ## Submit.
-            message = self.queue.get()
-            thread_pool.one(message)
+            rmessage = self.queue.get()
+            thread_pool.one(rmessage)
 
 
     def add_handler(
@@ -835,7 +831,7 @@ class RReceive(object):
 
     def _handler_room(
         self,
-        message: RMessage
+        rmessage: RMessage
     ) -> None:
         """
         Handle room message.
@@ -843,24 +839,24 @@ class RReceive(object):
 
         # Break.
         if (
-            message.user.__class__ != str
-            or not message.user.endswith("chatroom")
+            rmessage.user.__class__ != str
+            or not rmessage.user.endswith("chatroom")
         ):
             return
 
         # Set attribute.
-        message.room = message.user
-        if ":\n" in message.data:
-            user, data = message.data.split(":\n", 1)
-            message.user = user
-            message.data = data
+        rmessage.room = rmessage.user
+        if ":\n" in rmessage.data:
+            user, data = rmessage.data.split(":\n", 1)
+            rmessage.user = user
+            rmessage.data = data
         else:
-            message.user = None
+            rmessage.user = None
 
 
     def _handler_file(
         self,
-        message: RMessage
+        rmessage: RMessage
     ) -> None:
         """
         Handle file message.
@@ -871,12 +867,12 @@ class RReceive(object):
         generate_path = None
 
         ## Image.
-        if message.type == 3:
+        if rmessage.type == 3:
 
             ### Get attribute.
-            file_name = f"{message.id}.jpg"
+            file_name = f"{rmessage.id}.jpg"
             pattern = "length=\"(\d+)\".*?md5=\"([\da-f]{32})\""
-            file_size, file_md5 = search(pattern, message.data)
+            file_size, file_md5 = search(pattern, rmessage.data)
             file_size = int(file_size)
 
             ### Exist.
@@ -885,40 +881,40 @@ class RReceive(object):
 
             ### Generate.
             if search_path is None:
-                self.rwechat.rclient.download_file(message.id)
+                self.rwechat.rclient.download_file(rmessage.id)
                 generate_path = "%swxhelper/image/%s.dat" % (
                     self.rwechat.rclient.login_info["account_data_path"],
-                    message.id
+                    rmessage.id
                 )
 
         ## Voice.
-        elif message.type == 34:
+        elif rmessage.type == 34:
 
             ### Get attribute.
-            file_name = f"{message.id}.amr"
+            file_name = f"{rmessage.id}.amr"
             pattern = "length=\"(\d+)\""
-            file_size = int(search(pattern, message.data))
+            file_size = int(search(pattern, rmessage.data))
             file_md5 = None
 
             ### Generate.
             self.rwechat.rclient.download_voice(
-                message.id,
+                rmessage.id,
                 self.rwechat.dir_file
             )
             generate_path = "%s/%s.amr" % (
                 self.rwechat.dir_file,
-                message.id
+                rmessage.id
             )
 
         ## Video.
-        elif message.type == 43:
+        elif rmessage.type == 43:
 
             ### Get attribute.
-            file_name = f"{message.id}.mp4"
+            file_name = f"{rmessage.id}.mp4"
             pattern = "length=\"(\d+)\""
-            file_size = int(search(pattern, message.data))
+            file_size = int(search(pattern, rmessage.data))
             pattern = "md5=\"([\da-f]{32})\""
-            file_md5 = search(pattern, message.data)
+            file_md5 = search(pattern, rmessage.data)
 
             ### Exist.
             pattern = f"^{file_md5}$"
@@ -926,28 +922,28 @@ class RReceive(object):
 
             ### Generate.
             if search_path is None:
-                self.rwechat.rclient.download_file(message.id)
+                self.rwechat.rclient.download_file(rmessage.id)
                 generate_path = "%swxhelper/video/%s.mp4" % (
                     self.rwechat.rclient.login_info["account_data_path"],
-                    message.id
+                    rmessage.id
                 )
 
         ## Other.
-        elif message.type == 49:
+        elif rmessage.type == 49:
 
             ### Check.
             pattern = "^.+? : \[文件\](.+)$"
-            file_name = search(pattern, message.display)
+            file_name = search(pattern, rmessage.display)
             if file_name is None:
                 return
-            if "<type>6</type>" not in message.data:
+            if "<type>6</type>" not in rmessage.data:
                 return
 
             ### Get attribute.
             pattern = "<totallen>(\d+)</totallen>"
-            file_size = int(search(pattern, message.data))
+            file_size = int(search(pattern, rmessage.data))
             pattern = "<md5>([\da-f]{32})</md5>"
-            file_md5 = search(pattern, message.data)
+            file_md5 = search(pattern, rmessage.data)
 
             ### Exist.
             pattern = f"^{file_md5}$"
@@ -955,10 +951,10 @@ class RReceive(object):
 
             ### Generate.
             if search_path is None:
-                self.rwechat.rclient.download_file(message.id)
+                self.rwechat.rclient.download_file(rmessage.id)
                 generate_path = "%swxhelper/file/%s_%s" % (
                     self.rwechat.rclient.login_info["account_data_path"],
-                    message.id,
+                    rmessage.id,
                     file_name
                 )
 
@@ -1008,7 +1004,7 @@ class RReceive(object):
             "md5": file_md5,
             "size": file_size
         }
-        message.file = file
+        rmessage.file = file
 
 
     def start(self) -> None:
@@ -1048,44 +1044,3 @@ class RReceive(object):
 
 
     __del__ = end
-
-
-def is_valid(message: RMessage) -> Optional[bool]:
-    """
-    Judge if is valid user or chat room from database.
-
-    Parameters
-    ----------
-    message : `RMessage` instance.
-
-    Returns
-    -------
-    Judgment result.
-        - `True` : Valid.
-        - `False` : Invalid or no record.
-        - `None` : Not using database.
-    """
-
-    # Judge.
-
-    ## User.
-    if message.room is None:
-        judge = message.rreceive.rwechat.rdatabase.rrdatabase_wechat.execute_exist(
-            ("wechat", "contact_user"),
-            "`user_id` = :user_id AND `valid` = 1",
-            user_id=message.user
-        )
-
-    ## Room.
-    else:
-        judge = message.rreceive.rwechat.rdatabase.rrdatabase_wechat.execute_exist(
-            ("wechat", "contact_room"),
-            "`room_id` = :room_id AND `valid` = 1",
-            room_id=message.room
-        )
-
-    # Convert.
-    if judge is None:
-        judge = False
-
-    return judge

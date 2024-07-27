@@ -10,9 +10,11 @@
 
 
 from typing import Any, List, Dict, Literal, Callable, NoReturn
+from reytool.rexception import catch_exc
 
+from .rdatabase import is_valid
 from .rexception import RWeChatReplyContinueError, RWeChatReplyBreakError
-from .rreceive import RMessage, RReceive, is_valid
+from .rreceive import RMessage, RReceive
 from .rsend import SendParam
 
 
@@ -58,17 +60,17 @@ class RReply(object):
 
 
         # Define.
-        def handler_reply_by_rule(message: RMessage) -> None:
+        def handler_reply_by_rule(rmessage: RMessage) -> None:
             """
             Reply message by rules.
 
             Parameters
             ----------
-            message : `RMessage` instance.
+            rmessage : `RMessage` instance.
             """
 
             # Valid.
-            if is_valid(message) is False:
+            if is_valid(rmessage) is False:
                 return
 
             # Loop.
@@ -77,7 +79,7 @@ class RReply(object):
 
                 # Judge.
                 try:
-                    result = judge(message)
+                    result = judge(rmessage)
 
                 # Continue.
                 except RWeChatReplyContinueError:
@@ -86,6 +88,15 @@ class RReply(object):
                 # Break.
                 except RWeChatReplyBreakError:
                     break
+
+                # Exception.
+                except:
+
+                    ## Catch exception.
+                    exc_report, *_ = catch_exc()
+
+                    ## Save.
+                    rmessage.exc_reports.append(exc_report)
 
                 # Fail.
                 if result is None:
