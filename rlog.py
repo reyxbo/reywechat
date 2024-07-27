@@ -175,7 +175,7 @@ class RLog(object):
             "receive_id": rsparam.receive_id,
             **rsparam.params
         }
-        if exc_report == []:
+        if rsparam.exc_reports == []:
             level = self.rrlog.INFO
         else:
             level = self.rrlog.ERROR
