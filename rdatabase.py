@@ -1055,7 +1055,8 @@ class RDatabase(object):
         )
 
         # Send.
-        for send_id, type_, receive_id, parameter in table:
+        for row in table:
+            send_id, type_, receive_id, parameter = row.values()
             parameter: Dict = json_loads(parameter)
 
             ## Save file.
