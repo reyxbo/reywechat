@@ -404,12 +404,6 @@ class RSend(object):
     @overload
     def send(
         self,
-        rsparam: RSendParam
-    ) -> None: ...
-
-    @overload
-    def send(
-        self,
         send_type: Any,
         receive_id: str,
         send_id: Optional[int] = None,
@@ -421,7 +415,6 @@ class RSend(object):
         send_type: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7]] = None,
         receive_id: Optional[str] = None,
         send_id: Optional[int] = None,
-        rsparam: Optional[RSendParam] = None,
         **params: Any
     ) -> None:
         """
@@ -441,27 +434,23 @@ class RSend(object):
 
         receive_id : User ID or chat room ID of receive message.
         send_id : Send ID of database.
-        rsparam : `RSendParam` instance.
         params : Send parameters.
             - `Callable` : Use execute return value.
             - `Any` : Use this value.
                 * `Key 'file_name'` : Given file name.
         """
 
-        # Get parameter.
-        if rsparam is None:
+        # Check.
+        if send_type not in (0, 1, 2, 3, 4, 5, 6, 7):
+            throw(ValueError, send_type)
 
-            # Check.
-            if send_type not in (0, 1, 2, 3, 4, 5, 6, 7):
-                throw(ValueError, send_type)
-
-            rsparam = RSendParam(
-                self,
-                send_type,
-                receive_id,
-                params,
-                send_id
-            )
+        rsparam = RSendParam(
+            self,
+            send_type,
+            receive_id,
+            params,
+            send_id
+        )
 
         # Put.
         self.queue.put(rsparam)
