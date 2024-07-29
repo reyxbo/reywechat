@@ -26,13 +26,9 @@ from .rwechat import RWeChat
 
 
 __all__ = (
-    "SendParam",
+    "RSendParam",
     "RSend"
 )
-
-
-# Send parameters type.
-SendParam = Optional[Union[Dict, List[Dict]]]
 
 
 class RSendParam(object):
@@ -211,6 +207,13 @@ class RSend(object):
         ----------
         rsparam : `RSendParams` instance.
         """
+
+        # Handle parameter.
+        for key, value in rsparam.params.items():
+
+            ## Callable.
+            if callable(value):
+                rsparam.params[key] = value()
 
         # File.
 
@@ -396,6 +399,12 @@ class RSend(object):
     @overload
     def send(
         self,
+        rsparam: RSendParam
+    ) -> None: ...
+
+    @overload
+    def send(
+        self,
         send_type: Any,
         receive_id: str,
         send_id: Optional[int] = None,
@@ -404,9 +413,10 @@ class RSend(object):
 
     def send(
         self,
-        send_type: Literal[0, 1, 2, 3, 4, 5, 6, 7],
-        receive_id: str,
+        send_type: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7]] = None,
+        receive_id: Optional[str] = None,
         send_id: Optional[int] = None,
+        rsparam: Optional[RSendParam] = None,
         **params: Any
     ) -> None:
         """
@@ -426,30 +436,27 @@ class RSend(object):
 
         receive_id : User ID or chat room ID of receive message.
         send_id : Send ID of database.
+        rsparam : `RSendParam` instance.
         params : Send parameters.
             - `Callable` : Use execute return value.
             - `Any` : Use this value.
                 * `Key 'file_name'` : Given file name.
         """
 
-        # Check parameter.
-        if send_type not in (0, 1, 2, 3, 4, 5, 6, 7):
-            throw(ValueError, send_type)
+        # Get parameter.
+        if rsparam is None:
 
-        # Handle parameters.
-        for key, value in params.items():
+            # Check.
+            if send_type not in (0, 1, 2, 3, 4, 5, 6, 7):
+                throw(ValueError, send_type)
 
-            ## Callable.
-            if callable(value):
-                params[key] = value()
-
-        rsparam = RSendParam(
-            self,
-            send_type,
-            receive_id,
-            params,
-            send_id
-        )
+            rsparam = RSendParam(
+                self,
+                send_type,
+                receive_id,
+                params,
+                send_id
+            )
 
         # Put.
         self.queue.put(rsparam)

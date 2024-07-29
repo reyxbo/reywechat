@@ -10,10 +10,10 @@
 
 
 from __future__ import annotations
-from typing import Any, Dict, Literal, Callable, Union
+from typing import Any, List, Dict, Literal, Callable, Union, Optional
 from reytool.rschedule import RSchedule as RRSchedule
 
-from .rsend import SendParam
+from .rsend import RSendParam
 from .rwechat import RWeChat
 
 
@@ -92,35 +92,35 @@ class RSchedule(object):
 
     def _task(
         self,
-        task: Callable[[RSchedule], SendParam]
+        task: Callable[[RSchedule], Optional[Union[RSendParam, List[RSendParam]]]]
     ) -> None:
         """
         Schedule task.
 
         Parameters
         ----------
-        task : Function of generate send message parameters. The parameter is the `RSchedule` instance.
+        task : Function of generate `RSendParam` instance. The parameter is the `RSchedule` instance.
             - `Return None` : Not send.
-            - `Return Dict` : Send a message.
-            - `Return List[Dict]` : Send multiple messages.
+            - `Return RSendParam` : Send a message.
+            - `Return List[RSendParam]` : Send multiple messages.
         """
 
         # Get parameter.
-        params = task(self)
-        if params is None:
-            params = []
-        elif params.__class__ == dict:
-            params = [params]
+        result = task(self)
+        if result is None:
+            result = []
+        elif result.__class__ == RSendParam:
+            result = [result]
 
         # Send.
-        for item in params:
-            self.rwechat.rsend.send(**item)
+        for rsparam in result:
+            self.rwechat.rsend.send(rsparam)
 
 
     def add(
         self,
         trigger: Literal['date', 'interval', 'cron'],
-        task: Callable[[RSchedule], SendParam],
+        task: Callable[[RSchedule], Optional[Union[RSendParam, List[RSendParam]]]],
         **trigger_kwargs: Any
     ) -> None:
         """
@@ -129,10 +129,10 @@ class RSchedule(object):
         Parameters
         ----------
         trigger : Trigger type.
-        task : Function of generate send message parameters. The parameter is the `RSchedule` instance.
+        task : Function of generate `RSendParam` instance. The parameter is the `RSchedule` instance.
             - `Return None` : Not send.
-            - `Return Dict` : Send a message.
-            - `Return List[Dict]` : Send multiple messages.
+            - `Return RSendParam` : Send a message.
+            - `Return List[RSendParam]` : Send multiple messages.
 
         trigger_kwargs : Trigger keyword arguments.
         """

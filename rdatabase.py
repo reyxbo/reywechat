@@ -24,6 +24,7 @@ from .rwechat import RWeChat
 
 __all__ = (
     "RDatabase",
+    "is_valid"
 )
 
 

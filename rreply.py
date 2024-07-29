@@ -9,13 +9,13 @@
 """
 
 
-from typing import Any, List, Dict, Literal, Callable, NoReturn
+from typing import Any, List, Dict, Literal, Callable, Union, Optional, NoReturn
 from reytool.rexception import catch_exc
 
 from .rdatabase import is_valid
 from .rexception import RWeChatReplyContinueError, RWeChatReplyBreakError
 from .rreceive import RMessage, RReceive
-from .rsend import SendParam
+from .rsend import RSendParam
 
 
 __all__ = (
@@ -75,7 +75,7 @@ class RReply(object):
 
             # Loop.
             for rule in self.rules:
-                judge: Callable[[RMessage], SendParam] = rule["judge"]
+                judge: Callable[[RMessage], Optional[Union[RSendParam, List[RSendParam]]]] = rule["judge"]
 
                 # Judge.
                 try:
@@ -103,10 +103,11 @@ class RReply(object):
                     continue
 
                 # Send.
-                if result.__class__ == dict:
+                if result.__class__ == RSendParam:
                     result = [result]
-                for params in result:
-                    self.rreceive.rwechat.rsend.send(**params)
+                result: list[RSendParam]
+                for rsparam in result:
+                    self.rreceive.rwechat.rsend.send(rsparam)
 
                 break
 
@@ -119,7 +120,7 @@ class RReply(object):
 
     def add_rule(
         self,
-        judge: Callable[[RMessage], SendParam],
+        judge: Callable[[RMessage], Optional[Union[RSendParam, List[RSendParam]]]],
         level: float = 0
     ) -> None:
         """
@@ -127,7 +128,7 @@ class RReply(object):
 
         Parameters
         ----------
-        judge : Function of judgment and generate send message parameters. The parameter is the `RMessage` instance.
+        judge : Function of judgment and generate `RSendParam` instance. The parameter is the `RMessage` instance.
         When throw `RReplyBreakError` type exception, then stop executes.
             - `Return None` : Judgment failed, continue next rule.
             - `Return Dict` : Send a message and breaking judgment.
