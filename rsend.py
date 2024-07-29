@@ -27,6 +27,7 @@ from .rwechat import RWeChat
 
 __all__ = (
     "RSendParam",
+    "SendParam",
     "RSend"
 )
 
@@ -74,6 +75,10 @@ class RSendParam(object):
         self.send_id = send_id
         self.cache_path: Optional[str] = None
         self.exc_reports: List[str] = []
+
+
+# Send parameters type.
+SendParam = Optional[Union[RSendParam, List[RSendParam]]]
 
 
 class RSend(object):

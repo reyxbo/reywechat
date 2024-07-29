@@ -15,7 +15,7 @@ from reytool.rexception import catch_exc
 from .rdatabase import is_valid
 from .rexception import RWeChatReplyContinueError, RWeChatReplyBreakError
 from .rreceive import RMessage, RReceive
-from .rsend import RSendParam
+from .rsend import RSendParam, SendParam
 
 
 __all__ = (
@@ -75,7 +75,7 @@ class RReply(object):
 
             # Loop.
             for rule in self.rules:
-                judge: Callable[[RMessage], Optional[Union[RSendParam, List[RSendParam]]]] = rule["judge"]
+                judge: Callable[[RMessage], SendParam] = rule["judge"]
 
                 # Judge.
                 try:
@@ -120,7 +120,7 @@ class RReply(object):
 
     def add_rule(
         self,
-        judge: Callable[[RMessage], Optional[Union[RSendParam, List[RSendParam]]]],
+        judge: Callable[[RMessage], SendParam],
         level: float = 0
     ) -> None:
         """
