@@ -9,13 +9,14 @@
 """
 
 
-from typing import Any, List, Dict, Literal, Callable, Union, Optional, NoReturn
+from typing import Any, List, Dict, Literal, Callable, NoReturn
 from reytool.rexception import catch_exc
+from reytool.rsystem import get_stack_param
 
 from .rdatabase import is_valid
 from .rexception import RWeChatReplyContinueError, RWeChatReplyBreakError
 from .rreceive import RMessage, RReceive
-from .rsend import RSendParam, SendParam
+from .rsend import RSendParam
 
 
 __all__ = (
@@ -69,13 +70,19 @@ class RReply(object):
             rmessage : `RMessage` instance.
             """
 
-            # Valid.
+            # Check.
+
+            ## Status.
+            if rmessage.replied:
+                return
+
+            ## Valid.
             if is_valid(rmessage) is False:
                 return
 
             # Loop.
             for rule in self.rules:
-                judge: Callable[[RMessage], SendParam] = rule["judge"]
+                judge: Callable[[RMessage], Any] = rule["judge"]
 
                 # Judge.
                 try:
@@ -120,7 +127,7 @@ class RReply(object):
 
     def add_rule(
         self,
-        judge: Callable[[RMessage], SendParam],
+        judge: Callable[[RMessage], Any],
         level: float = 0
     ) -> None:
         """
@@ -128,12 +135,7 @@ class RReply(object):
 
         Parameters
         ----------
-        judge : Function of judgment and generate `RSendParam` instance. The parameter is the `RMessage` instance.
-        When throw `RReplyBreakError` type exception, then stop executes.
-            - `Return None` : Judgment failed, continue next rule.
-            - `Return Dict` : Send a message and breaking judgment.
-            - `Return List[Dict]` : Send multiple messages and breaking judgment.
-
+        judge : Function of judgment. The parameter is the `RMessage` instance. When throw `RWeChatReplyContinueError` type exception, then continue next execution. When throw `RWeChatReplyBreakError` type exception, then stop execution.
         level : Priority level, sort from large to small.
         """
 

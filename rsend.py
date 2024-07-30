@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 from typing import Any, List, Dict, Literal, Callable, Optional, Union, NoReturn, overload
+from functools import wraps as functools_wraps
 from os.path import join as os_join
 from queue import Queue
 from re import escape as re_escape
@@ -22,12 +23,12 @@ from reytool.ros import RFile
 from reytool.rtime import sleep
 from reytool.rwrap import wrap_thread, wrap_exc
 
+from .rexception import RWeChatContinueError, RWeChatBreakError
 from .rwechat import RWeChat
 
 
 __all__ = (
     "RSendParam",
-    "SendParam",
     "RSend"
 )
 
@@ -75,10 +76,6 @@ class RSendParam(object):
         self.send_id = send_id
         self.cache_path: Optional[str] = None
         self.exc_reports: List[str] = []
-
-
-# Send parameters type.
-SendParam = Optional[Union[RSendParam, List[RSendParam]]]
 
 
 class RSend(object):
@@ -506,6 +503,88 @@ class RSend(object):
         text_at = sub(pattern, text, replace)
 
         return text_at
+
+
+    def wrap_try_send(
+        self,
+        receive_id: Union[str, List[str]],
+        func: Callable
+    ) -> Callable:
+        """
+        Decorator, send exception information.
+
+        Parameters
+        ----------
+        receive_id : Receive user ID or chat room ID.
+            - `str` : An ID.
+            - `List[str]` : Multiple ID.
+
+        func : Function.
+
+        Returns
+        -------
+        Decorated function.
+        """
+
+        # Handle parameter.
+        if receive_id.__class__ == str:
+            receive_ids = [receive_id]
+        else:
+            receive_ids = receive_id
+
+        # Define.
+        @functools_wraps(func)
+        def wrap(
+            *arg: Any,
+            **kwargs: Any
+        ) -> Any:
+            """
+            Decorate.
+
+            Parameters
+            ----------
+            args : Position arguments of decorated function.
+            kwargs : Keyword arguments of decorated function.
+
+            Returns
+            -------
+            Function execution result.
+            """
+
+            # Execute.
+            try:
+                result = func(
+                    *arg,
+                    **kwargs
+                )
+            except:
+                _, _, exc_instance, _ = catch_exc()
+
+                # Report.
+                if not isinstance(
+                    exc_instance,
+                    (RWeChatContinueError, RWeChatBreakError)
+                ):
+                    text = "\n".join(
+                        [
+                            str(arg)
+                            for arg in exc_instance.args
+                        ]
+                    )
+                    for receive_id in receive_ids:
+                        self.send(
+                            0,
+                            receive_id,
+                            text=text
+                        )
+
+                # Throw exception.
+                raise exc_instance
+
+            return result
+
+
+        return wrap
 
 
     def start(self) -> None:

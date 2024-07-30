@@ -10,10 +10,10 @@
 
 
 from __future__ import annotations
-from typing import Any, List, Dict, Literal, Callable, Union, Optional
+from typing import Any, Dict, Literal, Callable, Union
 from reytool.rschedule import RSchedule as RRSchedule
 
-from .rsend import RSendParam, SendParam
+from .rsend import RSendParam
 from .rwechat import RWeChat
 
 
@@ -92,17 +92,14 @@ class RSchedule(object):
 
     def _task(
         self,
-        task: Callable[[RSchedule], SendParam]
+        task: Callable[[RSchedule], Any]
     ) -> None:
         """
         Schedule task.
 
         Parameters
         ----------
-        task : Function of generate `RSendParam` instance. The parameter is the `RSchedule` instance.
-            - `Return None` : Not send.
-            - `Return RSendParam` : Send a message.
-            - `Return List[RSendParam]` : Send multiple messages.
+        task : Function of task. The parameter is the `RSchedule` instance.
         """
 
         # Get parameter.
@@ -120,7 +117,7 @@ class RSchedule(object):
     def add(
         self,
         trigger: Literal['date', 'interval', 'cron'],
-        task: Callable[[RSchedule], SendParam],
+        task: Callable[[RSchedule], Any],
         **trigger_kwargs: Any
     ) -> None:
         """
@@ -129,11 +126,7 @@ class RSchedule(object):
         Parameters
         ----------
         trigger : Trigger type.
-        task : Function of generate `RSendParam` instance. The parameter is the `RSchedule` instance.
-            - `Return None` : Not send.
-            - `Return RSendParam` : Send a message.
-            - `Return List[RSendParam]` : Send multiple messages.
-
+        task : Function of task. The parameter is the `RSchedule` instance.
         trigger_kwargs : Trigger keyword arguments.
         """
 

@@ -10,7 +10,7 @@
 
 
 from __future__ import annotations
-from typing import Any, List, Dict, Literal, Callable, Optional
+from typing import Any, List, Dict, Literal, Callable, Optional, NoReturn, overload
 from queue import Queue
 from json import loads as json_loads
 from bs4 import BeautifulSoup as BSBeautifulSoup
@@ -19,6 +19,7 @@ from reytool.rcomm import get_file_stream_time, listen_socket
 from reytool.rexception import throw, catch_exc
 from reytool.ros import RFile, RFolder, os_exists
 from reytool.rregex import search
+from reytool.rsystem import get_stack_param
 from reytool.rtime import sleep, wait
 from reytool.rwrap import wrap_thread, wrap_exc
 from reytool.rmultitask import RThreadPool
@@ -109,6 +110,8 @@ class RMessage(object):
         self._is_xml: Optional[bool] = None
         self._is_app: Optional[bool] = None
         self._app_params: Optional[Dict] = None
+        self.replied = False
+        self.reply_stack_param = None
         self.reply_continue = self.rreceive.rreply.continue_
         self.reply_break = self.rreceive.rreply.break_
         self.execute_continue = self.rreceive.rexecute.continue_
@@ -637,6 +640,111 @@ class RMessage(object):
         }
 
         return self._app_params
+
+
+    @overload
+    def send(
+        self,
+        send_type: Literal[0],
+        *,
+        text: str
+    ) -> None: ...
+
+    @overload
+    def send(
+        self,
+        send_type: Literal[1],
+        *,
+        user_id: str | List[str],
+        text: str
+    ) -> None: ...
+
+    @overload
+    def send(
+        self,
+        send_type: Literal[2, 3, 4],
+        *,
+        path: str,
+        file_name: Optional[str] = None
+    ) -> None: ...
+
+    @overload
+    def send(
+        self,
+        send_type: Literal[5],
+        *,
+        user_id: str
+    ) -> None: ...
+
+    @overload
+    def send(
+        self,
+        send_type: Literal[6],
+        *,
+        page_url: str,
+        title: str,
+        text: Optional[str] = None,
+        image_url: Optional[str] = None,
+        public_name: Optional[str] = None,
+        public_id: Optional[str] = None
+    ) -> None: ...
+
+    @overload
+    def send(
+        self,
+        send_type: Literal[7],
+        *,
+        message_id: str
+    ) -> None: ...
+
+    @overload
+    def send(
+        self,
+        send_type: Any,
+        **params: Any
+    ) -> NoReturn: ...
+
+    def reply(
+        self,
+        send_type: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7]] = None,
+        **params: Any
+    ) -> None:
+        """
+        Send reply message.
+
+        Parameters
+        ----------
+        send_type : Send type.
+            - `Literal[0]` : Send text message, use `RClient.send_text` method.
+            - `Literal[1]` : Send text message with `@`, use `RClient.send_text_at` method.
+            - `Literal[2]` : Send file message, use `RClient.send_file` method.
+            - `Literal[3]` : Send image message, use `RClient.send_image` method.
+            - `Literal[4]` : Send emotion message, use `RClient.send_emotion` method.
+            - `Literal[5]` : Send pat message, use `RClient.send_pat` method.
+            - `Literal[6]` : Send public account message, use `RClient.send_public` method.
+            - `Literal[7]` : Forward message, use `RClient.send_forward` method.
+
+        params : Send parameters.
+            - `Callable` : Use execute return value.
+            - `Any` : Use this value.
+                * `Key 'file_name'` : Given file name.
+        """
+
+        # Get parameter.
+        if self.room is None:
+            receive_id = self.user
+        else:
+            receive_id = self.room
+
+        # Stack parameter.
+        self.reply_stack_param = get_stack_param()
+
+        # Send.
+        self.rreceive.rwechat.rsend.send(
+            send_type,
+            receive_id=receive_id
+            **params
+        )
 
 
 class RReceive(object):
