@@ -558,7 +558,7 @@ class RSend(object):
                     **kwargs
                 )
             except:
-                _, _, exc_instance, _ = catch_exc()
+                *_, exc_instance, _ = catch_exc()
 
                 # Report.
                 if not isinstance(
