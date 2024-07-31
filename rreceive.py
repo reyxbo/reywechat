@@ -19,7 +19,6 @@ from reytool.rcomm import get_file_stream_time, listen_socket
 from reytool.rexception import throw, catch_exc
 from reytool.ros import RFile, RFolder, os_exists
 from reytool.rregex import search
-from reytool.rsystem import get_stack_param
 from reytool.rtime import sleep, wait
 from reytool.rwrap import wrap_thread, wrap_exc
 from reytool.rmultitask import RThreadPool
