@@ -73,7 +73,7 @@ class RReply(object):
 
                 # Judge.
                 try:
-                    result = judge(rmessage)
+                    judge(rmessage)
 
                 # Continue.
                 except RWeChatReplyContinueError:
