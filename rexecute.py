@@ -68,7 +68,7 @@ class RExecute(object):
             rmessage : `RMessage` instance.
             """
 
-            # Valid.
+            # Check.
             if is_valid(rmessage) is False:
                 return
 

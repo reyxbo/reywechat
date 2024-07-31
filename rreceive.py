@@ -111,7 +111,6 @@ class RMessage(object):
         self._is_app: Optional[bool] = None
         self._app_params: Optional[Dict] = None
         self.replied = False
-        self.reply_stack_param = None
         self.reply_continue = self.rreceive.rreply.continue_
         self.reply_break = self.rreceive.rreply.break_
         self.execute_continue = self.rreceive.rexecute.continue_
@@ -736,13 +735,13 @@ class RMessage(object):
         else:
             receive_id = self.room
 
-        # Stack parameter.
-        self.reply_stack_param = get_stack_param()
+        # Status.
+        self.replied = True
 
         # Send.
         self.rreceive.rwechat.rsend.send(
             send_type,
-            receive_id=receive_id
+            receive_id=receive_id,
             **params
         )
 

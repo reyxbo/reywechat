@@ -71,12 +71,6 @@ class RReply(object):
             """
 
             # Check.
-
-            ## Status.
-            if rmessage.replied:
-                return
-
-            ## Valid.
             if is_valid(rmessage) is False:
                 return
 
@@ -105,18 +99,9 @@ class RReply(object):
                     ## Save.
                     rmessage.exc_reports.append(exc_report)
 
-                # Fail.
-                if result is None:
-                    continue
-
-                # Send.
-                if result.__class__ == RSendParam:
-                    result = [result]
-                result: list[RSendParam]
-                for rsparam in result:
-                    self.rreceive.rwechat.rsend.send(rsparam)
-
-                break
+                # Break.
+                if rmessage.replied:
+                    break
 
 
         # Add handler.

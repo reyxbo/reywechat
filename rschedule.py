@@ -90,30 +90,6 @@ class RSchedule(object):
         )
 
 
-    def _task(
-        self,
-        task: Callable[[RSchedule], Any]
-    ) -> None:
-        """
-        Schedule task.
-
-        Parameters
-        ----------
-        task : Function of task. The parameter is the `RSchedule` instance.
-        """
-
-        # Get parameter.
-        result = task(self)
-        if result is None:
-            result = []
-        elif result.__class__ == RSendParam:
-            result = [result]
-
-        # Send.
-        for rsparam in result:
-            self.rwechat.rsend.send(rsparam)
-
-
     def add(
         self,
         trigger: Literal['date', 'interval', 'cron'],
@@ -131,11 +107,11 @@ class RSchedule(object):
         """
 
         # Get parameter.
-        args = (task,)
+        args = (self,)
 
         # Add.
         self.rrschedule.add_task(
-            self._task,
+            task,
             trigger,
             args,
             **trigger_kwargs
