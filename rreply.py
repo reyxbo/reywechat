@@ -11,12 +11,9 @@
 
 from typing import Any, List, Dict, Literal, Callable, NoReturn
 from reytool.rexception import catch_exc
-from reytool.rsystem import get_stack_param
 
-from .rdatabase import is_valid
 from .rexception import RWeChatReplyContinueError, RWeChatReplyBreakError
 from .rreceive import RMessage, RReceive
-from .rsend import RSendParam
 
 
 __all__ = (
@@ -69,10 +66,6 @@ class RReply(object):
             ----------
             rmessage : `RMessage` instance.
             """
-
-            # Check.
-            if is_valid(rmessage) is False:
-                return
 
             # Loop.
             for rule in self.rules:

@@ -10,7 +10,7 @@
 
 
 from __future__ import annotations
-from typing import Any, List, Dict, Optional, Literal, Union, overload
+from typing import Any, List, Dict, Optional, Literal, Union
 from os.path import abspath as os_abspath
 from reytool.rcomm import request as reytool_request
 from reytool.rdll import inject_dll

@@ -109,6 +109,7 @@ class RMessage(object):
         self._is_xml: Optional[bool] = None
         self._is_app: Optional[bool] = None
         self._app_params: Optional[Dict] = None
+        self._valid: Optional[bool] = None
         self.replied = False
         self.reply_continue = self.rreceive.rreply.continue_
         self.reply_break = self.rreceive.rreply.break_
@@ -638,6 +639,28 @@ class RMessage(object):
         }
 
         return self._app_params
+
+
+    @property
+    def valid(self) -> bool:
+        """
+        Judge if is valid user or chat room or chat room user from database.
+
+        Returns
+        -------
+        Judgment result.
+            - `True` : Valid.
+            - `False` : Invalid or no record.
+        """
+
+        # Extracted.
+        if self._valid is not None:
+            return self._valid
+
+        # Judge.
+        self._valid = self.rreceive.rwechat.rdatabase.is_valid(self)
+
+        return self._valid
 
 
     @overload

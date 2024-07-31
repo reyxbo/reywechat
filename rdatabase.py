@@ -24,7 +24,6 @@ from .rwechat import RWeChat
 
 __all__ = (
     "RDatabase",
-    "is_valid"
 )
 
 
@@ -1130,57 +1129,60 @@ class RDatabase(object):
             sleep(1)
 
 
-def is_valid(rmessage: RMessage) -> bool:
-    """
-    Judge if is valid user or chat room from database.
+    def is_valid(
+        self,
+        rmessage: RMessage
+    ) -> bool:
+        """
+        Judge if is valid user or chat room from database.
 
-    Parameters
-    ----------
-    rmessage : `RMessage` instance.
+        Parameters
+        ----------
+        rmessage : `RMessage` instance.
 
-    Returns
-    -------
-    Judgment result.
-        - `True` : Valid.
-        - `False` : Invalid or no record.
-    """
+        Returns
+        -------
+        Judgment result.
+            - `True` : Valid.
+            - `False` : Invalid or no record.
+        """
 
-    # Judge.
+        # Judge.
 
-    ## User.
-    if rmessage.room is None:
-        result = rmessage.rreceive.rwechat.rdatabase.rrdatabase_wechat.execute_select(
-            ("wechat", "contact_user"),
-            ["valid"],
-            "`user_id` = :user_id",
-            limit=1,
-            user_id=rmessage.user
-        )
+        ## User.
+        if rmessage.room is None:
+            result = rmessage.rreceive.rwechat.rdatabase.rrdatabase_wechat.execute_select(
+                ("wechat", "contact_user"),
+                ["valid"],
+                "`user_id` = :user_id",
+                limit=1,
+                user_id=rmessage.user
+            )
 
-    ## Room.
-    else:
-        sql = (
-        "SELECT (\n"
-        "    SELECT `valid`\n"
-        "    FROM `wechat`.`contact_room_user`\n"
-        "    WHERE `room_id` = :room_id AND `user_id` = :user_id\n"
-        "    LIMIT 1\n"
-        ") AS `valid`\n"
-        "FROM (\n"
-        "    SELECT `valid`\n"
-        "    FROM `wechat`.`contact_room`\n"
-        "    WHERE `room_id` = :room_id\n"
-        "    LIMIT 1\n"
-        ") AS `a`\n"
-        "WHERE `valid` = 1"
-        )
-        result = rmessage.rreceive.rwechat.rdatabase.rrdatabase_wechat.execute(
-            sql,
-            room_id=rmessage.room,
-            user_id=rmessage.user
-        )
+        ## Room.
+        else:
+            sql = (
+            "SELECT (\n"
+            "    SELECT `valid`\n"
+            "    FROM `wechat`.`contact_room_user`\n"
+            "    WHERE `room_id` = :room_id AND `user_id` = :user_id\n"
+            "    LIMIT 1\n"
+            ") AS `valid`\n"
+            "FROM (\n"
+            "    SELECT `valid`\n"
+            "    FROM `wechat`.`contact_room`\n"
+            "    WHERE `room_id` = :room_id\n"
+            "    LIMIT 1\n"
+            ") AS `a`\n"
+            "WHERE `valid` = 1"
+            )
+            result = rmessage.rreceive.rwechat.rdatabase.rrdatabase_wechat.execute(
+                sql,
+                room_id=rmessage.room,
+                user_id=rmessage.user
+            )
 
-    valid = result.scalar()
-    judge = valid == 1
+        valid = result.scalar()
+        judge = valid == 1
 
-    return judge
+        return judge

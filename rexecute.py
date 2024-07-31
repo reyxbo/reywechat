@@ -12,7 +12,6 @@
 from typing import Any, List, Dict, Literal, Callable, NoReturn
 from reytool.rexception import catch_exc
 
-from .rdatabase import is_valid
 from .rexception import RWeChatExecuteContinueError, RWeChatExecuteBreakError
 from .rreceive import RMessage, RReceive
 
@@ -67,10 +66,6 @@ class RExecute(object):
             ----------
             rmessage : `RMessage` instance.
             """
-
-            # Check.
-            if is_valid(rmessage) is False:
-                return
 
             # Loop.
             for rule in self.rules:
