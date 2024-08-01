@@ -626,7 +626,7 @@ class RClient(object):
     def send_text_at(
         self,
         room_id: str,
-        user_id: Union[str, List[str]],
+        user_id: Union[str, List[str], Literal["notify@all"]],
         text: str
     ) -> None:
         """
@@ -636,6 +636,10 @@ class RClient(object):
         ----------
         room_id : Chat room ID of receive message.
         user_id : User ID of `@`.
+            - `str` : `@` one user.
+            - `List[str]` : `@` multiple users.
+            - `Literal["notify@all"]` : `@` all users.
+
         text : Message text.
         """
 

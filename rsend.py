@@ -348,7 +348,7 @@ class RSend(object):
         receive_id: str,
         send_id: Optional[int] = None,
         *,
-        user_id: str | List[str],
+        user_id: Union[str, List[str], Literal["notify@all"]],
         text: str
     ) -> None: ...
 
