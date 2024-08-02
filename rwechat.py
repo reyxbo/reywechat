@@ -89,6 +89,8 @@ class RWeChat(object):
         ## Client.
         self.client_version = self.rclient.client_version
         self.client_version_int = self.rclient.client_version_int
+        self.client_version_simulate = self.rclient.client_version_simulate
+        self.client_version_simulate_int = self.rclient.client_version_simulate_int
         self.client_api_port = self.rclient.client_api_port
         self.message_callback_port = self.rclient.message_callback_port
 

@@ -28,6 +28,18 @@ __all__ = (
 )
 
 
+# Set.
+_client_version_memory_offsets = (
+    61280212,
+    61372636,
+    61474056,
+    61638128,
+    61666264,
+    61674264,
+    61675784
+)
+
+
 class RClientErorr(RError):
     """
     Rey's `client exception` type.
@@ -47,15 +59,6 @@ class RClient(object):
     client_version_simulate_int: Final[int] = 1661599745
     client_api_port: Final[int] = 19088
     message_callback_port: Final[int] = 19089
-    client_version_memory_offsets = (
-        61280212,
-        61372636,
-        61474056,
-        61638128,
-        61666264,
-        61674264,
-        61675784
-    )
 
 
     def __init__(
@@ -138,7 +141,7 @@ class RClient(object):
         """
 
         # Check.
-        for offset in self.client_version_memory_offsets:
+        for offset in _client_version_memory_offsets:
             value = memory_read(
                 "WeChat.exe",
                 "WeChatWin.dll",
@@ -895,7 +898,7 @@ def simulate_client_version() -> None:
         raise RClientErorr(f"WeChat client version failed, must be '{RClient.client_version}'")
 
     # Simulate.
-    for offset in RClient.client_version_memory_offsets:
+    for offset in _client_version_memory_offsets:
         memory_write(
             "WeChat.exe",
             "WeChatWin.dll",
