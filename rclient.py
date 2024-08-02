@@ -43,6 +43,8 @@ class RClient(object):
     # Environment.
     client_version: Final[str] = "3.9.5.81"
     client_version_int: Final[int] = 1661535569
+    client_version_simulate: Final[str] = "3.10.0.1"
+    client_version_simulate_int: Final[int] = 1661599745
     client_api_port: Final[int] = 19088
     message_callback_port: Final[int] = 19089
     client_version_memory_offsets = (
@@ -142,7 +144,10 @@ class RClient(object):
                 "WeChatWin.dll",
                 offset
             )
-            if value != self.client_version_int:
+            if value not in (
+                self.client_version_int,
+                self.client_version_simulate_int
+            ):
                 return False
 
         return True
@@ -874,11 +879,8 @@ class RClient(object):
 
 def simulate_client_version() -> None:
     """
-    Simulate WeChat client version be '3.10.0.1'.
+    Simulate WeChat client version.
     """
-
-    # Set parameter.
-    simulate_version = 1661599745
 
     # Check.
 
@@ -898,5 +900,8 @@ def simulate_client_version() -> None:
             "WeChat.exe",
             "WeChatWin.dll",
             offset,
-            simulate_version
+            RClient.client_version_simulate_int
         )
+
+    # Report.
+    print(f"WeChat client version simulated be '{RClient.client_version_simulate}'")
