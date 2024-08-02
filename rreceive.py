@@ -809,7 +809,7 @@ class RReceive(object):
         self._start_receiver(self.max_receiver)
         self.rwechat.rclient.hook_message(
             "127.0.0.1",
-            self.rwechat.message_callback_port,
+            self.rwechat.rclient.message_callback_port,
             60
         )
 
@@ -856,7 +856,7 @@ class RReceive(object):
         # Listen socket.
         listen_socket(
             "127.0.0.1",
-            self.rwechat.message_callback_port,
+            self.rwechat.rclient.message_callback_port,
             put_queue
         )
 

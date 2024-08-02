@@ -9,7 +9,7 @@
 """
 
 
-from typing import Dict, Literal, Optional, Union, Final
+from typing import Dict, Literal, Optional, Union
 from os import getcwd as os_getcwd
 from os.path import join as os_join
 from reydb.rconnection import RDatabase as RRDatabase
@@ -34,11 +34,6 @@ class RWeChat(object):
 
     Warnings, the operating system version cannot be lower than `Windows 10 version 1709` or `Windows Server 2016 version 1709`.
     """
-
-    # Environment.
-    client_version: Final[str] = "3.9.5.81"
-    client_api_port: Final[int] = 19088
-    message_callback_port: Final[int] = 19089
 
 
     def __init__(
@@ -90,6 +85,12 @@ class RWeChat(object):
         self.rsend = RSend(self, bandwidth_upstream)
         self.rdatabase = RDatabase(self, rrdatabase)
         self.rschedule = RSchedule(self)
+
+        ## Client.
+        self.client_version = self.rclient.client_version
+        self.client_version_int = self.rclient.client_version_int
+        self.client_api_port = self.rclient.client_api_port
+        self.message_callback_port = self.rclient.message_callback_port
 
         ## Receive.
         self.receive_add_handler = self.rreceive.add_handler

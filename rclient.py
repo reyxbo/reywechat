@@ -10,31 +10,27 @@
 
 
 from __future__ import annotations
-from typing import Any, List, Dict, Optional, Literal, Union
+from typing import Any, List, Tuple, Dict, Optional, Literal, Union, Final
 from os.path import abspath as os_abspath
 from reytool.rcomm import request as reytool_request
 from reytool.rdll import inject_dll
+from reytool.rexception import RError
 from reytool.ros import find_relpath
-from reytool.rsystem import search_process
+from reytool.rsystem import search_process, memory_read, memory_write
 
 from .rwechat import RWeChat
 
 
 __all__ = (
+    "RClientErorr",
     "RClient",
+    "simulate_client_version"
 )
 
 
-# Response content dictionary, include response code and response message and response data.
-Response = Dict[
-    Literal["code", "message", "data"],
-    Any
-]
-
-
-class RClientErorr(Exception):
+class RClientErorr(RError):
     """
-    Rey's `client` exception type.
+    Rey's `client exception` type.
     """
 
 
@@ -42,6 +38,22 @@ class RClient(object):
     """
     Rey's `client` type.
     """
+
+
+    # Environment.
+    client_version: Final[str] = "3.9.5.81"
+    client_version_int: Final[int] = 1661535569
+    client_api_port: Final[int] = 19088
+    message_callback_port: Final[int] = 19089
+    client_version_memory_offsets = (
+        61280212,
+        61372636,
+        61474056,
+        61638128,
+        61666264,
+        61674264,
+        61675784
+    )
 
 
     def __init__(
@@ -70,27 +82,32 @@ class RClient(object):
         """
 
         # Check client.
-        result = self.check_client()
-        if not result:
+        judge = self.check_client_started()
+        if not judge:
             raise RClientErorr("WeChat client not started")
 
+        # Check client version.
+        judge = self.check_client_version()
+        if not judge:
+            raise RClientErorr(f"WeChat client version failed, must be '{self.client_version}'")
+
         # Check start.
-        result = self.check_api()
-        if not result:
+        judge = self.check_api()
+        if not judge:
 
             # Inject DLL.
             self.inject_dll()
 
             # Check api.
-            result = self.check_api()
-            if not result:
+            judge = self.check_api()
+            if not judge:
                 raise RClientErorr("start WeChat client API failed")
 
         # Report.
         print("Start WeChat client API successfully, address is '127.0.0.1:19088'.")
 
 
-    def check_client(self) -> bool:
+    def check_client_started(self) -> bool:
         """
         Check if the client is started.
 
@@ -109,13 +126,35 @@ class RClient(object):
             return True
 
 
+    def check_client_version(self) -> bool:
+        """
+        Check if the client version.
+
+        Returns
+        -------
+        Check result.
+        """
+
+        # Check.
+        for offset in self.client_version_memory_offsets:
+            value = memory_read(
+                "WeChat.exe",
+                "WeChatWin.dll",
+                offset
+            )
+            if value != self.client_version_int:
+                return False
+
+        return True
+
+
     def check_api(self) -> bool:
         """
         Check if the client API is started.
         """
 
         # Search.
-        processes = search_process(port=self.rwechat.client_api_port)
+        processes = search_process(port=self.client_api_port)
 
         # Check.
         if processes == []:
@@ -158,7 +197,10 @@ class RClient(object):
         data: Optional[Dict] = None,
         success_code: Optional[Union[int, List[int]]] = None,
         fail_code: Optional[Union[int, List[int]]] = None
-    ) -> Response:
+    ) -> Dict[
+        Literal["code", "message", "data"],
+        Any
+    ]:
         """
         Request client API.
 
@@ -176,11 +218,11 @@ class RClient(object):
 
         Returns
         -------
-        Response content dictionary.
+        Client response content dictionary.
         """
 
         # Get parameter.
-        url = f"http://127.0.0.1:{self.rwechat.client_api_port}/api/{api}"
+        url = f"http://127.0.0.1:{self.client_api_port}/api/{api}"
         if data is None:
             data = {}
         if success_code.__class__ == int:
@@ -828,3 +870,33 @@ class RClient(object):
 
         # Request.
         self.request(api, data, success_code=1)
+
+
+def simulate_client_version() -> None:
+    """
+    Simulate WeChat client version be '3.10.0.1'.
+    """
+
+    # Set parameter.
+    simulate_version = 1661599745
+
+    # Check.
+
+    ## Check client.
+    judge = RClient.check_client_started(RClient)
+    if not judge:
+        raise RClientErorr("WeChat client not started")
+
+    ## Check client version.
+    judge = RClient.check_client_version(RClient)
+    if not judge:
+        raise RClientErorr(f"WeChat client version failed, must be '{RClient.client_version}'")
+
+    # Simulate.
+    for offset in RClient.client_version_memory_offsets:
+        memory_write(
+            "WeChat.exe",
+            "WeChatWin.dll",
+            offset,
+            simulate_version
+        )
