@@ -585,7 +585,7 @@ class RMessage(object):
 
 
     @property
-    def image_qrcodes(self) -> Dict:
+    def image_qrcodes(self) -> List[str]:
         """
         Return image QR code texts.
 
