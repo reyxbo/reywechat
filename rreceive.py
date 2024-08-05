@@ -17,6 +17,7 @@ from bs4 import BeautifulSoup as BSBeautifulSoup
 from bs4.element import Tag as BSTag
 from reytool.rcomm import get_file_stream_time, listen_socket
 from reytool.rexception import throw, catch_exc
+from reytool.rimage import decode_qrcode
 from reytool.ros import RFile, RFolder, os_exists
 from reytool.rregex import search
 from reytool.rtime import sleep, wait
@@ -91,8 +92,8 @@ class RMessage(object):
         self.user = user
         self.room = room
         self.file = file
-        self._user_name = None
-        self._room_name = None
+        self._user_name: Optional[str] = None
+        self._room_name: Optional[str] = None
         self._is_quote: Optional[bool] = None
         self._is_quote_self: Optional[bool] = None
         self._quote_params: Optional[Dict[Literal["text", "quote_id", "quote_type", "quote_user", "quote_user_name", "quote_data"], Any]] = None
@@ -106,11 +107,13 @@ class RMessage(object):
         self._change_room_name: Optional[str] = None
         self._is_kick_out_room: Optional[bool] = None
         self._is_dissolve_room: Optional[bool] = None
+        self._is_image: Optional[bool] = None
+        self._image_qrcodes: Optional[List[str]] = None
         self._is_xml: Optional[bool] = None
         self._is_app: Optional[bool] = None
         self._app_params: Optional[Dict] = None
         self._valid: Optional[bool] = None
-        self.replied = False
+        self.replied: bool = False
         self.reply_continue = self.rreceive.rreply.continue_
         self.reply_break = self.rreceive.rreply.break_
         self.execute_continue = self.rreceive.rexecute.continue_
@@ -559,6 +562,50 @@ class RMessage(object):
         )
 
         return self._is_dissolve_room
+
+
+    @property
+    def is_image(self) -> bool:
+        """
+        Whether if is image.
+
+        Returns
+        -------
+        Judge result.
+        """
+
+        # Judged.
+        if self._is_image is not None:
+            return self._is_image
+
+        # Judge.
+        self._is_image = self.type == 3
+
+        return self._is_image
+
+
+    @property
+    def image_qrcodes(self) -> Dict:
+        """
+        Return image QR code texts.
+
+        Returns
+        -------
+        Image QR code texts.
+        """
+
+        # Extracted.
+        if self._image_qrcodes is not None:
+            return self._image_qrcodes
+
+        # Check.
+        if not self.is_image:
+            throw(value=self.is_image)
+
+        # Extract.
+        self._image_qrcodes = decode_qrcode(self.file["path"])
+
+        return self._image_qrcodes
 
 
     @property
