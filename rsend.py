@@ -490,7 +490,8 @@ class RSend(object):
         # Get parameter.
         member_dict = self.rwechat.rclient.get_room_member_dict(room_id)
         login_id = self.rwechat.rclient.login_info["id"]
-        del member_dict[login_id]
+        if login_id in member_dict:
+            del member_dict[login_id]
 
         # Add.
         names = [
