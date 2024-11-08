@@ -149,7 +149,8 @@ class RClient(object):
             )
             if value not in (
                 self.client_version_int,
-                self.client_version_simulate_int
+                self.client_version_simulate_int,
+                0
             ):
                 return False
 
