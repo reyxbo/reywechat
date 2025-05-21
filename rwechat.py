@@ -108,10 +108,6 @@ class RWeChat(object):
         self.send_stop = self.rsend.stop
         self.wrap_try_send = self.rsend.wrap_try_send
 
-        ## Reply.
-        self.rreply = self.rreceive.rreply
-        self.reply_add_rule = self.rreply.add_rule
-
         ## Execute.
         self.rexecute = self.rreceive.rexecute
         self.execute_add_rule = self.rexecute.add_rule

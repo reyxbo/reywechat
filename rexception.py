@@ -14,12 +14,7 @@ from reytool.rexception import RError
 
 __all__ = (
     "RWeChatError",
-    "RWeChatReplyError",
     "RWeChatExecuteError",
-    "RWeChatContinueError",
-    "RWeChatBreakError",
-    "RWeChatReplyContinueError",
-    "RWeChatReplyBreakError",
     "RWeChatExecuteContinueError",
     "RWeChatExecuteBreakError"
 )
@@ -31,49 +26,19 @@ class RWeChatError(RError):
     """
 
 
-class RWeChatReplyError(RWeChatError):
-    """
-    Rey's `WeChat reply error` type.
-    """
-
-
 class RWeChatExecuteError(RWeChatError):
     """
     Rey's `WeChat execute error` type.
     """
 
 
-class RWeChatContinueError(RWeChatError, AssertionError):
-    """
-    Rey's `WeChat continue error` type.
-    """
-
-
-class RWeChatBreakError(RWeChatError, AssertionError):
-    """
-    Rey's `WeChat break error` type.
-    """
-
-
-class RWeChatReplyContinueError(RWeChatReplyError, RWeChatContinueError):
-    """
-    Rey's `WeChat reply continue error` type.
-    """
-
-
-class RWeChatReplyBreakError(RWeChatReplyError, RWeChatBreakError):
-    """
-    Rey's `WeChat reply break error` type.
-    """
-
-
-class RWeChatExecuteContinueError(RWeChatExecuteError, RWeChatContinueError):
+class RWeChatExecuteContinueError(RWeChatExecuteError):
     """
     Rey's `WeChat execute continue error` type.
     """
 
 
-class RWeChatExecuteBreakError(RWeChatExecuteError, RWeChatBreakError):
+class RWeChatExecuteBreakError(RWeChatExecuteError):
     """
     Rey's `WeChat execute break error` type.
     """

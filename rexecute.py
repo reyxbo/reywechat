@@ -9,7 +9,7 @@
 """
 
 
-from typing import Any, List, Dict, Literal, Callable, NoReturn
+from typing import Any, List, TypedDict, Literal, Callable, NoReturn
 from reytool.rexception import catch_exc
 
 from .rexception import RWeChatExecuteContinueError, RWeChatExecuteBreakError
@@ -19,6 +19,9 @@ from .rreceive import RMessage, RReceive
 __all__ = (
     "RExecute",
 )
+
+
+Rule = TypedDict("Rule", {"mode": Literal["trigger", "reply"], "executer": Callable[[RMessage], Any], "level": float})
 
 
 class RExecute(object):
@@ -41,10 +44,13 @@ class RExecute(object):
 
         # Set attribute.
         self.rreceive = rreceive
-        self.rules: List[Dict[Literal["executer", "level"], Any]] = []
+        self.rules: List[Rule] = []
 
         # Add handler.
         self.handler = self._execute_by_rule()
+
+        # Add executer.
+        self._add_execute_valid()
 
 
     def _execute_by_rule(self) -> Callable[[RMessage], None]:
@@ -69,11 +75,17 @@ class RExecute(object):
 
             # Loop.
             for rule in self.rules:
-                executer: Callable[[RMessage], Any] = rule["executer"]
+
+                # Break.
+                if (
+                    rule["mode"] == "reply"
+                    and rmessage.replied
+                ):
+                    break
 
                 # Execute.
                 try:
-                    executer(rmessage)
+                    rule["executer"](rmessage)
 
                 # Continue.
                 except RWeChatExecuteContinueError:
@@ -101,6 +113,7 @@ class RExecute(object):
 
     def add_rule(
         self,
+        mode: Literal["trigger", "reply"],
         executer: Callable[[RMessage], Any],
         level: float = 0
     ) -> None:
@@ -109,13 +122,16 @@ class RExecute(object):
 
         Parameters
         ----------
+        mode : Execute mode.
         executer : Function of execute. The parameter is the `RMessage` instance.
-        When throw `RExecuteBreakError` type exception, then stop executes.
+            When throw `RWeChatExecuteContinueError` type exception, then continue next execution.
+            When throw `RWeChatExecuteBreakError` type exception, then stop executes.
         level : Priority level, sort from large to small.
         """
 
         # Get parameter.
         rule = {
+            "mode": mode,
             "executer": executer,
             "level": level
         }
@@ -133,7 +149,7 @@ class RExecute(object):
 
     def continue_(self) -> NoReturn:
         """
-        Continue reply by throwing `RWeChatExecuteContinueError` type exception.
+        Continue execute by throwing `RWeChatExecuteContinueError` type exception.
         """
 
         # Raise.
@@ -142,8 +158,39 @@ class RExecute(object):
 
     def break_(self) -> NoReturn:
         """
-        Break reply by throwing `RWeChatExecuteBreakError` type exception.
+        Break execute by throwing `RWeChatExecuteBreakError` type exception.
         """
 
         # Raise.
         raise RWeChatExecuteBreakError
+
+
+    def _add_execute_valid(self) -> None:
+        """
+        Add executer, execute rule judge valid.
+
+        Returns
+        -------
+        Handler.
+        """
+
+
+        # Define.
+        def execute_valid(rmessage: RMessage) -> None:
+            """
+            Function of execute rule judge valid.
+
+            Parameters
+            ----------
+            rmessage : `RMessage` instance.
+            """
+
+            # Judge.
+            if not rmessage.valid:
+
+                # Break.
+                rmessage.execute_break()
+
+
+        # Add.
+        self.add_rule("trigger", execute_valid, float('inf'))

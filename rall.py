@@ -15,7 +15,6 @@ from .rexception import *
 from .rexecute import *
 from .rlog import *
 from .rreceive import *
-from .rreply import *
 from .rschedule import *
 from .rsend import *
 from .rwechat import *

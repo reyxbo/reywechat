@@ -23,7 +23,7 @@ from reytool.ros import RFile
 from reytool.rtime import sleep
 from reytool.rwrap import wrap_thread, wrap_exc
 
-from .rexception import RWeChatContinueError, RWeChatBreakError
+from .rexception import RWeChatExecuteContinueError, RWeChatExecuteBreakError
 from .rwechat import RWeChat
 
 
@@ -564,7 +564,7 @@ class RSend(object):
                 # Report.
                 if not isinstance(
                     exc_instance,
-                    (RWeChatContinueError, RWeChatBreakError)
+                    (RWeChatExecuteContinueError, RWeChatExecuteBreakError)
                 ):
                     text = "\n".join(
                         [

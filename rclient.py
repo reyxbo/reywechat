@@ -10,7 +10,7 @@
 
 
 from __future__ import annotations
-from typing import Any, List, Tuple, Dict, Optional, Literal, Union, Final
+from typing import Any, List, Dict, TypedDict, Optional, Literal, Union, Final
 from os.path import abspath as os_abspath
 from reytool.rcomm import request as reytool_request
 from reytool.rdll import inject_dll
@@ -26,6 +26,9 @@ __all__ = (
     "RClient",
     "simulate_client_version"
 )
+
+
+Response = TypedDict("Response", {"code": int, "message": str, "data": Any})
 
 
 # Set.
@@ -206,10 +209,7 @@ class RClient(object):
         data: Optional[Dict] = None,
         success_code: Optional[Union[int, List[int]]] = None,
         fail_code: Optional[Union[int, List[int]]] = None
-    ) -> Dict[
-        Literal["code", "message", "data"],
-        Any
-    ]:
+    ) -> Response:
         """
         Request client API.
 
@@ -478,12 +478,7 @@ class RClient(object):
     def get_contact_table(
         self,
         type_: Optional[Literal["user", "room"]] = None
-    ) -> List[
-        Dict[
-            Literal["id", "name"],
-            str
-        ]
-    ]:
+    ) -> List[Dict[Literal["id", "name"], str]]:
         """
         Get contact table, include chat user and chat room.
 

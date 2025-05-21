@@ -10,7 +10,7 @@
 
 
 from __future__ import annotations
-from typing import Any, List, Dict, Literal, Callable, Optional, NoReturn, overload
+from typing import Any, List, Dict, TypedDict, Literal, Callable, Optional, NoReturn, overload
 from queue import Queue
 from json import loads as json_loads
 from bs4 import BeautifulSoup as BSBeautifulSoup
@@ -31,6 +31,22 @@ __all__ = (
     "RMessage",
     "RReceive"
 )
+
+
+MessageParameters = TypedDict(
+        "MessageParameters",
+        {
+            "time": int,
+            "id": int,
+            "number": int,
+            "room": Optional[str],
+            "user": Optional[str],
+            "type": int,
+            "display": str,
+            "data": str,
+            "file": Dict[Literal['path', 'name', 'md5', 'size'], str]
+        }
+    )
 
 
 class RMessage(object):
@@ -96,7 +112,7 @@ class RMessage(object):
         self._room_name: Optional[str] = None
         self._is_quote: Optional[bool] = None
         self._is_quote_self: Optional[bool] = None
-        self._quote_params: Optional[Dict[Literal["text", "quote_id", "quote_type", "quote_user", "quote_user_name", "quote_data"], Any]] = None
+        self._quote_params: Optional[Dict[Literal["text", "quote_id", "quote_type", "quote_user", "quote_user_name", "quote_data"], Optional[str]]] = None
         self._is_at: Optional[bool] = None
         self._is_at_self: Optional[bool] = None
         self._is_new_user: Optional[bool] = None
@@ -114,28 +130,13 @@ class RMessage(object):
         self._app_params: Optional[Dict] = None
         self._valid: Optional[bool] = None
         self.replied: bool = False
-        self.reply_continue = self.rreceive.rreply.continue_
-        self.reply_break = self.rreceive.rreply.break_
         self.execute_continue = self.rreceive.rexecute.continue_
         self.execute_break = self.rreceive.rexecute.break_
         self.exc_reports: List[str] = []
 
 
     @property
-    def params(self) -> Dict[
-        Literal[
-            "time",
-            "id",
-            "number",
-            "room",
-            "user",
-            "type",
-            "display",
-            "data",
-            "file"
-        ],
-        Any
-    ]:
+    def params(self) -> MessageParameters:
         """
         Return parameters dictionary.
 
@@ -272,7 +273,7 @@ class RMessage(object):
     @property
     def quote_params(self) -> Dict[
         Literal["text", "quote_id", "quote_type", "quote_user", "quote_user_name", "quote_data"],
-        Any
+        Optional[str]
     ]:
         """
         Return quote parameters of message.
@@ -711,7 +712,7 @@ class RMessage(object):
 
 
     @overload
-    def send(
+    def reply(
         self,
         send_type: Literal[0],
         *,
@@ -719,7 +720,7 @@ class RMessage(object):
     ) -> None: ...
 
     @overload
-    def send(
+    def reply(
         self,
         send_type: Literal[1],
         *,
@@ -728,7 +729,7 @@ class RMessage(object):
     ) -> None: ...
 
     @overload
-    def send(
+    def reply(
         self,
         send_type: Literal[2, 3, 4],
         *,
@@ -737,7 +738,7 @@ class RMessage(object):
     ) -> None: ...
 
     @overload
-    def send(
+    def reply(
         self,
         send_type: Literal[5],
         *,
@@ -745,7 +746,7 @@ class RMessage(object):
     ) -> None: ...
 
     @overload
-    def send(
+    def reply(
         self,
         send_type: Literal[6],
         *,
@@ -758,7 +759,7 @@ class RMessage(object):
     ) -> None: ...
 
     @overload
-    def send(
+    def reply(
         self,
         send_type: Literal[7],
         *,
@@ -766,7 +767,7 @@ class RMessage(object):
     ) -> None: ...
 
     @overload
-    def send(
+    def reply(
         self,
         send_type: Any,
         **params: Any
@@ -839,7 +840,6 @@ class RReceive(object):
 
         # Import.
         from .rexecute import RExecute
-        from .rreply import RReply
 
         # Set attribute.
         self.rwechat = rwechat
@@ -848,7 +848,6 @@ class RReceive(object):
         self.queue: Queue[RMessage] = Queue()
         self.handlers: List[Callable[[RMessage], Any]] = []
         self.started: Optional[bool] = False
-        self.rreply = RReply(self)
         self.rexecute = RExecute(self)
 
         # Start.
