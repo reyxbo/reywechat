@@ -14,7 +14,7 @@ from typing import Any, List, Dict, TypedDict, Optional, Literal, Union, Final
 from os.path import abspath as os_abspath
 from reytool.rcomm import request as reytool_request
 from reytool.rdll import inject_dll
-from reytool.rexception import RError
+from reytool.rtype import RError
 from reytool.ros import find_relpath
 from reytool.rsystem import search_process, memory_read, memory_write
 

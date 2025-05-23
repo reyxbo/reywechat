@@ -24,6 +24,8 @@ from reytool.rtime import sleep, wait
 from reytool.rwrap import wrap_thread, wrap_exc
 from reytool.rmultitask import RThreadPool
 
+from .rexception import RWeChatExecuteNoRuleReplyError, RWeChatExecuteTriggerReplyError
+from .rexecute import Rule
 from .rwechat import RWeChat
 
 
@@ -129,6 +131,7 @@ class RMessage(object):
         self._is_app: Optional[bool] = None
         self._app_params: Optional[Dict] = None
         self._valid: Optional[bool] = None
+        self.ruling: Optional[Rule] = None
         self.replied: bool = False
         self.execute_continue = self.rreceive.rexecute.continue_
         self.execute_break = self.rreceive.rexecute.break_
@@ -798,6 +801,12 @@ class RMessage(object):
             - `Any` : Use this value.
                 * `Key 'file_name'` : Given file name.
         """
+
+        # Check.
+        if self.ruling is None:
+            throw(RWeChatExecuteNoRuleReplyError)
+        if self.ruling["mode"] != "reply":
+            throw(RWeChatExecuteTriggerReplyError)
 
         # Get parameter.
         if self.room is None:

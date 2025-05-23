@@ -23,11 +23,10 @@ rreceive : Receive methods.
 rschedule : Schedule methods.
 rsend : Send methods.
 rwechat : WeChat methods.
-rwrap : Decorator methods.
 """
 
 
 from typing import Final
 
 
-__version__: Final[str] = "0.175"
+__version__: Final[str] = "0.176"

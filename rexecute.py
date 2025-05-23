@@ -21,7 +21,7 @@ __all__ = (
 )
 
 
-Rule = TypedDict("Rule", {"mode": Literal["trigger", "reply"], "executer": Callable[[RMessage], Any], "level": float})
+Rule = TypedDict("Rule", {"mode": Literal["trigger", "reply"], "executer": Callable[[RMessage], None], "level": float})
 
 
 class RExecute(object):
@@ -75,6 +75,7 @@ class RExecute(object):
 
             # Loop.
             for rule in self.rules:
+                rmessage.ruling = rule
 
                 # Break.
                 if (
@@ -103,6 +104,9 @@ class RExecute(object):
 
                     ## Save.
                     rmessage.exc_reports.append(exc_report)
+
+                finally:
+                    rmessage.ruling = None
 
 
         # Add handler.
@@ -178,7 +182,7 @@ class RExecute(object):
         # Define.
         def execute_valid(rmessage: RMessage) -> None:
             """
-            Function of execute rule judge valid.
+            Execute rule judge valid.
 
             Parameters
             ----------

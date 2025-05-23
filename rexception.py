@@ -9,14 +9,17 @@
 """
 
 
-from reytool.rexception import RError
+from reytool.rtype import RError, RActiveError
 
 
 __all__ = (
     "RWeChatError",
     "RWeChatExecuteError",
     "RWeChatExecuteContinueError",
-    "RWeChatExecuteBreakError"
+    "RWeChatExecuteBreakError",
+    "RWeChatExecuteReplyError",
+    "RWeChatExecuteNoRuleReplyError",
+    "RWeChatExecuteTriggerReplyError"
 )
 
 
@@ -32,13 +35,31 @@ class RWeChatExecuteError(RWeChatError):
     """
 
 
-class RWeChatExecuteContinueError(RWeChatExecuteError):
+class RWeChatExecuteContinueError(RActiveError, RWeChatExecuteError):
     """
     Rey's `WeChat execute continue error` type.
     """
 
 
-class RWeChatExecuteBreakError(RWeChatExecuteError):
+class RWeChatExecuteBreakError(RActiveError, RWeChatExecuteError):
     """
     Rey's `WeChat execute break error` type.
+    """
+
+
+class RWeChatExecuteReplyError(RWeChatExecuteError):
+    """
+    Rey's `WeChat execute reply error` type.
+    """
+
+
+class RWeChatExecuteNoRuleReplyError(RWeChatExecuteReplyError):
+    """
+    Rey's `WeChat execute no rule reply error` type.
+    """
+
+
+class RWeChatExecuteTriggerReplyError(RWeChatExecuteReplyError):
+    """
+    Rey's `WeChat execute trigger function reply error` type.
     """
