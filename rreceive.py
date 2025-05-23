@@ -25,7 +25,6 @@ from reytool.rwrap import wrap_thread, wrap_exc
 from reytool.rmultitask import RThreadPool
 
 from .rexception import RWeChatExecuteNoRuleReplyError, RWeChatExecuteTriggerReplyError
-from .rexecute import Rule
 from .rwechat import RWeChat
 
 
@@ -98,6 +97,9 @@ class RMessage(object):
                 * `Key 'md5'` : File MD5.
                 * `Key 'size'` : File byte size.
         """
+
+        # Import.
+        from .rexecute import Rule
 
         # Set attribute.
         self.rreceive = rreceive
@@ -301,17 +303,17 @@ class RMessage(object):
             throw(value=self.is_quote)
 
         # Extract.
-        pattern = "<title>(.+?)</title>"
+        pattern = r"<title>(.+?)</title>"
         text = search(pattern, self.data)
-        pattern = "<svrid>(\w+?)</svrid>"
+        pattern = r"<svrid>(\w+?)</svrid>"
         quote_id = search(pattern, self.data)
-        pattern = "<refermsg>\s*<type>(\d+?)</type>"
+        pattern = r"<refermsg>\s*<type>(\d+?)</type>"
         quote_type = int(search(pattern, self.data))
-        pattern = "<chatusr>(\w+?)</chatusr>"
+        pattern = r"<chatusr>(\w+?)</chatusr>"
         quote_user = search(pattern, self.data)
-        pattern = "<displayname>(.+?)</displayname>"
+        pattern = r"<displayname>(.+?)</displayname>"
         quote_user_name = search(pattern, self.data)
-        pattern = "<content>(.+?)</content>"
+        pattern = r"<content>(.+?)</content>"
         quote_data = search(pattern, self.data)
         self._quote_params = {
             "text": text,
@@ -344,7 +346,7 @@ class RMessage(object):
             text = self.data
         elif self.is_quote:
             text = self.quote_params["text"]
-        pattern = "@\w+ "
+        pattern = r"@\w+ "
         result = search(pattern, text)
         self._is_at = result is not None
 
@@ -370,7 +372,7 @@ class RMessage(object):
             text = self.data
         elif self.is_quote:
             text = self.quote_params["text"]
-        pattern = "@%s " % self.rreceive.rwechat.rclient.login_info["name"]
+        pattern = r"@%s " % self.rreceive.rwechat.rclient.login_info["name"]
         result = search(pattern, text)
         self._is_at_self = result is not None
 
@@ -1055,12 +1057,12 @@ class RReceive(object):
 
             ### Get attribute.
             file_name = f"{rmessage.id}.jpg"
-            pattern = "length=\"(\d+)\".*?md5=\"([\da-f]{32})\""
+            pattern = r"length=\"(\d+)\".*?md5=\"([\da-f]{32})\""
             file_size, file_md5 = search(pattern, rmessage.data)
             file_size = int(file_size)
 
             ### Exist.
-            pattern = f"^{file_md5}$"
+            pattern = fr"^{file_md5}$"
             search_path = rfolder.search(pattern)
 
             ### Generate.
@@ -1076,7 +1078,7 @@ class RReceive(object):
 
             ### Get attribute.
             file_name = f"{rmessage.id}.amr"
-            pattern = "length=\"(\d+)\""
+            pattern = r"length=\"(\d+)\""
             file_size = int(search(pattern, rmessage.data))
             file_md5 = None
 
@@ -1095,13 +1097,13 @@ class RReceive(object):
 
             ### Get attribute.
             file_name = f"{rmessage.id}.mp4"
-            pattern = "length=\"(\d+)\""
+            pattern = r"length=\"(\d+)\""
             file_size = int(search(pattern, rmessage.data))
-            pattern = "md5=\"([\da-f]{32})\""
+            pattern = r"md5=\"([\da-f]{32})\""
             file_md5 = search(pattern, rmessage.data)
 
             ### Exist.
-            pattern = f"^{file_md5}$"
+            pattern = fr"^{file_md5}$"
             search_path = rfolder.search(pattern)
 
             ### Generate.
@@ -1116,7 +1118,7 @@ class RReceive(object):
         elif rmessage.type == 49:
 
             ### Check.
-            pattern = "^.+? : \[文件\](.+)$"
+            pattern = r"^.+? : \[文件\](.+)$"
             file_name = search(pattern, rmessage.display)
             if file_name is None:
                 return
@@ -1124,13 +1126,13 @@ class RReceive(object):
                 return
 
             ### Get attribute.
-            pattern = "<totallen>(\d+)</totallen>"
+            pattern = r"<totallen>(\d+)</totallen>"
             file_size = int(search(pattern, rmessage.data))
-            pattern = "<md5>([\da-f]{32})</md5>"
+            pattern = r"<md5>([\da-f]{32})</md5>"
             file_md5 = search(pattern, rmessage.data)
 
             ### Exist.
-            pattern = f"^{file_md5}$"
+            pattern = fr"^{file_md5}$"
             search_path = rfolder.search(pattern)
 
             ### Generate.
@@ -1171,7 +1173,7 @@ class RReceive(object):
                 file_md5 = rfile.md5
 
                 ### Exist.
-                pattern = f"^{file_md5}$"
+                pattern = fr"^{file_md5}$"
                 search_path = rfolder.search(pattern)
 
             if search_path is None:

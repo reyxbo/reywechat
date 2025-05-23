@@ -989,7 +989,7 @@ class RDatabase(object):
         # Check.
         file_md5 = file_info["md5"]
         rfolder = RFolder(self.rwechat.dir_file)
-        pattern = f"^{file_md5}$"
+        pattern = fr"^{file_md5}$"
         search_path = rfolder.search(pattern)
 
         # Download.

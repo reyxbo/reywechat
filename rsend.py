@@ -499,7 +499,7 @@ class RSend(object):
             for name in member_dict.values()
             if len(name) != 1
         ]
-        pattern = "(?<!@)(%s) *" % "|".join(names)
+        pattern = r"(?<!@)(%s) *" % "|".join(names)
         replace = lambda match: "@%s " % match[1]
         text_at = sub(pattern, text, replace)
 
