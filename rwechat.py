@@ -74,8 +74,7 @@ class RWeChat(object):
         from .rsend import RSend
 
         # Create folder.
-        if project_dir is None:
-            project_dir = os_getcwd()
+        project_dir = project_dir or os_getcwd()
         self._create_folder(project_dir)
 
         # Set attribute.
