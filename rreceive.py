@@ -984,15 +984,16 @@ class RReceive(object):
 
         # Loop.
         while True:
+            match self.started:
 
-            ## Stop.
-            if self.started is False:
-                sleep(0.1)
-                continue
+                ## Stop.
+                case False:
+                    sleep(0.1)
+                    continue
 
-            ## End.
-            elif self.started is None:
-                break
+                ## End.
+                case None:
+                    break
 
             ## Submit.
             rmessage = self.queue.get()
@@ -1051,102 +1052,103 @@ class RReceive(object):
         # Save.
         rfolder = RFolder(self.rwechat.dir_file)
         generate_path = None
+        match rmessage.type:
 
-        ## Image.
-        if rmessage.type == 3:
+            ## Image.
+            case 3:
 
-            ### Get attribute.
-            file_name = f"{rmessage.id}.jpg"
-            pattern = r"length=\"(\d+)\".*?md5=\"([\da-f]{32})\""
-            file_size, file_md5 = search(pattern, rmessage.data)
-            file_size = int(file_size)
+                ### Get attribute.
+                file_name = f"{rmessage.id}.jpg"
+                pattern = r"length=\"(\d+)\".*?md5=\"([\da-f]{32})\""
+                file_size, file_md5 = search(pattern, rmessage.data)
+                file_size = int(file_size)
 
-            ### Exist.
-            pattern = fr"^{file_md5}$"
-            search_path = rfolder.search(pattern)
+                ### Exist.
+                pattern = fr"^{file_md5}$"
+                search_path = rfolder.search(pattern)
 
-            ### Generate.
-            if search_path is None:
-                self.rwechat.rclient.download_file(rmessage.id)
-                generate_path = "%swxhelper/image/%s.dat" % (
-                    self.rwechat.rclient.login_info["account_data_path"],
-                    rmessage.id
-                )
+                ### Generate.
+                if search_path is None:
+                    self.rwechat.rclient.download_file(rmessage.id)
+                    generate_path = "%swxhelper/image/%s.dat" % (
+                        self.rwechat.rclient.login_info["account_data_path"],
+                        rmessage.id
+                    )
 
-        ## Voice.
-        elif rmessage.type == 34:
+            ## Voice.
+            case 34:
 
-            ### Get attribute.
-            file_name = f"{rmessage.id}.amr"
-            pattern = r"length=\"(\d+)\""
-            file_size = int(search(pattern, rmessage.data))
-            file_md5 = None
+                ### Get attribute.
+                file_name = f"{rmessage.id}.amr"
+                pattern = r"length=\"(\d+)\""
+                file_size = int(search(pattern, rmessage.data))
+                file_md5 = None
 
-            ### Generate.
-            self.rwechat.rclient.download_voice(
-                rmessage.id,
-                self.rwechat.dir_file
-            )
-            generate_path = "%s/%s.amr" % (
-                self.rwechat.dir_file,
-                rmessage.id
-            )
-
-        ## Video.
-        elif rmessage.type == 43:
-
-            ### Get attribute.
-            file_name = f"{rmessage.id}.mp4"
-            pattern = r"length=\"(\d+)\""
-            file_size = int(search(pattern, rmessage.data))
-            pattern = r"md5=\"([\da-f]{32})\""
-            file_md5 = search(pattern, rmessage.data)
-
-            ### Exist.
-            pattern = fr"^{file_md5}$"
-            search_path = rfolder.search(pattern)
-
-            ### Generate.
-            if search_path is None:
-                self.rwechat.rclient.download_file(rmessage.id)
-                generate_path = "%swxhelper/video/%s.mp4" % (
-                    self.rwechat.rclient.login_info["account_data_path"],
-                    rmessage.id
-                )
-
-        ## Other.
-        elif rmessage.type == 49:
-
-            ### Check.
-            pattern = r"^.+? : \[文件\](.+)$"
-            file_name = search(pattern, rmessage.display)
-            if file_name is None:
-                return
-            if "<type>6</type>" not in rmessage.data:
-                return
-
-            ### Get attribute.
-            pattern = r"<totallen>(\d+)</totallen>"
-            file_size = int(search(pattern, rmessage.data))
-            pattern = r"<md5>([\da-f]{32})</md5>"
-            file_md5 = search(pattern, rmessage.data)
-
-            ### Exist.
-            pattern = fr"^{file_md5}$"
-            search_path = rfolder.search(pattern)
-
-            ### Generate.
-            if search_path is None:
-                self.rwechat.rclient.download_file(rmessage.id)
-                generate_path = "%swxhelper/file/%s_%s" % (
-                    self.rwechat.rclient.login_info["account_data_path"],
+                ### Generate.
+                self.rwechat.rclient.download_voice(
                     rmessage.id,
-                    file_name
+                    self.rwechat.dir_file
+                )
+                generate_path = "%s/%s.amr" % (
+                    self.rwechat.dir_file,
+                    rmessage.id
                 )
 
-        ## Break.
-        else:
-            return
+            ## Video.
+            case 43:
+
+                ### Get attribute.
+                file_name = f"{rmessage.id}.mp4"
+                pattern = r"length=\"(\d+)\""
+                file_size = int(search(pattern, rmessage.data))
+                pattern = r"md5=\"([\da-f]{32})\""
+                file_md5 = search(pattern, rmessage.data)
+
+                ### Exist.
+                pattern = fr"^{file_md5}$"
+                search_path = rfolder.search(pattern)
+
+                ### Generate.
+                if search_path is None:
+                    self.rwechat.rclient.download_file(rmessage.id)
+                    generate_path = "%swxhelper/video/%s.mp4" % (
+                        self.rwechat.rclient.login_info["account_data_path"],
+                        rmessage.id
+                    )
+
+            ## Other.
+            case 49:
+
+                ### Check.
+                pattern = r"^.+? : \[文件\](.+)$"
+                file_name = search(pattern, rmessage.display)
+                if file_name is None:
+                    return
+                if "<type>6</type>" not in rmessage.data:
+                    return
+
+                ### Get attribute.
+                pattern = r"<totallen>(\d+)</totallen>"
+                file_size = int(search(pattern, rmessage.data))
+                pattern = r"<md5>([\da-f]{32})</md5>"
+                file_md5 = search(pattern, rmessage.data)
+
+                ### Exist.
+                pattern = fr"^{file_md5}$"
+                search_path = rfolder.search(pattern)
+
+                ### Generate.
+                if search_path is None:
+                    self.rwechat.rclient.download_file(rmessage.id)
+                    generate_path = "%swxhelper/file/%s_%s" % (
+                        self.rwechat.rclient.login_info["account_data_path"],
+                        rmessage.id,
+                        file_name
+                    )
+
+            ## Break.
+            case _:
+                return
 
         # Wait.
         if generate_path is not None:

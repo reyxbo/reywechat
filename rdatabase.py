@@ -53,18 +53,19 @@ class RDatabase(object):
 
         # Set attribute.
         self.rwechat = rwechat
-        if rrdatabase.__class__ == RRDatabase:
-            self.rrdatabase_wechat = self.rrdatabase_file = rrdatabase
-        elif rrdatabase.__class__ == dict:
-            self.rrdatabase_wechat = rrdatabase.get("wechat")
-            self.rrdatabase_file = rrdatabase.get("file")
-            if (
-                self.rrdatabase_wechat
-                or self.rrdatabase_file
-            ):
-                throw(ValueError, rrdatabase)
-        else:
-            throw(TypeError, rrdatabase)
+        match rrdatabase:
+            case RRDatabase():
+                self.rrdatabase_wechat = self.rrdatabase_file = rrdatabase
+            case dict():
+                self.rrdatabase_wechat = rrdatabase.get("wechat")
+                self.rrdatabase_file = rrdatabase.get("file")
+                if (
+                    self.rrdatabase_wechat
+                    or self.rrdatabase_file
+                ):
+                    throw(ValueError, rrdatabase)
+            case _:
+                throw(TypeError, rrdatabase)
 
         # Build.
         self.build()

@@ -286,10 +286,11 @@ class RClient(object):
         response = self.request(api)
 
         # Check.
-        if response["code"] == 1:
-            return True
-        elif response["code"] == 0:
-            return False
+        match response["code"]:
+            case 1:
+                return True
+            case 0:
+                return False
 
 
     def get_login_info(

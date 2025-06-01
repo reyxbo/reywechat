@@ -118,15 +118,16 @@ class RSend(object):
 
         # Loop.
         while True:
+            match self.started:
 
-            ## Stop.
-            if self.started is False:
-                sleep(0.1)
-                continue
+                ## Stop.
+                case False:
+                    sleep(0.1)
+                    continue
 
-            ## End.
-            elif self.started is None:
-                break
+                ## End.
+                case None:
+                    break
 
             ## Send.
             rsparam = self.queue.get()
@@ -235,72 +236,73 @@ class RSend(object):
             path = copy_path
 
         # Send.
+        match rsparam.send_type:
 
-        ## Text.
-        if rsparam.send_type == 0:
-            self.rwechat.rclient.send_text(
-                rsparam.receive_id,
-                rsparam.params["text"]
-            )
+            ## Text.
+            case 0:
+                self.rwechat.rclient.send_text(
+                    rsparam.receive_id,
+                    rsparam.params["text"]
+                )
 
-        ## Text with "@".
-        elif rsparam.send_type == 1:
-            self.rwechat.rclient.send_text_at(
-                rsparam.receive_id,
-                rsparam.params["user_id"],
-                rsparam.params["text"]
-            )
+            ## Text with "@".
+            case 1:
+                self.rwechat.rclient.send_text_at(
+                    rsparam.receive_id,
+                    rsparam.params["user_id"],
+                    rsparam.params["text"]
+                )
 
-        ## File.
-        elif rsparam.send_type == 2:
-            self.rwechat.rclient.send_file(
-                rsparam.receive_id,
-                path
-            )
+            ## File.
+            case 2:
+                self.rwechat.rclient.send_file(
+                    rsparam.receive_id,
+                    path
+                )
 
-        ## Image.
-        elif rsparam.send_type == 3:
-            self.rwechat.rclient.send_image(
-                rsparam.receive_id,
-                path
-            )
+            ## Image.
+            case 3:
+                self.rwechat.rclient.send_image(
+                    rsparam.receive_id,
+                    path
+                )
 
-        ## Emotion.
-        elif rsparam.send_type == 4:
-            self.rwechat.rclient.send_emotion(
-                rsparam.receive_id,
-                path
-            )
+            ## Emotion.
+            case 4:
+                self.rwechat.rclient.send_emotion(
+                    rsparam.receive_id,
+                    path
+                )
 
-        ## Pat.
-        elif rsparam.send_type == 5:
-            self.rwechat.rclient.send_pat(
-                rsparam.receive_id,
-                rsparam.params["user_id"]
-            )
+            ## Pat.
+            case 5:
+                self.rwechat.rclient.send_pat(
+                    rsparam.receive_id,
+                    rsparam.params["user_id"]
+                )
 
-        ## Public account.
-        elif rsparam.send_type == 6:
-            self.rwechat.rclient.send_public(
-                rsparam.receive_id,
-                rsparam.params["page_url"],
-                rsparam.params["title"],
-                rsparam.params["text"],
-                rsparam.params["image_url"],
-                rsparam.params["public_name"],
-                rsparam.params["public_id"]
-            )
+            ## Public account.
+            case 6:
+                self.rwechat.rclient.send_public(
+                    rsparam.receive_id,
+                    rsparam.params["page_url"],
+                    rsparam.params["title"],
+                    rsparam.params["text"],
+                    rsparam.params["image_url"],
+                    rsparam.params["public_name"],
+                    rsparam.params["public_id"]
+                )
 
-        ## Forward.
-        elif rsparam.send_type == 7:
-            self.rwechat.rclient.send_forward(
-                rsparam.receive_id,
-                rsparam.params["message_id"]
-            )
+            ## Forward.
+            case 7:
+                self.rwechat.rclient.send_forward(
+                    rsparam.receive_id,
+                    rsparam.params["message_id"]
+                )
 
-        ## Throw exception.
-        else:
-            throw(ValueError, rsparam.send_type)
+            ## Throw exception.
+            case _:
+                throw(ValueError, rsparam.send_type)
 
         # Wait.
         self._wait(rsparam)
