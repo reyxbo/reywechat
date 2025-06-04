@@ -10,7 +10,7 @@
 
 
 from os.path import join as os_join
-from reytool.rlog import RLog as RRLog
+from reykit.rlog import RLog as RRLog
 
 from .rreceive import RMessage
 from .rsend import RSendParam
@@ -18,7 +18,7 @@ from .rwechat import RWeChat
 
 
 __all__ = (
-    "RLog",
+    'RLog',
 )
 
 
@@ -44,9 +44,9 @@ class RLog(object):
         self.rwechat = rwechat
 
         # Logger.
-        self.rrlog = RRLog("WeChat")
-        self.rrlog_print = RRLog("WeChat.WeChatPrint")
-        self.rrlog_file = RRLog("WeChat.WeChatFile")
+        self.rrlog = RRLog('WeChat')
+        self.rrlog_print = RRLog('WeChat.WeChatPrint')
+        self.rrlog_file = RRLog('WeChat.WeChatFile')
 
         # Add handler.
         self._add_handler()
@@ -59,9 +59,9 @@ class RLog(object):
 
         # Set parameter.
         format_ = (
-            "%(format_time)s | "
-            "%(format_levelname)s | "
-            "%(format_message_)s"
+            '%(format_time)s | '
+            '%(format_levelname)s | '
+            '%(format_message_)s'
         )
 
         # Add.
@@ -73,10 +73,10 @@ class RLog(object):
         self.rrlog_print.add_print(format_=format_)
 
         ## Add handler file.
-        file_path = os_join(self.rwechat.dir_log, "WeChat")
+        file_path = os_join(self.rwechat.dir_log, 'WeChat')
         self.rrlog_file.add_file(
             file_path,
-            time="m",
+            time='m',
             format_=format_
         )
 
@@ -130,20 +130,20 @@ class RLog(object):
             message_object = rmessage.user
         else:
             message_object = rmessage.room
-        content_print = "RECEIVE | %-20s" % message_object
-        content_file = "RECEIVE | %s" % rmessage.params
+        content_print = 'RECEIVE | %-20s' % message_object
+        content_file = 'RECEIVE | %s' % rmessage.params
         if rmessage.exc_reports == []:
             level = self.rrlog.INFO
         else:
             level = self.rrlog.ERROR
-            exc_report = "\n".join(rmessage.exc_reports)
-            content_print = "%s\n%s" % (content_print, exc_report)
-            content_file = "%s\n%s" % (content_file, exc_report)
+            exc_report = '\n'.join(rmessage.exc_reports)
+            content_print = '%s\n%s' % (content_print, exc_report)
+            content_file = '%s\n%s' % (content_file, exc_report)
 
         ## Add color.
         if self.rrlog.print_colour:
             color_code = self.rrlog.get_level_color_ansi(level)
-            content_print = f"{color_code}{content_print}\033[0m"
+            content_print = f'{color_code}{content_print}\033[0m'
 
         # Log.
         self.rrlog_print.log(
@@ -169,23 +169,23 @@ class RLog(object):
         """
 
         # Generate record.
-        content_print = "SEND    | %-20s" % rsparam.receive_id
-        content_file = "SEND    | %s" % {
-            "receive_id": rsparam.receive_id,
+        content_print = 'SEND    | %-20s' % rsparam.receive_id
+        content_file = 'SEND    | %s' % {
+            'receive_id': rsparam.receive_id,
             **rsparam.params
         }
         if rsparam.exc_reports == []:
             level = self.rrlog.INFO
         else:
             level = self.rrlog.ERROR
-            exc_report = "\n".join(rsparam.exc_reports)
-            content_print = "%s\n%s" % (content_print, exc_report)
-            content_file = "%s\n%s" % (content_file, exc_report)
+            exc_report = '\n'.join(rsparam.exc_reports)
+            content_print = '%s\n%s' % (content_print, exc_report)
+            content_file = '%s\n%s' % (content_file, exc_report)
 
         ## Add color.
         if self.rrlog.print_colour:
             color_code = self.rrlog.get_level_color_ansi(level)
-            content_print = f"{color_code}{content_print}\033[0m"
+            content_print = f'{color_code}{content_print}\033[0m'
 
         # Log.
         self.rrlog_print.log(

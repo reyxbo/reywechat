@@ -10,18 +10,18 @@
 
 
 from typing import Any, List, TypedDict, Literal, Callable, NoReturn
-from reytool.rexception import catch_exc
+from reykit.rexception import catch_exc
 
 from .rexception import RWeChatExecuteContinueError, RWeChatExecuteBreakError
 from .rreceive import RMessage, RReceive
 
 
 __all__ = (
-    "RExecute",
+    'RExecute',
 )
 
 
-Rule = TypedDict("Rule", {"mode": Literal["trigger", "reply"], "executer": Callable[[RMessage], None], "level": float})
+Rule = TypedDict('Rule', {'mode': Literal['trigger', 'reply'], 'executer': Callable[[RMessage], None], 'level': float})
 
 
 class RExecute(object):
@@ -79,14 +79,14 @@ class RExecute(object):
 
                 # Break.
                 if (
-                    rule["mode"] == "reply"
+                    rule['mode'] == 'reply'
                     and rmessage.replied
                 ):
                     break
 
                 # Execute.
                 try:
-                    rule["executer"](rmessage)
+                    rule['executer'](rmessage)
 
                 # Continue.
                 except RWeChatExecuteContinueError:
@@ -117,7 +117,7 @@ class RExecute(object):
 
     def add_rule(
         self,
-        mode: Literal["trigger", "reply"],
+        mode: Literal['trigger', 'reply'],
         executer: Callable[[RMessage], Any],
         level: float = 0
     ) -> None:
@@ -135,16 +135,16 @@ class RExecute(object):
 
         # Get parameter.
         rule = {
-            "mode": mode,
-            "executer": executer,
-            "level": level
+            'mode': mode,
+            'executer': executer,
+            'level': level
         }
 
         # Add.
         self.rules.append(rule)
 
         # Sort.
-        fund_sort = lambda rule: rule["level"]
+        fund_sort = lambda rule: rule['level']
         self.rules.sort(
             key=fund_sort,
             reverse=True
@@ -197,4 +197,4 @@ class RExecute(object):
 
 
         # Add.
-        self.add_rule("trigger", execute_valid, float('inf'))
+        self.add_rule('trigger', execute_valid, float('inf'))

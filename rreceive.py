@@ -15,37 +15,37 @@ from queue import Queue
 from json import loads as json_loads
 from bs4 import BeautifulSoup as BSBeautifulSoup
 from bs4.element import Tag as BSTag
-from reytool.rcomm import get_file_stream_time, listen_socket
-from reytool.rexception import throw, catch_exc
-from reytool.rimage import decode_qrcode
-from reytool.ros import RFile, RFolder, os_exists
-from reytool.rregex import search
-from reytool.rtime import sleep, wait
-from reytool.rwrap import wrap_thread, wrap_exc
-from reytool.rmultitask import RThreadPool
+from reykit.rcomm import get_file_stream_time, listen_socket
+from reykit.rexception import throw, catch_exc
+from reykit.rimage import decode_qrcode
+from reykit.ros import RFile, RFolder, os_exists
+from reykit.rregex import search
+from reykit.rtime import sleep, wait
+from reykit.rwrap import wrap_thread, wrap_exc
+from reykit.rmultitask import RThreadPool
 
 from .rexception import RWeChatExecuteNoRuleReplyError, RWeChatExecuteTriggerReplyError
 from .rwechat import RWeChat
 
 
 __all__ = (
-    "RMessage",
-    "RReceive"
+    'RMessage',
+    'RReceive'
 )
 
 
 MessageParameters = TypedDict(
-        "MessageParameters",
+        'MessageParameters',
         {
-            "time": int,
-            "id": int,
-            "number": int,
-            "room": Optional[str],
-            "user": Optional[str],
-            "type": int,
-            "display": str,
-            "data": str,
-            "file": Dict[Literal['path', 'name', 'md5', 'size'], str]
+            'time': int,
+            'id': int,
+            'number': int,
+            'room': Optional[str],
+            'user': Optional[str],
+            'type': int,
+            'display': str,
+            'data': str,
+            'file': Dict[Literal['path', 'name', 'md5', 'size'], str]
         }
     )
 
@@ -67,7 +67,7 @@ class RMessage(object):
         data: str,
         user: Optional[str] = None,
         room: Optional[str] = None,
-        file:  Optional[Dict[Literal["path", "name", "md5", "size"], str]] = None
+        file:  Optional[Dict[Literal['path', 'name', 'md5', 'size'], str]] = None
     ) -> None:
         """
         Build `message` instance.
@@ -116,7 +116,7 @@ class RMessage(object):
         self._room_name: Optional[str] = None
         self._is_quote: Optional[bool] = None
         self._is_quote_self: Optional[bool] = None
-        self._quote_params: Optional[Dict[Literal["text", "quote_id", "quote_type", "quote_user", "quote_user_name", "quote_data"], Optional[str]]] = None
+        self._quote_params: Optional[Dict[Literal['text', 'quote_id', 'quote_type', 'quote_user', 'quote_user_name', 'quote_data'], Optional[str]]] = None
         self._is_at: Optional[bool] = None
         self._is_at_self: Optional[bool] = None
         self._is_new_user: Optional[bool] = None
@@ -152,15 +152,15 @@ class RMessage(object):
 
         # Get parameter.
         params = {
-            "time": self.time,
-            "id": self.id,
-            "number": self.number,
-            "room": self.room,
-            "user": self.user,
-            "type": self.type,
-            "display": self.display,
-            "data": self.data,
-            "file": self.file
+            'time': self.time,
+            'id': self.id,
+            'number': self.number,
+            'room': self.room,
+            'user': self.user,
+            'type': self.type,
+            'display': self.display,
+            'data': self.data,
+            'file': self.file
         }
 
         return params
@@ -246,7 +246,7 @@ class RMessage(object):
         # Judge.
         self._is_quote = (
             self.type == 49
-            and "<type>57</type>" in self.data
+            and '<type>57</type>' in self.data
         )
 
         return self._is_quote
@@ -269,7 +269,7 @@ class RMessage(object):
         # Judge.
         self._is_quote_self = (
             self.is_quote
-            and "<chatusr>%s</chatusr>" % self.rreceive.rwechat.rclient.login_info["id"] in self.data
+            and '<chatusr>%s</chatusr>' % self.rreceive.rwechat.rclient.login_info['id'] in self.data
         )
 
         return self._is_quote_self
@@ -277,7 +277,7 @@ class RMessage(object):
 
     @property
     def quote_params(self) -> Dict[
-        Literal["text", "quote_id", "quote_type", "quote_user", "quote_user_name", "quote_data"],
+        Literal['text', 'quote_id', 'quote_type', 'quote_user', 'quote_user_name', 'quote_data'],
         Optional[str]
     ]:
         """
@@ -303,25 +303,25 @@ class RMessage(object):
             throw(value=self.is_quote)
 
         # Extract.
-        pattern = r"<title>(.+?)</title>"
+        pattern = '<title>(.+?)</title>'
         text = search(pattern, self.data)
-        pattern = r"<svrid>(\w+?)</svrid>"
+        pattern = r'<svrid>(\w+?)</svrid>'
         quote_id = search(pattern, self.data)
-        pattern = r"<refermsg>\s*<type>(\d+?)</type>"
+        pattern = r'<refermsg>\s*<type>(\d+?)</type>'
         quote_type = int(search(pattern, self.data))
-        pattern = r"<chatusr>(\w+?)</chatusr>"
+        pattern = r'<chatusr>(\w+?)</chatusr>'
         quote_user = search(pattern, self.data)
-        pattern = r"<displayname>(.+?)</displayname>"
+        pattern = '<displayname>(.+?)</displayname>'
         quote_user_name = search(pattern, self.data)
-        pattern = r"<content>(.+?)</content>"
+        pattern = '<content>(.+?)</content>'
         quote_data = search(pattern, self.data)
         self._quote_params = {
-            "text": text,
-            "quote_id": quote_id,
-            "quote_type": quote_type,
-            "quote_user": quote_user,
-            "quote_user_name": quote_user_name,
-            "quote_data": quote_data
+            'text': text,
+            'quote_id': quote_id,
+            'quote_type': quote_type,
+            'quote_user': quote_user,
+            'quote_user_name': quote_user_name,
+            'quote_data': quote_data
         }
 
         return self._quote_params
@@ -345,8 +345,8 @@ class RMessage(object):
         if self.type == 1:
             text = self.data
         elif self.is_quote:
-            text = self.quote_params["text"]
-        pattern = r"@\w+ "
+            text = self.quote_params['text']
+        pattern = r'@\w+ '
         result = search(pattern, text)
         self._is_at = result is not None
 
@@ -371,8 +371,8 @@ class RMessage(object):
         if self.type == 1:
             text = self.data
         elif self.is_quote:
-            text = self.quote_params["text"]
-        pattern = r"@%s " % self.rreceive.rwechat.rclient.login_info["name"]
+            text = self.quote_params['text']
+        pattern = '@%s ' % self.rreceive.rwechat.rclient.login_info['name']
         result = search(pattern, text)
         self._is_at_self = result is not None
 
@@ -397,8 +397,8 @@ class RMessage(object):
         self._is_new_user = (
             self.type == 10000
             and (
-                self.data == "以上是打招呼的内容"
-                or self.data.startswith("你已添加了")
+                self.data == '以上是打招呼的内容'
+                or self.data.startswith('你已添加了')
             )
         )
 
@@ -423,8 +423,8 @@ class RMessage(object):
         self._is_new_room = (
             self.type == 10000
             and (
-                "邀请你和" in self.data[:38]
-                or "邀请你加入了群聊" in self.data[:42]
+                '邀请你和' in self.data[:38]
+                or '邀请你加入了群聊' in self.data[:42]
             )
         )
 
@@ -448,8 +448,8 @@ class RMessage(object):
         # Judge.
         self._is_new_room_user = (
             self.type == 10000
-            and "邀请\"" in self.data[:37]
-            and self.data.endswith("\"加入了群聊")
+            and '邀请"' in self.data[:37]
+            and self.data.endswith('"加入了群聊')
         )
 
         return self._is_new_room_user
@@ -494,7 +494,7 @@ class RMessage(object):
         # Judge.
         self._is_change_room_name = (
             self.type == 10000
-            and "修改群名为“" in self.data[:40]
+            and '修改群名为“' in self.data[:40]
         )
 
         return self._is_change_room_name
@@ -539,8 +539,8 @@ class RMessage(object):
         # Judge.
         self._is_kick_out_room = (
             self.type == 10000
-            and self.data.startswith("你被")
-            and self.data.endswith("移出群聊")
+            and self.data.startswith('你被')
+            and self.data.endswith('移出群聊')
         )
 
         return self._is_kick_out_room
@@ -563,8 +563,8 @@ class RMessage(object):
         # Judge.
         self._is_dissolve_room = (
             self.type == 10000
-            and self.data.startswith("群主")
-            and self.data.endswith("已解散该群聊")
+            and self.data.startswith('群主')
+            and self.data.endswith('已解散该群聊')
         )
 
         return self._is_dissolve_room
@@ -609,7 +609,7 @@ class RMessage(object):
             throw(value=self.is_image)
 
         # Extract.
-        self._image_qrcodes = decode_qrcode(self.file["path"])
+        self._image_qrcodes = decode_qrcode(self.file['path'])
 
         return self._image_qrcodes
 
@@ -631,7 +631,7 @@ class RMessage(object):
         # Judge.
         self._is_xml = (
             self.type != 1
-            and self.data.startswith("<?xml ")
+            and self.data.startswith('<?xml ')
         )
 
         return self._is_xml
@@ -655,7 +655,7 @@ class RMessage(object):
         self.is_app = (
             self.type == 49
             and self.is_xml
-            and "<appmsg " in self.data[:50]
+            and '<appmsg ' in self.data[:50]
         )
 
         return self.is_app
@@ -682,9 +682,9 @@ class RMessage(object):
         # Extract.
         bs_document = BSBeautifulSoup(
             self.data,
-            "xml"
+            'xml'
         )
-        bs_appmsg = bs_document.find("appmsg")
+        bs_appmsg = bs_document.find('appmsg')
         self._app_params = {
             bs_element.name: bs_element.text
             for bs_element in bs_appmsg.contents
@@ -807,7 +807,7 @@ class RMessage(object):
         # Check.
         if self.ruling is None:
             throw(RWeChatExecuteNoRuleReplyError)
-        if self.ruling["mode"] != "reply":
+        if self.ruling['mode'] != 'reply':
             throw(RWeChatExecuteTriggerReplyError)
 
         # Get parameter.
@@ -865,7 +865,7 @@ class RReceive(object):
         self._start_callback()
         self._start_receiver(self.max_receiver)
         self.rwechat.rclient.hook_message(
-            "127.0.0.1",
+            '127.0.0.1',
             self.rwechat.rclient.message_callback_port,
             60
         )
@@ -892,18 +892,18 @@ class RReceive(object):
             data: Dict = json_loads(data)
 
             # Break.
-            if "msgId" not in data: return
+            if 'msgId' not in data: return
 
             # Extract.
             rmessage = RMessage(
                 self,
-                data["createTime"],
-                data["msgId"],
-                data["msgSequence"],
-                data["type"],
-                data["displayFullContent"],
-                data["content"],
-                data["fromUser"]
+                data['createTime'],
+                data['msgId'],
+                data['msgSequence'],
+                data['type'],
+                data['displayFullContent'],
+                data['content'],
+                data['fromUser']
             )
 
             # Put.
@@ -912,7 +912,7 @@ class RReceive(object):
 
         # Listen socket.
         listen_socket(
-            "127.0.0.1",
+            '127.0.0.1',
             self.rwechat.rclient.message_callback_port,
             put_queue
         )
@@ -1027,14 +1027,14 @@ class RReceive(object):
         # Break.
         if (
             rmessage.user.__class__ != str
-            or not rmessage.user.endswith("chatroom")
+            or not rmessage.user.endswith('chatroom')
         ):
             return
 
         # Set attribute.
         rmessage.room = rmessage.user
-        if ":\n" in rmessage.data:
-            user, data = rmessage.data.split(":\n", 1)
+        if ':\n' in rmessage.data:
+            user, data = rmessage.data.split(':\n', 1)
             rmessage.user = user
             rmessage.data = data
         else:
@@ -1058,20 +1058,20 @@ class RReceive(object):
             case 3:
 
                 ### Get attribute.
-                file_name = f"{rmessage.id}.jpg"
-                pattern = r"length=\"(\d+)\".*?md5=\"([\da-f]{32})\""
+                file_name = f'{rmessage.id}.jpg'
+                pattern = r'length="(\d+)".*?md5="([\da-f]{32})"'
                 file_size, file_md5 = search(pattern, rmessage.data)
                 file_size = int(file_size)
 
                 ### Exist.
-                pattern = fr"^{file_md5}$"
+                pattern = f'^{file_md5}$'
                 search_path = rfolder.search(pattern)
 
                 ### Generate.
                 if search_path is None:
                     self.rwechat.rclient.download_file(rmessage.id)
-                    generate_path = "%swxhelper/image/%s.dat" % (
-                        self.rwechat.rclient.login_info["account_data_path"],
+                    generate_path = '%swxhelper/image/%s.dat' % (
+                        self.rwechat.rclient.login_info['account_data_path'],
                         rmessage.id
                     )
 
@@ -1079,8 +1079,8 @@ class RReceive(object):
             case 34:
 
                 ### Get attribute.
-                file_name = f"{rmessage.id}.amr"
-                pattern = r"length=\"(\d+)\""
+                file_name = f'{rmessage.id}.amr'
+                pattern = r'length="(\d+)"'
                 file_size = int(search(pattern, rmessage.data))
                 file_md5 = None
 
@@ -1089,7 +1089,7 @@ class RReceive(object):
                     rmessage.id,
                     self.rwechat.dir_file
                 )
-                generate_path = "%s/%s.amr" % (
+                generate_path = '%s/%s.amr' % (
                     self.rwechat.dir_file,
                     rmessage.id
                 )
@@ -1098,21 +1098,21 @@ class RReceive(object):
             case 43:
 
                 ### Get attribute.
-                file_name = f"{rmessage.id}.mp4"
-                pattern = r"length=\"(\d+)\""
+                file_name = f'{rmessage.id}.mp4'
+                pattern = r'length="(\d+)"'
                 file_size = int(search(pattern, rmessage.data))
-                pattern = r"md5=\"([\da-f]{32})\""
+                pattern = r'md5="([\da-f]{32})"'
                 file_md5 = search(pattern, rmessage.data)
 
                 ### Exist.
-                pattern = fr"^{file_md5}$"
+                pattern = f'^{file_md5}$'
                 search_path = rfolder.search(pattern)
 
                 ### Generate.
                 if search_path is None:
                     self.rwechat.rclient.download_file(rmessage.id)
-                    generate_path = "%swxhelper/video/%s.mp4" % (
-                        self.rwechat.rclient.login_info["account_data_path"],
+                    generate_path = '%swxhelper/video/%s.mp4' % (
+                        self.rwechat.rclient.login_info['account_data_path'],
                         rmessage.id
                     )
 
@@ -1120,28 +1120,28 @@ class RReceive(object):
             case 49:
 
                 ### Check.
-                pattern = r"^.+? : \[文件\](.+)$"
+                pattern = r'^.+? : \[文件\](.+)$'
                 file_name = search(pattern, rmessage.display)
                 if file_name is None:
                     return
-                if "<type>6</type>" not in rmessage.data:
+                if '<type>6</type>' not in rmessage.data:
                     return
 
                 ### Get attribute.
-                pattern = r"<totallen>(\d+)</totallen>"
+                pattern = r'<totallen>(\d+)</totallen>'
                 file_size = int(search(pattern, rmessage.data))
-                pattern = r"<md5>([\da-f]{32})</md5>"
+                pattern = r'<md5>([\da-f]{32})</md5>'
                 file_md5 = search(pattern, rmessage.data)
 
                 ### Exist.
-                pattern = fr"^{file_md5}$"
+                pattern = f'^{file_md5}$'
                 search_path = rfolder.search(pattern)
 
                 ### Generate.
                 if search_path is None:
                     self.rwechat.rclient.download_file(rmessage.id)
-                    generate_path = "%swxhelper/file/%s_%s" % (
-                        self.rwechat.rclient.login_info["account_data_path"],
+                    generate_path = '%swxhelper/file/%s_%s' % (
+                        self.rwechat.rclient.login_info['account_data_path'],
                         rmessage.id,
                         file_name
                     )
@@ -1164,7 +1164,7 @@ class RReceive(object):
 
         # Move.
         if generate_path is None:
-            save_path = "%s/%s" % (
+            save_path = '%s/%s' % (
                 self.rwechat.dir_file,
                 file_md5
             )
@@ -1175,11 +1175,11 @@ class RReceive(object):
                 file_md5 = rfile.md5
 
                 ### Exist.
-                pattern = fr"^{file_md5}$"
+                pattern = f'^{file_md5}$'
                 search_path = rfolder.search(pattern)
 
             if search_path is None:
-                save_path = "%s/%s" % (
+                save_path = '%s/%s' % (
                     self.rwechat.dir_file,
                     file_md5
                 )
@@ -1187,10 +1187,10 @@ class RReceive(object):
 
         # Set parameter.
         file = {
-            "path": save_path,
-            "name": file_name,
-            "md5": file_md5,
-            "size": file_size
+            'path': save_path,
+            'name': file_name,
+            'md5': file_md5,
+            'size': file_size
         }
         rmessage.file = file
 
@@ -1204,7 +1204,7 @@ class RReceive(object):
         self.started = True
 
         # Report.
-        print("Start receiver.")
+        print('Start receiver.')
 
 
     def stop(self) -> None:
@@ -1216,7 +1216,7 @@ class RReceive(object):
         self.started = False
 
         # Report.
-        print("Stop receiver.")
+        print('Stop receiver.')
 
 
     def end(self) -> None:
@@ -1228,7 +1228,7 @@ class RReceive(object):
         self.started = None
 
         # Report.
-        print("End receiver.")
+        print('End receiver.')
 
 
     __del__ = end

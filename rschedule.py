@@ -11,7 +11,7 @@
 
 from __future__ import annotations
 from typing import Any, Dict, Literal, Callable, Union
-from reytool.rschedule import RSchedule as RRSchedule
+from reykit.rschedule import RSchedule as RRSchedule
 
 from .rsend import RSendParam
 from .rwechat import RWeChat
@@ -76,8 +76,8 @@ class RSchedule(object):
 
         # Get parameter.
         kwargs = {
-            "send_type": send_type,
-            "receive_id": receive_id,
+            'send_type': send_type,
+            'receive_id': receive_id,
             **params
         }
 
@@ -133,4 +133,4 @@ class RSchedule(object):
         """
 
         # Pause.
-        self.rrschedule.resume()
+        self.rrschedule.resume

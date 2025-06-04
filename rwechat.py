@@ -13,12 +13,12 @@ from typing import Dict, Literal, Optional, Union
 from os import getcwd as os_getcwd
 from os.path import join as os_join
 from reydb.rconnection import RDatabase as RRDatabase
-from reytool.ros import create_folder as reytool_create_folder
-from reytool.rsystem import block
+from reykit.ros import create_folder as reytool_create_folder
+from reykit.rsystem import block
 
 
 __all__ = (
-    "RWeChat",
+    'RWeChat',
 )
 
 
@@ -40,7 +40,7 @@ class RWeChat(object):
 
     def __init__(
         self,
-        rrdatabase: Optional[Union[RRDatabase, Dict[Literal["wechat", "file"], RRDatabase]]],
+        rrdatabase: Optional[Union[RRDatabase, Dict[Literal['wechat', 'file'], RRDatabase]]],
         max_receiver: int = 2,
         bandwidth_downstream: float = 5,
         bandwidth_upstream: float = 5,
@@ -51,7 +51,7 @@ class RWeChat(object):
 
         Parameters
         ----------
-        rrdatabase : `RDatabase` instance of `reytool` package.
+        rrdatabase : `RDatabase` instance of `reykit` package.
             - `RDatabase` : Set all `RDatabase` instances.
             - `Dict` : Set each `RDatabase` instance, all item is required.
                 * `Key 'wechat'` : `RDatabase` instance used in WeChat methods.
@@ -131,8 +131,8 @@ class RWeChat(object):
 
         # Set parameter.
         folders = (
-            "Log",
-            "File"
+            'Log',
+            'File'
         )
         folder_dict = {
             folder: os_join(project_dir, folder)
@@ -144,8 +144,8 @@ class RWeChat(object):
         reytool_create_folder(*paths)
 
         # Set attribute.
-        self.dir_log = folder_dict["Log"]
-        self.dir_file = folder_dict["File"]
+        self.dir_log = folder_dict['Log']
+        self.dir_file = folder_dict['File']
 
 
     def start(self) -> None:
@@ -164,7 +164,7 @@ class RWeChat(object):
         """
 
         # Report.
-        print("Keep runing.")
+        print('Keep runing.')
 
         # Blocking.
         block()

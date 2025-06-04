@@ -12,23 +12,23 @@
 from __future__ import annotations
 from typing import Any, List, Dict, TypedDict, Optional, Literal, Union, Final
 from os.path import abspath as os_abspath
-from reytool.rcomm import request as reytool_request
-from reytool.rdll import inject_dll
-from reytool.rtype import RError
-from reytool.ros import find_relpath
-from reytool.rsystem import search_process, memory_read, memory_write
+from reykit.rcomm import request as reytool_request
+from reykit.rdll import inject_dll
+from reykit.rtype import RError
+from reykit.ros import find_relpath
+from reykit.rsystem import search_process, memory_read, memory_write
 
 from .rwechat import RWeChat
 
 
 __all__ = (
-    "RClientErorr",
-    "RClient",
-    "simulate_client_version"
+    'RClientErorr',
+    'RClient',
+    'simulate_client_version'
 )
 
 
-Response = TypedDict("Response", {"code": int, "message": str, "data": Any})
+Response = TypedDict('Response', {'code': int, 'message': str, 'data': Any})
 
 
 # Set.
@@ -56,9 +56,9 @@ class RClient(object):
 
 
     # Environment.
-    client_version: Final[str] = "3.9.5.81"
+    client_version: Final[str] = '3.9.5.81'
     client_version_int: Final[int] = 1661535569
-    client_version_simulate: Final[str] = "3.10.0.1"
+    client_version_simulate: Final[str] = '3.10.0.1'
     client_version_simulate_int: Final[int] = 1661599745
     client_api_port: Final[int] = 19088
     message_callback_port: Final[int] = 19089
@@ -92,12 +92,12 @@ class RClient(object):
         # Check client.
         judge = self.check_client_started()
         if not judge:
-            raise RClientErorr("WeChat client not started")
+            raise RClientErorr('WeChat client not started')
 
         # Check client version.
         judge = self.check_client_version()
         if not judge:
-            raise RClientErorr(f"WeChat client version failed, must be '{self.client_version}'")
+            raise RClientErorr(f'WeChat client version failed, must be "{self.client_version}"')
 
         # Check start.
         judge = self.check_api()
@@ -109,10 +109,10 @@ class RClient(object):
             # Check api.
             judge = self.check_api()
             if not judge:
-                raise RClientErorr("start WeChat client API failed")
+                raise RClientErorr('start WeChat client API failed')
 
         # Report.
-        print("Start WeChat client API successfully, address is '127.0.0.1:19088'.")
+        print('Start WeChat client API successfully, address is "127.0.0.1:19088".')
 
 
     def check_client_started(self) -> bool:
@@ -125,7 +125,7 @@ class RClient(object):
         """
 
         # Search.
-        processes = search_process(name="WeChat.exe")
+        processes = search_process(name='WeChat.exe')
 
         # Check.
         if processes == []:
@@ -146,8 +146,8 @@ class RClient(object):
         # Check.
         for offset in _client_version_memory_offsets:
             value = memory_read(
-                "WeChat.exe",
-                "WeChatWin.dll",
+                'WeChat.exe',
+                'WeChatWin.dll',
                 offset
             )
             if value not in (
@@ -174,7 +174,7 @@ class RClient(object):
         process = processes[0]
         with process.oneshot():
             process_name = process.name()
-        if process_name != "WeChat.exe":
+        if process_name != 'WeChat.exe':
             return False
 
         ## Check request.
@@ -191,11 +191,11 @@ class RClient(object):
         """
 
         # Get parameter.
-        dll_file_relpath = "./data/client_api.dll"
+        dll_file_relpath = './data/client_api.dll'
         dll_file_path = find_relpath(__file__, dll_file_relpath)
 
         # Inject.
-        processes = search_process(name="WeChat.exe")
+        processes = search_process(name='WeChat.exe')
         process = processes[0]
         inject_dll(
             process.pid,
@@ -231,7 +231,7 @@ class RClient(object):
         """
 
         # Get parameter.
-        url = f"http://127.0.0.1:{self.client_api_port}/api/{api}"
+        url = f'http://127.0.0.1:{self.client_api_port}/api/{api}'
         if data is None:
             data = {}
         if success_code.__class__ == int:
@@ -243,29 +243,29 @@ class RClient(object):
         response = reytool_request(
             url,
             json=data,
-            method="post",
+            method='post',
             check=True
         )
 
         # Extract.
         response_data = response.json()
         response = {
-            "code": response_data["code"],
-            "message": response_data["msg"],
-            "data": response_data["data"]
+            'code': response_data['code'],
+            'message': response_data['msg'],
+            'data': response_data['data']
         }
 
         # Throw exception.
         if (
             (
                 success_code is not None
-                and response["code"] not in success_code
+                and response['code'] not in success_code
             ) or (
                 fail_code is not None
-                and response["code"] in fail_code
+                and response['code'] in fail_code
             )
         ):
-            raise RClientErorr(f"client API '{api}' request failed", data, response)
+            raise RClientErorr(f'client API "{api}" request failed', data, response)
 
         return response
 
@@ -280,13 +280,13 @@ class RClient(object):
         """
 
         # Get parameter.
-        api = "checkLogin"
+        api = 'checkLogin'
 
         # Request.
         response = self.request(api)
 
         # Check.
-        match response["code"]:
+        match response['code']:
             case 1:
                 return True
             case 0:
@@ -297,18 +297,18 @@ class RClient(object):
         self
     ) -> Dict[
         Literal[
-            "id",
-            "account",
-            "name",
-            "phone",
-            "signature",
-            "city",
-            "province",
-            "country",
-            "head_image",
-            "account_data_path",
-            "wechat_data_path",
-            "decrypt_key"
+            'id',
+            'account',
+            'name',
+            'phone',
+            'signature',
+            'city',
+            'province',
+            'country',
+            'head_image',
+            'account_data_path',
+            'wechat_data_path',
+            'decrypt_key'
         ],
         Optional[str]
     ]:
@@ -333,31 +333,31 @@ class RClient(object):
         """
 
         # Get parameter.
-        api = "userInfo"
+        api = 'userInfo'
 
         # Request.
         response = self.request(api)
 
         # Extract.
-        data = response["data"]
+        data = response['data']
         info = {
-            "id": data["wxid"],
-            "account": data["account"],
-            "name": data["name"],
-            "phone": data["mobile"],
-            "signature": data["signature"],
-            "city": data["city"],
-            "province": data["province"],
-            "country": data["country"],
-            "head_image": data["headImage"],
-            "account_data_path": data["currentDataPath"],
-            "wechat_data_path": data["dataSavePath"],
-            "decrypt_key": data["dbKey"]
+            'id': data['wxid'],
+            'account': data['account'],
+            'name': data['name'],
+            'phone': data['mobile'],
+            'signature': data['signature'],
+            'city': data['city'],
+            'province': data['province'],
+            'country': data['country'],
+            'head_image': data['headImage'],
+            'account_data_path': data['currentDataPath'],
+            'wechat_data_path': data['dataSavePath'],
+            'decrypt_key': data['dbKey']
         }
         info = {
             key: (
                 None
-                if value == ""
+                if value == ''
                 else value
             )
             for key, value in info.items()
@@ -383,21 +383,21 @@ class RClient(object):
         """
 
         # Get parameter.
-        api = "hookSyncMsg"
+        api = 'hookSyncMsg'
         port = str(port)
         timeout_ms_str = str(int(timeout * 1000))
         data = {
-            "ip": host,
-            "port": port,
-            "timeout": timeout_ms_str,
-            "enableHttp": "0"
+            'ip': host,
+            'port': port,
+            'timeout': timeout_ms_str,
+            'enableHttp': '0'
         }
 
         # Request.
         response = self.request(api, data, [0, 2])
 
         # Retry.
-        if response["code"] == 2:
+        if response['code'] == 2:
             self.unhook_message()
             self.hook_message(
                 host,
@@ -408,7 +408,7 @@ class RClient(object):
         # Report.
         else:
             print(
-                "Hook message successfully, address is '%s:%s'." % (
+                'Hook message successfully, address is "%s:%s".' % (
                     host,
                     port
                 )
@@ -421,13 +421,13 @@ class RClient(object):
         """
 
         # Get parameter.
-        api = "unhookSyncMsg"
+        api = 'unhookSyncMsg'
 
         # Request.
         self.request(api, success_code=0)
 
         # Report.
-        print("Unhook message successfully.")
+        print('Unhook message successfully.')
 
 
     def download_file(
@@ -443,8 +443,8 @@ class RClient(object):
         """
 
         # Get parameter.
-        api = "downloadAttach"
-        data = {"msgId": id_}
+        api = 'downloadAttach'
+        data = {'msgId': id_}
 
         # Request.
         self.request(api, data, [0, 1000])
@@ -465,11 +465,11 @@ class RClient(object):
         """
 
         # Get parameter.
-        api = "getVoiceByMsgId"
+        api = 'getVoiceByMsgId'
         dir_ = os_abspath(dir_)
         data = {
-            "msgId": id_,
-            "storeDir": dir_
+            'msgId': id_,
+            'storeDir': dir_
         }
 
         # Request.
@@ -478,8 +478,8 @@ class RClient(object):
 
     def get_contact_table(
         self,
-        type_: Optional[Literal["user", "room"]] = None
-    ) -> List[Dict[Literal["id", "name"], str]]:
+        type_: Optional[Literal['user', 'room']] = None
+    ) -> List[Dict[Literal['id', 'name'], str]]:
         """
         Get contact table, include chat user and chat room.
 
@@ -498,23 +498,23 @@ class RClient(object):
         """
 
         # Get parameter.
-        api = "getContactList"
+        api = 'getContactList'
         filter_names = {
-            "filehelper": "朋友推荐消息",
-            "floatbottle": "语音记事本",
-            "fmessage": "漂流瓶",
-            "medianote": "文件传输助手"
+            'filehelper': '朋友推荐消息',
+            'floatbottle': '语音记事本',
+            'fmessage': '漂流瓶',
+            'medianote': '文件传输助手'
         }
 
         # Request.
         response = self.request(api, success_code=1)
 
         # Extract.
-        data: List[Dict] = response["data"]
+        data: List[Dict] = response['data']
         table_user = []
         table_room = []
         for info in data:
-            id_: str = info["wxid"]
+            id_: str = info['wxid']
 
             # Filter system user.
             if id_ in filter_names:
@@ -522,26 +522,26 @@ class RClient(object):
 
             # Split table.
             row = {
-                "id": id_,
-                "name": info["nickname"]
+                'id': id_,
+                'name': info['nickname']
             }
 
             ## Chat room table.
-            if id_.endswith("chatroom"):
+            if id_.endswith('chatroom'):
                 if (
-                    type_ in (None, "room")
-                    and id_[-1] == "m"
+                    type_ in (None, 'room')
+                    and id_[-1] == 'm'
                 ):
                     table_room.append(row)
 
             ## User table.
             else:
-                if type_ in (None, "user"):
+                if type_ in (None, 'user'):
                     table_user.append(row)
 
         # User no name.
         for row in table_user[::-1]:
-            if row["name"] == "":
+            if row['name'] == '':
                 table_user.remove(row)
 
         # Merge table.
@@ -567,18 +567,18 @@ class RClient(object):
         """
 
         # Get parameter.
-        api = "getContactProfile"
-        data = {"wxid": id_}
+        api = 'getContactProfile'
+        data = {'wxid': id_}
 
         # Request.
         response = self.request(api, data, [0, 1])
 
         # Extract.
-        data: Optional[dict] = response["data"]
+        data: Optional[dict] = response['data']
         if data is None:
             name = None
         else:
-            name = data["nickname"]
+            name = data['nickname']
 
         return name
 
@@ -600,18 +600,18 @@ class RClient(object):
         """
 
         # Get parameter.
-        api = "getMemberFromChatRoom"
-        data = {"chatRoomId": room_id}
+        api = 'getMemberFromChatRoom'
+        data = {'chatRoomId': room_id}
 
         # Request.
         response = self.request(api, data, [0, 1])
 
         # Convert.
-        data: Dict = response["data"]
-        members: str = data["members"]
-        members_list = members.split("^G")
+        data: Dict = response['data']
+        members: str = data['members']
+        members_list = members.split('^G')
         members_list = list(filter(
-            lambda member: member != "",
+            lambda member: member != '',
             members_list
         ))
 
@@ -660,10 +660,10 @@ class RClient(object):
         """
 
         # Get parameter.
-        api = "sendTextMsg"
+        api = 'sendTextMsg'
         data = {
-            "wxid": receive_id,
-            "msg": text
+            'wxid': receive_id,
+            'msg': text
         }
 
         # Request.
@@ -673,7 +673,7 @@ class RClient(object):
     def send_text_at(
         self,
         room_id: str,
-        user_id: Union[str, List[str], Literal["notify@all"]],
+        user_id: Union[str, List[str], Literal['notify@all']],
         text: str
     ) -> None:
         """
@@ -685,19 +685,19 @@ class RClient(object):
         user_id : User ID of `@`.
             - `str` : `@` one user.
             - `List[str]` : `@` multiple users.
-            - `Literal["notify@all"]` : `@` all users.
+            - `Literal['notify@all']` : `@` all users.
 
         text : Message text.
         """
 
         # Get parameter.
-        api = "sendAtText"
+        api = 'sendAtText'
         if user_id.__class__ != str:
-            user_id = ",".join(user_id)
+            user_id = ','.join(user_id)
         data = {
-            "chatRoomId": room_id,
-            "wxids": user_id,
-            "msg": text
+            'chatRoomId': room_id,
+            'wxids': user_id,
+            'msg': text
         }
 
         # Request.
@@ -719,10 +719,10 @@ class RClient(object):
         """
 
         # Get parameter.
-        api = "sendFileMsg"
+        api = 'sendFileMsg'
         data = {
-            "wxid": receive_id,
-            "filePath": path
+            'wxid': receive_id,
+            'filePath': path
         }
 
         # Request.
@@ -744,10 +744,10 @@ class RClient(object):
         """
 
         # Get parameter.
-        api = "sendImagesMsg"
+        api = 'sendImagesMsg'
         data = {
-            "wxid": receive_id,
-            "imagePath": path
+            'wxid': receive_id,
+            'imagePath': path
         }
 
         # Request.
@@ -769,10 +769,10 @@ class RClient(object):
         """
 
         # Get parameter.
-        api = "sendCustomEmotion"
+        api = 'sendCustomEmotion'
         data = {
-            "wxid": receive_id,
-            "filePath": path
+            'wxid': receive_id,
+            'filePath': path
         }
 
         # Request.
@@ -794,10 +794,10 @@ class RClient(object):
         """
 
         # Get parameter.
-        api = "sendPatMsg"
+        api = 'sendPatMsg'
         data = {
-            "wxid": receive_id,
-            "receiver": user_id
+            'wxid': receive_id,
+            'receiver': user_id
         }
 
         # Request.
@@ -830,22 +830,22 @@ class RClient(object):
 
         # Get parameter.
         if text is None:
-            text = ""
+            text = ''
         if image_url is None:
-            image_url = ""
+            image_url = ''
         if public_name is None:
-            public_name = ""
+            public_name = ''
         if public_id is None:
-            public_id = ""
-        api = "forwardPublicMsg"
+            public_id = ''
+        api = 'forwardPublicMsg'
         data = {
-            "wxid": receive_id,
-            "url": page_url,
-            "title": title,
-            "digest": text,
-            "thumbUrl": image_url,
-            "appName": public_name,
-            "userName": public_id
+            'wxid': receive_id,
+            'url': page_url,
+            'title': title,
+            'digest': text,
+            'thumbUrl': image_url,
+            'appName': public_name,
+            'userName': public_id
         }
 
         # Request.
@@ -867,10 +867,10 @@ class RClient(object):
         """
 
         # Get parameter.
-        api = "sendImagesMsg"
+        api = 'sendImagesMsg'
         data = {
-            "wxid": receive_id,
-            "forwardMsg": message_id
+            'wxid': receive_id,
+            'forwardMsg': message_id
         }
 
         # Request.
@@ -887,21 +887,21 @@ def simulate_client_version() -> None:
     ## Check client.
     judge = RClient.check_client_started(RClient)
     if not judge:
-        raise RClientErorr("WeChat client not started")
+        raise RClientErorr('WeChat client not started')
 
     ## Check client version.
     judge = RClient.check_client_version(RClient)
     if not judge:
-        raise RClientErorr(f"WeChat client version failed, must be '{RClient.client_version}'")
+        raise RClientErorr(f'WeChat client version failed, must be "{RClient.client_version}"')
 
     # Simulate.
     for offset in _client_version_memory_offsets:
         memory_write(
-            "WeChat.exe",
-            "WeChatWin.dll",
+            'WeChat.exe',
+            'WeChatWin.dll',
             offset,
             RClient.client_version_simulate_int
         )
 
     # Report.
-    print(f"WeChat client version simulated be '{RClient.client_version_simulate}'")
+    print(f'WeChat client version simulated be "{RClient.client_version_simulate}"')
