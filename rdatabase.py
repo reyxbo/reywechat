@@ -45,10 +45,10 @@ class RDatabase(object):
         ----------
         rwechat : `RClient` instance.
         rrdatabase : `RDatabase` instance of `reykit` package.
-            - `RDatabase` : Set all `RDatabase` instances.
-            - `Dict` : Set each `RDatabase` instance, all item is required.
-                * `Key 'wechat'` : `RDatabase` instance used in WeChat methods.
-                * `Key 'file'` : `RDatabase` instance used in file methods.
+            - `RDatabase`, Set all `RDatabase`: instances.
+            - `Dict`, Set each `RDatabase`: instance, all item is required.
+                `Key 'wechat'`: `RDatabase` instance used in WeChat methods.
+                `Key 'file'`: `RDatabase` instance used in file methods.
         """
 
         # Set attribute.
@@ -625,8 +625,8 @@ class RDatabase(object):
         Parameters
         ----------
         room_id : Chat room ID.
-            - `None` : Update all chat room.
-            - `str` : Update this chat room.
+            - `None`: Update all chat room.
+            - `str`: Update this chat room.
         """
 
         # Get data.
@@ -1144,8 +1144,8 @@ class RDatabase(object):
         Returns
         -------
         Judgment result.
-            - `True` : Valid.
-            - `False` : Invalid or no record.
+            - `True`: Valid.
+            - `False`: Invalid or no record.
         """
 
         # Judge.

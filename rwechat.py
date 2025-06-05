@@ -52,17 +52,16 @@ class RWeChat(object):
         Parameters
         ----------
         rrdatabase : `RDatabase` instance of `reykit` package.
-            - `RDatabase` : Set all `RDatabase` instances.
-            - `Dict` : Set each `RDatabase` instance, all item is required.
-                * `Key 'wechat'` : `RDatabase` instance used in WeChat methods.
-                * `Key 'file'` : `RDatabase` instance used in file methods.
-
+            - `RDatabase`, Set all `RDatabase`: instances.
+            - `Dict`, Set each `RDatabase`: instance, all item is required.
+                `Key 'wechat'`: `RDatabase` instance used in WeChat methods.
+                `Key 'file'`: `RDatabase` instance used in file methods.
         max_receiver : Maximum number of receivers.
         bandwidth_downstream : Download bandwidth, impact receive timeout, unit Mpbs.
         bandwidth_upstream : Upload bandwidth, impact send interval, unit Mpbs.
         project_dir: Project directory, will create sub folders.
-            - `None` : Use working directory.
-            - `str` : Use this directory.
+            - `None`: Use working directory.
+            - `str`: Use this directory.
         """
 
         # Import.

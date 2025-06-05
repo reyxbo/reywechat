@@ -218,12 +218,11 @@ class RClient(object):
         api : API name.
         data : Request data.
         success_code : Suceess code, if not within the range, throw an exception.
-            - `None` : Not handle.
-            - `Union[int, List[int]]` : Handle.
-
+            - `None`: Not handle.
+            - `Union[int, List[int]]`: Handle.
         fail_code : Fail code, if within the range, throw an exception.
-            - `None` : Not handle.
-            - `Union[int, List[int]]` : Handle.
+            - `None`: Not handle.
+            - `Union[int, List[int]]`: Handle.
 
         Returns
         -------
@@ -318,18 +317,18 @@ class RClient(object):
         Returns
         -------
         Login user account information.
-            - `Key 'id'` : User ID, cannot change.
-            - `Key 'account' : User account, can change.
-            - `Key 'name' : User nickname.
-            - `Key 'phone' : Phone number.
-            - `Key 'signature' : Personal signature.
-            - `Key 'city' : City.
-            - `Key 'province' : Province.
-            - `Key 'country' : Country.
-            - `Key 'head_image' : Head image URL.
-            - `Key 'account_data_path' : Current account data save path.
-            - `Key 'wechat_data_path' : WeChat data save path.
-            - `Key 'decrypt_key' : Database decrypt key.
+            - `Key 'id'`: User ID, cannot change.
+            - `Key 'account'`: User account, can change.
+            - `Key 'name'`: User nickname.
+            - `Key 'phone'`: Phone number.
+            - `Key 'signature'`: Personal signature.
+            - `Key 'city'`: City.
+            - `Key 'province'`: Province.
+            - `Key 'country'`: Country.
+            - `Key 'head_image'`: Head image URL.
+            - `Key 'account_data_path'`: Current account data save path.
+            - `Key 'wechat_data_path'`: WeChat data save path.
+            - `Key 'decrypt_key'`: Database decrypt key.
         """
 
         # Get parameter.
@@ -486,15 +485,15 @@ class RClient(object):
         Parameters
         ----------
         type_ : Return contact table type.
-            - `None` : Return all contact table.
-            - `Literal['user']` : Return user contact table.
-            - `Literal['room']` : Return chat room contact table.
+            - `None`: Return all contact table.
+            - `Literal['user']`: Return user contact table.
+            - `Literal['room']`: Return chat room contact table.
 
         Returns
         -------
         Contact table.
-            - `Key 'id'` : User ID or chat room ID.
-            - `Key 'name' : User nickname or chat room name.
+            - `Key 'id'`: User ID or chat room ID.
+            - `Key 'name'`: User nickname or chat room name.
         """
 
         # Get parameter.
@@ -683,10 +682,9 @@ class RClient(object):
         ----------
         room_id : Chat room ID of receive message.
         user_id : User ID of `@`.
-            - `str` : `@` one user.
-            - `List[str]` : `@` multiple users.
-            - `Literal['notify@all']` : `@` all users.
-
+            - `str`, `@`: one user.
+            - `List[str]` `@`: multiple users.
+            - `Literal['notify@all']` `@`: all users.
         text : Message text.
         """
 

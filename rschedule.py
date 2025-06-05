@@ -59,19 +59,18 @@ class RSchedule(object):
         trigger : Trigger type.
         trigger_kwargs : Trigger keyword arguments.
         send_type : Send type.
-            - `Literal[0]` : Send text message, use `RClient.send_text` method.
-            - `Literal[1]` : Send text message with `@`, use `RClient.send_text_at` method.
-            - `Literal[2]` : Send file message, use `RClient.send_file` method.
-            - `Literal[3]` : Send image message, use `RClient.send_image` method.
-            - `Literal[4]` : Send emotion message, use `RClient.send_emotion` method.
-            - `Literal[5]` : Send pat message, use `RClient.send_pat` method.
-            - `Literal[6]` : Send public account message, use `RClient.send_public` method.
-            - `Literal[7]` : Forward message, use `RClient.send_forward` method.
-
+            - `Literal[0]` Send text message, use `RClient.send_text`: method.
+            - `Literal[1]` Send text message with `@`, use `RClient.send_text_at`: method.
+            - `Literal[2]` Send file message, use `RClient.send_file`: method.
+            - `Literal[3]` Send image message, use `RClient.send_image`: method.
+            - `Literal[4]` Send emotion message, use `RClient.send_emotion`: method.
+            - `Literal[5]` Send pat message, use `RClient.send_pat`: method.
+            - `Literal[6]` Send public account message, use `RClient.send_public`: method.
+            - `Literal[7]` Forward message, use `RClient.send_forward`: method.
         receive_id : User ID or chat room ID of receive message.
         params : Send parameters.
-            - `Callable` : Use execute return value.
-            - `Any` : Use this value.
+            - `Callable`: Use execute return value.
+            - `Any`: Use this value.
         """
 
         # Get parameter.

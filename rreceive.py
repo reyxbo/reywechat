@@ -82,20 +82,18 @@ class RMessage(object):
         display : Message description text.
         data : Message source data.
         user : Message sender user ID.
-            - `None` : System message.
-            - `str` : User messages.
-
+            - `None`: System message.
+            - `str`: User messages.
         room : Message chat room ID.
-            - `None` : Private chat.
-            - `str` : Chat room chat.
-
+            - `None`: Private chat.
+            - `str`: Chat room chat.
         file : Message file information.
-            - `None` : Non file message.
-            - `Dict` : File message.
-                * `Key 'path'` : File path.
-                * `Key 'name'` : File name.
-                * `Key 'md5'` : File MD5.
-                * `Key 'size'` : File byte size.
+            - `None`: Non file message.
+            - `Dict`: File message.
+                `Key 'path'`: File path.
+                `Key 'name'`: File name.
+                `Key 'md5'`: File MD5.
+                `Key 'size'`: File byte size.
         """
 
         # Import.
@@ -286,12 +284,12 @@ class RMessage(object):
         Returns
         -------
         Quote parameters of message.
-            - `Key 'text'` : Message text.
-            - `Key 'quote_id'` : Quote message ID.
-            - `Key 'quote_type'` : Quote message type.
-            - `Key 'quote_user'` : Quote message user ID.
-            - `Key 'quote_user_name'` : Quote message user name.
-            - `Key 'quote_data'` : Quote message data.
+            - `Key 'text'`: Message text.
+            - `Key 'quote_id'`: Quote message ID.
+            - `Key 'quote_type'`: Quote message type.
+            - `Key 'quote_user'`: Quote message user ID.
+            - `Key 'quote_user_name'`: Quote message user name.
+            - `Key 'quote_data'`: Quote message data.
         """
 
         # Extracted.
@@ -702,8 +700,8 @@ class RMessage(object):
         Returns
         -------
         Judgment result.
-            - `True` : Valid.
-            - `False` : Invalid or no record.
+            - `True`: Valid.
+            - `False`: Invalid or no record.
         """
 
         # Extracted.
@@ -789,19 +787,18 @@ class RMessage(object):
         Parameters
         ----------
         send_type : Send type.
-            - `Literal[0]` : Send text message, use `RClient.send_text` method.
-            - `Literal[1]` : Send text message with `@`, use `RClient.send_text_at` method.
-            - `Literal[2]` : Send file message, use `RClient.send_file` method.
-            - `Literal[3]` : Send image message, use `RClient.send_image` method.
-            - `Literal[4]` : Send emotion message, use `RClient.send_emotion` method.
-            - `Literal[5]` : Send pat message, use `RClient.send_pat` method.
-            - `Literal[6]` : Send public account message, use `RClient.send_public` method.
-            - `Literal[7]` : Forward message, use `RClient.send_forward` method.
-
+            - `Literal[0]` Send text message, use `RClient.send_text`: method.
+            - `Literal[1]` Send text message with `@`, use `RClient.send_text_at`: method.
+            - `Literal[2]` Send file message, use `RClient.send_file`: method.
+            - `Literal[3]` Send image message, use `RClient.send_image`: method.
+            - `Literal[4]` Send emotion message, use `RClient.send_emotion`: method.
+            - `Literal[5]` Send pat message, use `RClient.send_pat`: method.
+            - `Literal[6]` Send public account message, use `RClient.send_public`: method.
+            - `Literal[7]` Forward message, use `RClient.send_forward`: method.
         params : Send parameters.
-            - `Callable` : Use execute return value.
-            - `Any` : Use this value.
-                * `Key 'file_name'` : Given file name.
+            - `Callable`: Use execute return value.
+            - `Any`: Use this value.
+                `Key 'file_name'`: Given file name.
         """
 
         # Check.
