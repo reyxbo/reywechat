@@ -679,7 +679,7 @@ class RDatabase(object):
             sql = (
                 'UPDATE `wechat`.`contact_room_user`\n'
                 'SET `contact` = 0\n'
-                'WHERE CONCAT(`room_id`, ',', `user_id`) NOT IN :room_user_ids'
+                "WHERE CONCAT(`room_id`, ',', `user_id`) NOT IN :room_user_ids"
             )
         else:
             sql = (
@@ -687,7 +687,7 @@ class RDatabase(object):
                 'SET `contact` = 0\n'
                 'WHERE (\n'
                 '    `room_id` = :room_id\n'
-                '    AND CONCAT(`room_id`, ',', `user_id`) NOT IN :room_user_ids\n'
+                "    AND CONCAT(`room_id`, ',', `user_id`) NOT IN :room_user_ids\n"
                 ')'
             )
         conn.execute(
