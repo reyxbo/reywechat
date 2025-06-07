@@ -10,7 +10,8 @@
 
 
 from __future__ import annotations
-from typing import Any, List, Dict, TypedDict, Literal, Callable, Optional, NoReturn, overload
+from typing import Any, TypedDict, Literal, Optional, NoReturn, overload
+from collections.abc import Callable
 from queue import Queue
 from json import loads as json_loads
 from bs4 import BeautifulSoup as BSBeautifulSoup
@@ -45,7 +46,7 @@ MessageParameters = TypedDict(
             'type': int,
             'display': str,
             'data': str,
-            'file': Dict[Literal['path', 'name', 'md5', 'size'], str]
+            'file': dict[Literal['path', 'name', 'md5', 'size'], str]
         }
     )
 
@@ -67,7 +68,7 @@ class RMessage(object):
         data: str,
         user: Optional[str] = None,
         room: Optional[str] = None,
-        file:  Optional[Dict[Literal['path', 'name', 'md5', 'size'], str]] = None
+        file:  Optional[dict[Literal['path', 'name', 'md5', 'size'], str]] = None
     ) -> None:
         """
         Build `message` instance.
@@ -89,7 +90,7 @@ class RMessage(object):
             - `str`: Chat room chat.
         file : Message file information.
             - `None`: Non file message.
-            - `Dict`: File message.
+            - `dict`: File message.
                 `Key 'path'`: File path.
                 `Key 'name'`: File name.
                 `Key 'md5'`: File MD5.
@@ -114,7 +115,7 @@ class RMessage(object):
         self._room_name: Optional[str] = None
         self._is_quote: Optional[bool] = None
         self._is_quote_self: Optional[bool] = None
-        self._quote_params: Optional[Dict[Literal['text', 'quote_id', 'quote_type', 'quote_user', 'quote_user_name', 'quote_data'], Optional[str]]] = None
+        self._quote_params: Optional[dict[Literal['text', 'quote_id', 'quote_type', 'quote_user', 'quote_user_name', 'quote_data'], Optional[str]]] = None
         self._is_at: Optional[bool] = None
         self._is_at_self: Optional[bool] = None
         self._is_new_user: Optional[bool] = None
@@ -126,16 +127,16 @@ class RMessage(object):
         self._is_kick_out_room: Optional[bool] = None
         self._is_dissolve_room: Optional[bool] = None
         self._is_image: Optional[bool] = None
-        self._image_qrcodes: Optional[List[str]] = None
+        self._image_qrcodes: Optional[list[str]] = None
         self._is_xml: Optional[bool] = None
         self._is_app: Optional[bool] = None
-        self._app_params: Optional[Dict] = None
+        self._app_params: Optional[dict] = None
         self._valid: Optional[bool] = None
         self.ruling: Optional[Rule] = None
         self.replied: bool = False
         self.execute_continue = self.rreceive.rexecute.continue_
         self.execute_break = self.rreceive.rexecute.break_
-        self.exc_reports: List[str] = []
+        self.exc_reports: list[str] = []
 
 
     @property
@@ -274,7 +275,7 @@ class RMessage(object):
 
 
     @property
-    def quote_params(self) -> Dict[
+    def quote_params(self) -> dict[
         Literal['text', 'quote_id', 'quote_type', 'quote_user', 'quote_user_name', 'quote_data'],
         Optional[str]
     ]:
@@ -589,7 +590,7 @@ class RMessage(object):
 
 
     @property
-    def image_qrcodes(self) -> List[str]:
+    def image_qrcodes(self) -> list[str]:
         """
         Return image QR code texts.
 
@@ -660,7 +661,7 @@ class RMessage(object):
 
 
     @property
-    def app_params(self) -> Dict:
+    def app_params(self) -> dict:
         """
         Return application share parameters.
 
@@ -727,7 +728,7 @@ class RMessage(object):
         self,
         send_type: Literal[1],
         *,
-        user_id: str | List[str],
+        user_id: str | list[str],
         text: str
     ) -> None: ...
 
@@ -854,7 +855,7 @@ class RReceive(object):
         self.max_receiver = max_receiver
         self.bandwidth_downstream = bandwidth_downstream
         self.queue: Queue[RMessage] = Queue()
-        self.handlers: List[Callable[[RMessage], Any]] = []
+        self.handlers: list[Callable[[RMessage], Any]] = []
         self.started: Optional[bool] = False
         self.rexecute = RExecute(self)
 
@@ -886,7 +887,7 @@ class RReceive(object):
             """
 
             # Decode.
-            data: Dict = json_loads(data)
+            data: dict = json_loads(data)
 
             # Break.
             if 'msgId' not in data: return

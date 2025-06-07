@@ -9,7 +9,8 @@
 """
 
 
-from typing import Any, List, TypedDict, Literal, Callable, NoReturn
+from typing import Any, TypedDict, Literal, NoReturn
+from collections.abc import Callable
 from reykit.rexception import catch_exc
 
 from .rexception import RWeChatExecuteContinueError, RWeChatExecuteBreakError
@@ -44,7 +45,7 @@ class RExecute(object):
 
         # Set attribute.
         self.rreceive = rreceive
-        self.rules: List[Rule] = []
+        self.rules: list[Rule] = []
 
         # Add handler.
         self.handler = self._execute_by_rule()

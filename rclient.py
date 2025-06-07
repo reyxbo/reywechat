@@ -10,7 +10,7 @@
 
 
 from __future__ import annotations
-from typing import Any, List, Dict, TypedDict, Optional, Literal, Union, Final
+from typing import Any, TypedDict, Optional, Literal, Union, Final
 from os.path import abspath as os_abspath
 from reykit.rcomm import request as reytool_request
 from reykit.rdll import inject_dll
@@ -206,9 +206,9 @@ class RClient(object):
     def request(
         self,
         api: str,
-        data: Optional[Dict] = None,
-        success_code: Optional[Union[int, List[int]]] = None,
-        fail_code: Optional[Union[int, List[int]]] = None
+        data: Optional[dict] = None,
+        success_code: Optional[Union[int, list[int]]] = None,
+        fail_code: Optional[Union[int, list[int]]] = None
     ) -> Response:
         """
         Request client API.
@@ -219,10 +219,10 @@ class RClient(object):
         data : Request data.
         success_code : Suceess code, if not within the range, throw an exception.
             - `None`: Not handle.
-            - `Union[int, List[int]]`: Handle.
+            - `Union[int, list[int]]`: Handle.
         fail_code : Fail code, if within the range, throw an exception.
             - `None`: Not handle.
-            - `Union[int, List[int]]`: Handle.
+            - `Union[int, list[int]]`: Handle.
 
         Returns
         -------
@@ -294,7 +294,7 @@ class RClient(object):
 
     def get_login_info(
         self
-    ) -> Dict[
+    ) -> dict[
         Literal[
             'id',
             'account',
@@ -478,7 +478,7 @@ class RClient(object):
     def get_contact_table(
         self,
         type_: Optional[Literal['user', 'room']] = None
-    ) -> List[Dict[Literal['id', 'name'], str]]:
+    ) -> list[dict[Literal['id', 'name'], str]]:
         """
         Get contact table, include chat user and chat room.
 
@@ -509,7 +509,7 @@ class RClient(object):
         response = self.request(api, success_code=1)
 
         # Extract.
-        data: List[Dict] = response['data']
+        data: list[dict] = response['data']
         table_user = []
         table_room = []
         for info in data:
@@ -585,7 +585,7 @@ class RClient(object):
     def get_room_member_list(
         self,
         room_id: str
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Get list of chat room member user ID.
 
@@ -606,7 +606,7 @@ class RClient(object):
         response = self.request(api, data, [0, 1])
 
         # Convert.
-        data: Dict = response['data']
+        data: dict = response['data']
         members: str = data['members']
         members_list = members.split('^G')
         members_list = list(filter(
@@ -620,7 +620,7 @@ class RClient(object):
     def get_room_member_dict(
         self,
         room_id: str
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """
         Get dictionary of chat room member user ID and user name.
 
@@ -672,7 +672,7 @@ class RClient(object):
     def send_text_at(
         self,
         room_id: str,
-        user_id: Union[str, List[str], Literal['notify@all']],
+        user_id: Union[str, list[str], Literal['notify@all']],
         text: str
     ) -> None:
         """
@@ -683,7 +683,7 @@ class RClient(object):
         room_id : Chat room ID of receive message.
         user_id : User ID of `@`.
             - `str`, `@`: one user.
-            - `List[str]` `@`: multiple users.
+            - `list[str]` `@`: multiple users.
             - `Literal['notify@all']` `@`: all users.
         text : Message text.
         """

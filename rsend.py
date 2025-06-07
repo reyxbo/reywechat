@@ -10,7 +10,8 @@
 
 
 from __future__ import annotations
-from typing import Any, List, Dict, Literal, Callable, Optional, Union, NoReturn, overload
+from typing import Any, Literal, Optional, Union, NoReturn, overload
+from collections.abc import Callable
 from functools import wraps as functools_wraps
 from os.path import join as os_join
 from queue import Queue
@@ -44,7 +45,7 @@ class RSendParam(object):
         rsend: RSend,
         send_type: Literal[0, 1, 2, 3, 4, 5, 6, 7],
         receive_id: str,
-        params: Dict,
+        params: dict,
         send_id: Optional[int]
     ) -> None:
         """
@@ -74,7 +75,7 @@ class RSendParam(object):
         self.params = params
         self.send_id = send_id
         self.cache_path: Optional[str] = None
-        self.exc_reports: List[str] = []
+        self.exc_reports: list[str] = []
 
 
 class RSend(object):
@@ -101,7 +102,7 @@ class RSend(object):
         self.rwechat = rwechat
         self.bandwidth_upstream = bandwidth_upstream
         self.queue: Queue[RSendParam] = Queue()
-        self.handlers: List[Callable[[RSendParam], Any]] = []
+        self.handlers: list[Callable[[RSendParam], Any]] = []
         self.started: Optional[bool] = False
 
         # Start.
@@ -349,7 +350,7 @@ class RSend(object):
         receive_id: str,
         send_id: Optional[int] = None,
         *,
-        user_id: Union[str, List[str], Literal['notify@all']],
+        user_id: Union[str, list[str], Literal['notify@all']],
         text: str
     ) -> None: ...
 
@@ -508,7 +509,7 @@ class RSend(object):
 
     def wrap_try_send(
         self,
-        receive_id: Union[str, List[str]],
+        receive_id: Union[str, list[str]],
         func: Callable
     ) -> Callable:
         """
@@ -518,7 +519,7 @@ class RSend(object):
         ----------
         receive_id : Receive user ID or chat room ID.
             - `str`: An ID.
-            - `List[str]`: Multiple ID.
+            - `list[str]`: Multiple ID.
         func : Function.
 
         Returns

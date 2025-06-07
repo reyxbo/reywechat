@@ -9,7 +9,7 @@
 """
 
 
-from typing import Tuple, Dict, Literal, Union, Optional
+from typing import Literal, Union, Optional
 from json import loads as json_loads
 from reydb.rconnection import RDatabase as RRDatabase
 from reykit.rexception import throw
@@ -36,7 +36,7 @@ class RDatabase(object):
     def __init__(
         self,
         rwechat: RWeChat,
-        rrdatabase: Union[RRDatabase, Dict[Literal['wechat', 'file'], RRDatabase]]
+        rrdatabase: Union[RRDatabase, dict[Literal['wechat', 'file'], RRDatabase]]
     ) -> None:
         """
         Build `database` instance.
@@ -46,7 +46,7 @@ class RDatabase(object):
         rwechat : `RClient` instance.
         rrdatabase : `RDatabase` instance of `reykit` package.
             - `RDatabase`, Set all `RDatabase`: instances.
-            - `Dict`, Set each `RDatabase`: instance, all item is required.
+            - `dict`, Set each `RDatabase`: instance, all item is required.
                 `Key 'wechat'`: `RDatabase` instance used in WeChat methods.
                 `Key 'file'`: `RDatabase` instance used in file methods.
         """
@@ -971,7 +971,7 @@ class RDatabase(object):
     def _download_file(
         self,
         file_id: int
-    ) -> Tuple[str, str]:
+    ) -> tuple[str, str]:
         """
         Download file by ID.
 
@@ -1058,7 +1058,7 @@ class RDatabase(object):
         # Send.
         for row in table:
             send_id, type_, receive_id, parameter = row.values()
-            parameter: Dict = json_loads(parameter)
+            parameter: dict = json_loads(parameter)
 
             ## Save file.
             file_id = parameter.get('file_id')

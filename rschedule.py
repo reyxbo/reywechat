@@ -10,7 +10,8 @@
 
 
 from __future__ import annotations
-from typing import Any, Dict, Literal, Callable, Union
+from typing import Any, Literal, Union
+from collections.abc import Callable
 from reykit.rschedule import RSchedule as RRSchedule
 
 from .rsend import RSendParam
@@ -46,7 +47,7 @@ class RSchedule(object):
     def send(
         self,
         trigger: Literal['date', 'interval', 'cron'],
-        trigger_kwargs: Dict,
+        trigger_kwargs: dict,
         send_type: Literal[0, 1, 2, 3, 4, 5, 6, 7],
         receive_id: str,
         **params: Union[Callable[[], Any], Any]

@@ -9,7 +9,7 @@
 """
 
 
-from typing import Dict, Literal, Optional, Union
+from typing import Literal, Optional, Union
 from os import getcwd as os_getcwd
 from os.path import join as os_join
 from reydb.rconnection import RDatabase as RRDatabase
@@ -40,7 +40,7 @@ class RWeChat(object):
 
     def __init__(
         self,
-        rrdatabase: Optional[Union[RRDatabase, Dict[Literal['wechat', 'file'], RRDatabase]]],
+        rrdatabase: Optional[Union[RRDatabase, dict[Literal['wechat', 'file'], RRDatabase]]],
         max_receiver: int = 2,
         bandwidth_downstream: float = 5,
         bandwidth_upstream: float = 5,
@@ -53,7 +53,7 @@ class RWeChat(object):
         ----------
         rrdatabase : `RDatabase` instance of `reykit` package.
             - `RDatabase`, Set all `RDatabase`: instances.
-            - `Dict`, Set each `RDatabase`: instance, all item is required.
+            - `dict`, Set each `RDatabase`: instance, all item is required.
                 `Key 'wechat'`: `RDatabase` instance used in WeChat methods.
                 `Key 'file'`: `RDatabase` instance used in file methods.
         max_receiver : Maximum number of receivers.
