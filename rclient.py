@@ -14,14 +14,16 @@ from typing import Any, TypedDict, Optional, Literal, Union, Final
 from os.path import abspath as os_abspath
 from reykit.rcomm import request as reytool_request
 from reykit.rdll import inject_dll
-from reykit.rtype import RError
+from reykit.rexception import RError
 from reykit.ros import find_relpath
 from reykit.rsystem import search_process, memory_read, memory_write
+from reykit.rtype import RConfigMeta
 
 from .rwechat import RWeChat
 
 
 __all__ = (
+    'RConfigClient',
     'RClientErorr',
     'RClient',
     'simulate_client_version'
@@ -31,16 +33,21 @@ __all__ = (
 Response = TypedDict('Response', {'code': int, 'message': str, 'data': Any})
 
 
-# Set.
-_client_version_memory_offsets = (
-    61280212,
-    61372636,
-    61474056,
-    61638128,
-    61666264,
-    61674264,
-    61675784
-)
+class RConfigClient(object, metaclass=RConfigMeta):
+    """
+    Rey's `config client` type.
+    """
+
+    # Set.
+    _client_version_memory_offsets = (
+        61280212,
+        61372636,
+        61474056,
+        61638128,
+        61666264,
+        61674264,
+        61675784
+    )
 
 
 class RClientErorr(RError):
@@ -69,7 +76,7 @@ class RClient(object):
         rwechat: RWeChat
     ) -> None:
         """
-        Build `client` instance.
+        Build `client` attributes.
 
         Parameters
         ----------
@@ -144,7 +151,7 @@ class RClient(object):
         """
 
         # Check.
-        for offset in _client_version_memory_offsets:
+        for offset in RConfigClient._client_version_memory_offsets:
             value = memory_read(
                 'WeChat.exe',
                 'WeChatWin.dll',
@@ -893,7 +900,7 @@ def simulate_client_version() -> None:
         raise RClientErorr(f'WeChat client version failed, must be "{RClient.client_version}"')
 
     # Simulate.
-    for offset in _client_version_memory_offsets:
+    for offset in RConfigClient._client_version_memory_offsets:
         memory_write(
             'WeChat.exe',
             'WeChatWin.dll',

@@ -71,7 +71,7 @@ class RMessage(object):
         file:  Optional[dict[Literal['path', 'name', 'md5', 'size'], str]] = None
     ) -> None:
         """
-        Build `message` instance.
+        Build `message` attributes.
 
         Parameters
         ----------
@@ -838,7 +838,7 @@ class RReceive(object):
         bandwidth_downstream: float
     ) -> None:
         """
-        Build `receive` instance.
+        Build `receive` attributes.
 
         Parameters
         ----------

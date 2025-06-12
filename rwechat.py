@@ -47,7 +47,7 @@ class RWeChat(object):
         project_dir: Optional[str] = None
     ) -> None:
         """
-        Build `WeChat` instance.
+        Build `WeChat` attributes.
 
         Parameters
         ----------

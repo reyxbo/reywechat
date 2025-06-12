@@ -49,7 +49,7 @@ class RSendParam(object):
         send_id: Optional[int]
     ) -> None:
         """
-        Build `send parameters` instance.
+        Build `send parameters` attributes.
 
         Parameters
         ----------
@@ -90,7 +90,7 @@ class RSend(object):
         bandwidth_upstream: float
     ) -> None:
         """
-        Build `send` instance.
+        Build `send` attributes.
 
         Parameters
         ----------

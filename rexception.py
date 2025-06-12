@@ -9,7 +9,7 @@
 """
 
 
-from reykit.rtype import RError, RActiveError
+from reykit.rexception import RError, RActiveError
 
 
 __all__ = (

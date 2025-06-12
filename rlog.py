@@ -33,7 +33,7 @@ class RLog(object):
         rwechat: RWeChat
     ) -> None:
         """
-        Build `log` instance.
+        Build `log` attributes.
 
         Parameters
         ----------

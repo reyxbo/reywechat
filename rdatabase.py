@@ -39,7 +39,7 @@ class RDatabase(object):
         rrdatabase: Union[RRDatabase, dict[Literal['wechat', 'file'], RRDatabase]]
     ) -> None:
         """
-        Build `database` instance.
+        Build `database` attributes.
 
         Parameters
         ----------
