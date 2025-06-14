@@ -9,7 +9,7 @@
 """
 
 
-from typing import Literal, Union, Optional
+from typing import Literal
 from json import loads as json_loads
 from reydb.rconnection import RDatabase as RRDatabase
 from reykit.rexception import throw
@@ -36,7 +36,7 @@ class RDatabase(object):
     def __init__(
         self,
         rwechat: RWeChat,
-        rrdatabase: Union[RRDatabase, dict[Literal['wechat', 'file'], RRDatabase]]
+        rrdatabase: RRDatabase | dict[Literal['wechat', 'file'], RRDatabase]
     ) -> None:
         """
         Build `database` attributes.
@@ -617,7 +617,7 @@ class RDatabase(object):
 
     def update_contact_room_user(
         self,
-        room_id: Optional[str] = None
+        room_id: str | None = None
     ) -> None:
         """
         Update table `contact_room_user`.

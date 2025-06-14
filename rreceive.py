@@ -10,7 +10,7 @@
 
 
 from __future__ import annotations
-from typing import Any, TypedDict, Literal, Optional, NoReturn, overload
+from typing import Any, TypedDict, Literal, NoReturn, overload
 from collections.abc import Callable
 from queue import Queue
 from json import loads as json_loads
@@ -41,8 +41,8 @@ MessageParameters = TypedDict(
             'time': int,
             'id': int,
             'number': int,
-            'room': Optional[str],
-            'user': Optional[str],
+            'room': str | None,
+            'user': str | None,
             'type': int,
             'display': str,
             'data': str,
@@ -66,9 +66,9 @@ class RMessage(object):
         type_: int,
         display: str,
         data: str,
-        user: Optional[str] = None,
-        room: Optional[str] = None,
-        file:  Optional[dict[Literal['path', 'name', 'md5', 'size'], str]] = None
+        user: str | None = None,
+        room: str | None = None,
+        file:  dict[Literal['path', 'name', 'md5', 'size'], str] | None = None
     ) -> None:
         """
         Build `message` attributes.
@@ -111,28 +111,28 @@ class RMessage(object):
         self.user = user
         self.room = room
         self.file = file
-        self._user_name: Optional[str] = None
-        self._room_name: Optional[str] = None
-        self._is_quote: Optional[bool] = None
-        self._is_quote_self: Optional[bool] = None
-        self._quote_params: Optional[dict[Literal['text', 'quote_id', 'quote_type', 'quote_user', 'quote_user_name', 'quote_data'], Optional[str]]] = None
-        self._is_at: Optional[bool] = None
-        self._is_at_self: Optional[bool] = None
-        self._is_new_user: Optional[bool] = None
-        self._is_new_room: Optional[bool] = None
-        self._is_new_room_user: Optional[bool] = None
-        self._new_room_user_name: Optional[str] = None
-        self._is_change_room_name: Optional[bool] = None
-        self._change_room_name: Optional[str] = None
-        self._is_kick_out_room: Optional[bool] = None
-        self._is_dissolve_room: Optional[bool] = None
-        self._is_image: Optional[bool] = None
-        self._image_qrcodes: Optional[list[str]] = None
-        self._is_xml: Optional[bool] = None
-        self._is_app: Optional[bool] = None
-        self._app_params: Optional[dict] = None
-        self._valid: Optional[bool] = None
-        self.ruling: Optional[Rule] = None
+        self._user_name: str | None = None
+        self._room_name: str | None = None
+        self._is_quote: bool | None = None
+        self._is_quote_self: bool | None = None
+        self._quote_params: dict[Literal['text', 'quote_id', 'quote_type', 'quote_user', 'quote_user_name', 'quote_data'], str] | None = None
+        self._is_at: bool | None = None
+        self._is_at_self: bool | None = None
+        self._is_new_user: bool | None = None
+        self._is_new_room: bool | None = None
+        self._is_new_room_user: bool | None = None
+        self._new_room_user_name: str | None = None
+        self._is_change_room_name: bool | None = None
+        self._change_room_name: str | None = None
+        self._is_kick_out_room: bool | None = None
+        self._is_dissolve_room: bool | None = None
+        self._is_image: bool | None = None
+        self._image_qrcodes: list[str] | None = None
+        self._is_xml: bool | None = None
+        self._is_app: bool | None = None
+        self._app_params: dict | None = None
+        self._valid: bool | None = None
+        self.ruling: Rule | None = None
         self.replied: bool = False
         self.execute_continue = self.rreceive.rexecute.continue_
         self.execute_break = self.rreceive.rexecute.break_
@@ -277,7 +277,7 @@ class RMessage(object):
     @property
     def quote_params(self) -> dict[
         Literal['text', 'quote_id', 'quote_type', 'quote_user', 'quote_user_name', 'quote_data'],
-        Optional[str]
+        str | None
     ]:
         """
         Return quote parameters of message.
@@ -455,7 +455,7 @@ class RMessage(object):
 
 
     @property
-    def new_room_user_name(self) -> Optional[str]:
+    def new_room_user_name(self) -> str | None:
         """
         Return new chat room user name.
 
@@ -500,7 +500,7 @@ class RMessage(object):
 
 
     @property
-    def change_room_name(self) -> Optional[str]:
+    def change_room_name(self) -> str | None:
         """
         Return change chat room name.
 
@@ -738,7 +738,7 @@ class RMessage(object):
         send_type: Literal[2, 3, 4],
         *,
         path: str,
-        file_name: Optional[str] = None
+        file_name: str | None = None
     ) -> None: ...
 
     @overload
@@ -756,10 +756,10 @@ class RMessage(object):
         *,
         page_url: str,
         title: str,
-        text: Optional[str] = None,
-        image_url: Optional[str] = None,
-        public_name: Optional[str] = None,
-        public_id: Optional[str] = None
+        text: str | None = None,
+        image_url: str | None = None,
+        public_name: str | None = None,
+        public_id: str | None = None
     ) -> None: ...
 
     @overload
@@ -779,7 +779,7 @@ class RMessage(object):
 
     def reply(
         self,
-        send_type: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7]] = None,
+        send_type: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None = None,
         **params: Any
     ) -> None:
         """
@@ -856,7 +856,7 @@ class RReceive(object):
         self.bandwidth_downstream = bandwidth_downstream
         self.queue: Queue[RMessage] = Queue()
         self.handlers: list[Callable[[RMessage], Any]] = []
-        self.started: Optional[bool] = False
+        self.started: bool | None = False
         self.rexecute = RExecute(self)
 
         # Start.

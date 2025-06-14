@@ -9,7 +9,7 @@
 """
 
 
-from typing import Literal, Optional, Union
+from typing import Literal
 from os import getcwd as os_getcwd
 from os.path import join as os_join
 from reydb.rconnection import RDatabase as RRDatabase
@@ -40,11 +40,11 @@ class RWeChat(object):
 
     def __init__(
         self,
-        rrdatabase: Optional[Union[RRDatabase, dict[Literal['wechat', 'file'], RRDatabase]]],
+        rrdatabase: RRDatabase | dict[Literal['wechat', 'file'], RRDatabase] | None,
         max_receiver: int = 2,
         bandwidth_downstream: float = 5,
         bandwidth_upstream: float = 5,
-        project_dir: Optional[str] = None
+        project_dir: str | None = None
     ) -> None:
         """
         Build `WeChat` attributes.

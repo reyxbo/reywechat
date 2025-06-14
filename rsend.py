@@ -10,7 +10,7 @@
 
 
 from __future__ import annotations
-from typing import Any, Literal, Optional, Union, NoReturn, overload
+from typing import Any, Literal, NoReturn, overload
 from collections.abc import Callable
 from functools import wraps as functools_wraps
 from os.path import join as os_join
@@ -46,7 +46,7 @@ class RSendParam(object):
         send_type: Literal[0, 1, 2, 3, 4, 5, 6, 7],
         receive_id: str,
         params: dict,
-        send_id: Optional[int]
+        send_id: int | None
     ) -> None:
         """
         Build `send parameters` attributes.
@@ -74,7 +74,7 @@ class RSendParam(object):
         self.receive_id = receive_id
         self.params = params
         self.send_id = send_id
-        self.cache_path: Optional[str] = None
+        self.cache_path: str | None = None
         self.exc_reports: list[str] = []
 
 
@@ -103,7 +103,7 @@ class RSend(object):
         self.bandwidth_upstream = bandwidth_upstream
         self.queue: Queue[RSendParam] = Queue()
         self.handlers: list[Callable[[RSendParam], Any]] = []
-        self.started: Optional[bool] = False
+        self.started: bool | None = False
 
         # Start.
         self._delete_cache_file()
@@ -338,7 +338,7 @@ class RSend(object):
         self,
         send_type: Literal[0],
         receive_id: str,
-        send_id: Optional[int] = None,
+        send_id: int | None = None,
         *,
         text: str
     ) -> None: ...
@@ -348,9 +348,9 @@ class RSend(object):
         self,
         send_type: Literal[1],
         receive_id: str,
-        send_id: Optional[int] = None,
+        send_id: int | None = None,
         *,
-        user_id: Union[str, list[str], Literal['notify@all']],
+        user_id: str | list[str] | Literal['notify@all'],
         text: str
     ) -> None: ...
 
@@ -359,10 +359,10 @@ class RSend(object):
         self,
         send_type: Literal[2, 3, 4],
         receive_id: str,
-        send_id: Optional[int] = None,
+        send_id: int | None = None,
         *,
         path: str,
-        file_name: Optional[str] = None
+        file_name: str | None = None
     ) -> None: ...
 
     @overload
@@ -370,7 +370,7 @@ class RSend(object):
         self,
         send_type: Literal[5],
         receive_id: str,
-        send_id: Optional[int] = None,
+        send_id: int | None = None,
         *,
         user_id: str
     ) -> None: ...
@@ -380,14 +380,14 @@ class RSend(object):
         self,
         send_type: Literal[6],
         receive_id: str,
-        send_id: Optional[int] = None,
+        send_id: int | None = None,
         *,
         page_url: str,
         title: str,
-        text: Optional[str] = None,
-        image_url: Optional[str] = None,
-        public_name: Optional[str] = None,
-        public_id: Optional[str] = None
+        text: str | None = None,
+        image_url: str | None = None,
+        public_name: str | None = None,
+        public_id: str | None = None
     ) -> None: ...
 
     @overload
@@ -395,7 +395,7 @@ class RSend(object):
         self,
         send_type: Literal[7],
         receive_id: str,
-        send_id: Optional[int] = None,
+        send_id: int | None = None,
         *,
         message_id: str
     ) -> None: ...
@@ -405,15 +405,15 @@ class RSend(object):
         self,
         send_type: Any,
         receive_id: str,
-        send_id: Optional[int] = None,
+        send_id: int | None = None,
         **params: Any
     ) -> NoReturn: ...
 
     def send(
         self,
-        send_type: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7]] = None,
-        receive_id: Optional[str] = None,
-        send_id: Optional[int] = None,
+        send_type: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None = None,
+        receive_id: str | None = None,
+        send_id: int | None = None,
         **params: Any
     ) -> None:
         """
@@ -509,7 +509,7 @@ class RSend(object):
 
     def wrap_try_send(
         self,
-        receive_id: Union[str, list[str]],
+        receive_id: str | list[str],
         func: Callable
     ) -> Callable:
         """

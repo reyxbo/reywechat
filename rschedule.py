@@ -10,7 +10,7 @@
 
 
 from __future__ import annotations
-from typing import Any, Literal, Union
+from typing import Any, Literal
 from collections.abc import Callable
 from reykit.rschedule import RSchedule as RRSchedule
 
@@ -50,7 +50,7 @@ class RSchedule(object):
         trigger_kwargs: dict,
         send_type: Literal[0, 1, 2, 3, 4, 5, 6, 7],
         receive_id: str,
-        **params: Union[Callable[[], Any], Any]
+        **params: Callable[[], Any] | Any
     ) -> None:
         """
         Schedule send message.

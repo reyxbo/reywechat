@@ -10,7 +10,7 @@
 
 
 from __future__ import annotations
-from typing import Any, TypedDict, Optional, Literal, Union, Final
+from typing import Any, TypedDict, Literal, Final
 from os.path import abspath as os_abspath
 from reykit.rcomm import request as reytool_request
 from reykit.rdll import inject_dll
@@ -213,9 +213,9 @@ class RClient(object):
     def request(
         self,
         api: str,
-        data: Optional[dict] = None,
-        success_code: Optional[Union[int, list[int]]] = None,
-        fail_code: Optional[Union[int, list[int]]] = None
+        data: dict | None = None,
+        success_code: int | list[int] | None = None,
+        fail_code: int | list[int] | None = None
     ) -> Response:
         """
         Request client API.
@@ -226,10 +226,10 @@ class RClient(object):
         data : Request data.
         success_code : Suceess code, if not within the range, throw an exception.
             - `None`: Not handle.
-            - `Union[int, list[int]]`: Handle.
+            - `int | list[int]`: Handle.
         fail_code : Fail code, if within the range, throw an exception.
             - `None`: Not handle.
-            - `Union[int, list[int]]`: Handle.
+            - `int | list[int]`: Handle.
 
         Returns
         -------
@@ -316,7 +316,7 @@ class RClient(object):
             'wechat_data_path',
             'decrypt_key'
         ],
-        Optional[str]
+        str | None
     ]:
         """
         Get login account information.
@@ -375,7 +375,7 @@ class RClient(object):
     def hook_message(
         self,
         host: str,
-        port: Union[str, int],
+        port: str | int,
         timeout: float
     ) -> None:
         """
@@ -484,7 +484,7 @@ class RClient(object):
 
     def get_contact_table(
         self,
-        type_: Optional[Literal['user', 'room']] = None
+        type_: Literal['user', 'room'] | None = None
     ) -> list[dict[Literal['id', 'name'], str]]:
         """
         Get contact table, include chat user and chat room.
@@ -580,7 +580,7 @@ class RClient(object):
         response = self.request(api, data, [0, 1])
 
         # Extract.
-        data: Optional[dict] = response['data']
+        data: dict | None = response['data']
         if data is None:
             name = None
         else:
@@ -679,7 +679,7 @@ class RClient(object):
     def send_text_at(
         self,
         room_id: str,
-        user_id: Union[str, list[str], Literal['notify@all']],
+        user_id: str | list[str] | Literal['notify@all'],
         text: str
     ) -> None:
         """
@@ -814,10 +814,10 @@ class RClient(object):
         receive_id: str,
         page_url: str,
         title: str,
-        text: Optional[str] = None,
-        image_url: Optional[str] = None,
-        public_name: Optional[str] = None,
-        public_id: Optional[str] = None
+        text: str | None = None,
+        image_url: str | None = None,
+        public_name: str | None = None,
+        public_id: str | None = None
     ) -> None:
         """
         Send public account message.
