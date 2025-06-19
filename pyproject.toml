@@ -1,0 +1,27 @@
+[project]
+name = "reywechat"
+version = "1.0.2"
+description = "Rey's WeChat method set."
+readme = "README.md"
+requires-python = ">=3.12"
+license = {file = "LICENSE"}
+keywords = ["rey", "reyxbo", "wechat", "robot", "helper"]
+authors = [
+    {name = "Rey", email = "reyxbo@163.com"}
+]
+dependencies = [
+    "beautifulsoup4",
+    "reykit"
+]
+
+[project.urls]
+homepage = "https://github.com/reyxbo/reywechat/"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+artifacts = [
+    "src/reywechat/data/client_api.dll"
+]
