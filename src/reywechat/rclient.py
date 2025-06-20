@@ -16,7 +16,8 @@ from reykit.rcomm import request as reytool_request
 from reykit.rdll import inject_dll
 from reykit.rexception import RError
 from reykit.ros import find_relpath
-from reykit.rsystem import search_process, memory_read, memory_write
+from reykit.rsystem import dos_command, search_process, memory_read, memory_write, popup_select
+from reykit.rtime import wait
 from reykit.rtype import RConfigMeta
 
 from .rwechat import RWeChat
@@ -24,7 +25,7 @@ from .rwechat import RWeChat
 
 __all__ = (
     'RConfigClient',
-    'RClientErorr',
+    'RWeChatClientErorr',
     'RClient',
     'simulate_client_version'
 )
@@ -50,9 +51,14 @@ class RConfigClient(object, metaclass=RConfigMeta):
     )
 
 
-class RClientErorr(RError):
+class RWeChatError(RError):
     """
-    Rey's `client exception` type.
+    Rey's `WeChat exception` type.
+    """
+
+class RWeChatClientErorr(RWeChatError):
+    """
+    Rey's `WeChat client exception` type.
     """
 
 
@@ -96,17 +102,35 @@ class RClient(object):
         Start client control API.
         """
 
-        # Check client.
+        # Check client started.
         judge = self.check_client_started()
+
+        ## Start client.
         if not judge:
-            raise RClientErorr('WeChat client not started')
+            wechat_path = popup_select(
+                title='请选择微信客户端',
+                filter_file=[('', ['*微信*.exe', '*WeChat*.exe'])]
+            )
+            if wechat_path is None:
+                raise RWeChatClientErorr('WeChat client not started')
+            dos_command(wechat_path)
+
+            ## Wait.
+            seconds = wait(
+                self.check_client_started,
+                _interval=0.2,
+                _timeout=10,
+                _raising=False
+            )
+            if seconds is None:
+                raise RWeChatClientErorr('WeChat client not started')
 
         # Check client version.
         judge = self.check_client_version()
         if not judge:
-            raise RClientErorr(f'WeChat client version failed, must be "{self.client_version}"')
+            raise RWeChatClientErorr(f'WeChat client version failed, must be "{self.client_version}"')
 
-        # Check start.
+        # Check API.
         judge = self.check_api()
         if not judge:
 
@@ -116,7 +140,22 @@ class RClient(object):
             # Check api.
             judge = self.check_api()
             if not judge:
-                raise RClientErorr('start WeChat client API failed')
+                raise RWeChatClientErorr('start WeChat client API failed')
+
+        # Check client login.
+        judge = self.check_client_login()
+        if not judge:
+            print('Please login WeChat.')
+
+            ## Wait.
+            seconds = wait(
+                self.check_client_login(),
+                _interval=0.5,
+                _timeout=30,
+                _raising=False
+            )
+            if seconds is None:
+                raise RWeChatClientErorr('WeChat not logged in')
 
         # Report.
         print('Start WeChat client API successfully, address is "127.0.0.1:19088".')
@@ -182,11 +221,6 @@ class RClient(object):
         with process.oneshot():
             process_name = process.name()
         if process_name != 'WeChat.exe':
-            return False
-
-        ## Check request.
-        result = self.check_login()
-        if not result:
             return False
 
         return True
@@ -271,12 +305,12 @@ class RClient(object):
                 and response['code'] in fail_code
             )
         ):
-            raise RClientErorr(f'client API "{api}" request failed', data, response)
+            raise RWeChatClientErorr(f'client API "{api}" request failed', data, response)
 
         return response
 
 
-    def check_login(self) -> bool:
+    def check_client_login(self) -> bool:
         """
         Check if the client is logged in.
 
@@ -892,12 +926,12 @@ def simulate_client_version() -> None:
     ## Check client.
     judge = RClient.check_client_started(RClient)
     if not judge:
-        raise RClientErorr('WeChat client not started')
+        raise RWeChatClientErorr('WeChat client not started')
 
     ## Check client version.
     judge = RClient.check_client_version(RClient)
     if not judge:
-        raise RClientErorr(f'WeChat client version failed, must be "{RClient.client_version}"')
+        raise RWeChatClientErorr(f'WeChat client version failed, must be "{RClient.client_version}"')
 
     # Simulate.
     for offset in RConfigClient._client_version_memory_offsets:
