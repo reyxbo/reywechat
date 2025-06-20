@@ -149,7 +149,7 @@ class RClient(object):
 
             ## Wait.
             seconds = wait(
-                self.check_client_login(),
+                self.check_client_login,
                 _interval=0.5,
                 _timeout=30,
                 _raising=False
