@@ -10,7 +10,7 @@
 
 
 from __future__ import annotations
-from typing import Any, TypedDict, Literal, NoReturn, overload
+from typing import Any, TypedDict, Literal, overload
 from collections.abc import Callable
 from queue import Queue
 from json import loads as json_loads
@@ -769,13 +769,6 @@ class RMessage(object):
         *,
         message_id: str
     ) -> None: ...
-
-    @overload
-    def reply(
-        self,
-        send_type: Any,
-        **params: Any
-    ) -> NoReturn: ...
 
     def reply(
         self,

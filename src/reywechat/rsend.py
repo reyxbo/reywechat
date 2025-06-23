@@ -10,7 +10,7 @@
 
 
 from __future__ import annotations
-from typing import Any, Literal, NoReturn, overload
+from typing import Any, Literal, overload
 from collections.abc import Callable
 from functools import wraps as functools_wraps
 from os.path import join as os_join
@@ -399,15 +399,6 @@ class RSend(object):
         *,
         message_id: str
     ) -> None: ...
-
-    @overload
-    def send(
-        self,
-        send_type: Any,
-        receive_id: str,
-        send_id: int | None = None,
-        **params: Any
-    ) -> NoReturn: ...
 
     def send(
         self,
