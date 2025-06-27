@@ -19,11 +19,11 @@ from bs4.element import Tag as BSTag
 from reykit.rcomm import get_file_stream_time, listen_socket
 from reykit.rexception import throw, catch_exc
 from reykit.rimage import decode_qrcode
+from reykit.rmultitask import RThreadPool
 from reykit.ros import RFile, RFolder, os_exists
 from reykit.rregex import search
 from reykit.rtime import sleep, wait
 from reykit.rwrap import wrap_thread, wrap_exc
-from reykit.rmultitask import RThreadPool
 
 from .rexception import RWeChatExecuteNoRuleReplyError, RWeChatExecuteTriggerReplyError
 from .rwechat import RWeChat
@@ -988,7 +988,7 @@ class RReceive(object):
 
             ## Submit.
             rmessage = self.queue.get()
-            thread_pool.one(rmessage)
+            thread_pool(rmessage)
 
 
     def add_handler(

@@ -571,7 +571,7 @@ class RSend(object):
                         )
 
                 # Throw exception.
-                raise exc_instance
+                raise
 
             return result
 
