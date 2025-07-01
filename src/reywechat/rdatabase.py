@@ -102,37 +102,37 @@ class RDatabase(object):
                 'fields': [
                     {
                         'name': 'create_time',
-                        'type_': 'datetime',
+                        'type': 'datetime',
                         'constraint': 'NOT NULL DEFAULT CURRENT_TIMESTAMP',
                         'comment': 'Record create time.'
                     },
                     {
                         'name': 'update_time',
-                        'type_': 'datetime',
+                        'type': 'datetime',
                         'constraint': 'DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP',
                         'comment': 'Record update time.'
                     },
                     {
                         'name': 'user_id',
-                        'type_': 'varchar(24)',
+                        'type': 'varchar(24)',
                         'constraint': 'NOT NULL',
                         'comment': 'User ID.'
                     },
                     {
                         'name': 'name',
-                        'type_': 'varchar(32)',
+                        'type': 'varchar(32)',
                         'constraint': 'CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL',
                         'comment': 'User name.'
                     },
                     {
                         'name': 'contact',
-                        'type_': 'tinyint unsigned',
+                        'type': 'tinyint unsigned',
                         'constraint': 'NOT NULL',
                         'comment': 'Is the contact, 0 is contact, 1 is no contact.'
                     },
                     {
                         'name': 'valid',
-                        'type_': 'tinyint unsigned',
+                        'type': 'tinyint unsigned',
                         'constraint': 'DEFAULT 1',
                         'comment': 'Is the valid, 0 is invalid, 1 is valid.'
                     }
@@ -147,37 +147,37 @@ class RDatabase(object):
                 'fields': [
                     {
                         'name': 'create_time',
-                        'type_': 'datetime',
+                        'type': 'datetime',
                         'constraint': 'NOT NULL DEFAULT CURRENT_TIMESTAMP',
                         'comment': 'Record create time.'
                     },
                     {
                         'name': 'update_time',
-                        'type_': 'datetime',
+                        'type': 'datetime',
                         'constraint': 'DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP',
                         'comment': 'Record update time.'
                     },
                     {
                         'name': 'room_id',
-                        'type_': 'varchar(31)',
+                        'type': 'varchar(31)',
                         'constraint': 'NOT NULL',
                         'comment': 'Chat room ID.'
                     },
                     {
                         'name': 'name',
-                        'type_': 'varchar(32)',
+                        'type': 'varchar(32)',
                         'constraint': 'CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL',
                         'comment': 'Chat room name.'
                     },
                     {
                         'name': 'contact',
-                        'type_': 'tinyint unsigned',
+                        'type': 'tinyint unsigned',
                         'constraint': 'NOT NULL',
                         'comment': 'Is the contact, 0 is contact, 1 is no contact.'
                     },
                     {
                         'name': 'valid',
-                        'type_': 'tinyint unsigned',
+                        'type': 'tinyint unsigned',
                         'constraint': 'DEFAULT 1',
                         'comment': 'Is the valid, 0 is invalid, 1 is valid.'
                     }
@@ -192,43 +192,43 @@ class RDatabase(object):
                 'fields': [
                     {
                         'name': 'create_time',
-                        'type_': 'datetime',
+                        'type': 'datetime',
                         'constraint': 'NOT NULL DEFAULT CURRENT_TIMESTAMP',
                         'comment': 'Record create time.'
                     },
                     {
                         'name': 'update_time',
-                        'type_': 'datetime',
+                        'type': 'datetime',
                         'constraint': 'DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP',
                         'comment': 'Record update time.'
                     },
                     {
                         'name': 'room_id',
-                        'type_': 'varchar(31)',
+                        'type': 'varchar(31)',
                         'constraint': 'NOT NULL',
                         'comment': 'Chat room ID.'
                     },
                     {
                         'name': 'user_id',
-                        'type_': 'varchar(24)',
+                        'type': 'varchar(24)',
                         'constraint': 'NOT NULL',
                         'comment': 'Chat room user ID.'
                     },
                     {
                         'name': 'name',
-                        'type_': 'varchar(32)',
+                        'type': 'varchar(32)',
                         'constraint': 'CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL',
                         'comment': 'Chat room user name.'
                     },
                     {
                         'name': 'contact',
-                        'type_': 'tinyint unsigned',
+                        'type': 'tinyint unsigned',
                         'constraint': 'NOT NULL',
                         'comment': 'Is the contact, 0 is contact, 1 is no contact.'
                     },
                     {
                         'name': 'valid',
-                        'type_': 'tinyint unsigned',
+                        'type': 'tinyint unsigned',
                         'constraint': 'DEFAULT 1',
                         'comment': 'Is the valid, 0 is invalid, 1 is valid.'
                     }
@@ -244,37 +244,37 @@ class RDatabase(object):
                 'fields': [
                     {
                         'name': 'create_time',
-                        'type_': 'datetime',
+                        'type': 'datetime',
                         'constraint': 'NOT NULL DEFAULT CURRENT_TIMESTAMP',
                         'comment': 'Record create time.'
                     },
                     {
                         'name': 'message_time',
-                        'type_': 'datetime',
+                        'type': 'datetime',
                         'constraint': 'NOT NULL',
                         'comment': 'Message time.'
                     },
                     {
                         'name': 'message_id',
-                        'type_': 'bigint unsigned',
+                        'type': 'bigint unsigned',
                         'constraint': 'NOT NULL',
                         'comment': 'Message UUID.'
                     },
                     {
                         'name': 'room_id',
-                        'type_': 'varchar(31)',
+                        'type': 'varchar(31)',
                         'constraint': 'DEFAULT NULL',
                         'comment': 'Message chat room ID, null for private chat.'
                     },
                     {
                         'name': 'user_id',
-                        'type_': 'varchar(24)',
+                        'type': 'varchar(24)',
                         'constraint': 'DEFAULT NULL',
                         'comment': 'Message sender user ID, null for system message.'
                     },
                     {
                         'name': 'type',
-                        'type_': 'int unsigned',
+                        'type': 'int unsigned',
                         'constraint': 'NOT NULL',
                         'comment': (
                             'Message type, '
@@ -293,13 +293,13 @@ class RDatabase(object):
                     },
                     {
                         'name': 'data',
-                        'type_': 'text',
+                        'type': 'text',
                         'constraint': 'CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL',
                         'comment': 'Message data.'
                     },
                     {
                         'name': 'file_id',
-                        'type_': 'mediumint unsigned',
+                        'type': 'mediumint unsigned',
                         'constraint': 'DEFAULT NULL',
                         'comment': 'Message file ID, from the file database.'
                     }
@@ -334,31 +334,31 @@ class RDatabase(object):
                 'fields': [
                     {
                         'name': 'create_time',
-                        'type_': 'datetime',
+                        'type': 'datetime',
                         'constraint': 'NOT NULL DEFAULT CURRENT_TIMESTAMP',
                         'comment': 'Record create time.'
                     },
                     {
                         'name': 'status_time',
-                        'type_': 'datetime',
+                        'type': 'datetime',
                         'constraint': 'NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP',
                         'comment': 'Send status time.'
                     },
                     {
                         'name': 'plan_time',
-                        'type_': 'datetime',
+                        'type': 'datetime',
                         'constraint': 'DEFAULT NULL',
                         'comment': 'Send plan time.'
                     },
                     {
                         'name': 'send_id',
-                        'type_': 'int unsigned',
+                        'type': 'int unsigned',
                         'constraint': 'NOT NULL AUTO_INCREMENT',
                         'comment': 'Send self increase ID.'
                     },
                     {
                         'name': 'status',
-                        'type_': 'tinyint unsigned',
+                        'type': 'tinyint unsigned',
                         'constraint': 'NOT NULL',
                         'comment': (
                             'Send status, '
@@ -371,7 +371,7 @@ class RDatabase(object):
                     },
                     {
                         'name': 'type',
-                        'type_': 'tinyint unsigned',
+                        'type': 'tinyint unsigned',
                         'constraint': 'NOT NULL',
                         'comment': (
                             'Send type, '
@@ -387,13 +387,13 @@ class RDatabase(object):
                     },
                     {
                         'name': 'receive_id',
-                        'type_': 'varchar(31)',
+                        'type': 'varchar(31)',
                         'constraint': 'NOT NULL',
                         'comment': 'Receive to user ID or chat room ID.'
                     },
                     {
                         'name': 'parameter',
-                        'type_': 'json',
+                        'type': 'json',
                         'constraint': 'NOT NULL',
                         'comment': (
                             'Send parameters, '

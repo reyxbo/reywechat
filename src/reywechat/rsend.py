@@ -10,9 +10,9 @@
 
 
 from __future__ import annotations
-from typing import Any, Literal, overload
+from typing import Any, Literal, Final, overload
 from collections.abc import Callable
-from enum import Enum, auto as enum_auto
+from enum import Enum
 from functools import wraps as functools_wraps
 from os.path import join as os_join
 from queue import Queue
@@ -51,14 +51,14 @@ class SendType(Enum):
     SEND_FORWARD : Forward message.
     """
 
-    SEND_TEXT = enum_auto()
-    SEND_TEXT_AT = enum_auto()
-    SEND_FILE = enum_auto()
-    SEND_IMAGE = enum_auto()
-    SEND_EMOTION = enum_auto()
-    SEND_PAT = enum_auto()
-    SEND_PUBLIC = enum_auto()
-    SEND_FORWARD = enum_auto()
+    SEND_TEXT = 0
+    SEND_TEXT_AT = 1
+    SEND_FILE = 2
+    SEND_IMAGE = 3
+    SEND_EMOTION = 4
+    SEND_PAT = 5
+    SEND_PUBLIC = 6
+    SEND_FORWARD = 7
 
 
 class RSendParam(object):
@@ -70,7 +70,7 @@ class RSendParam(object):
     def __init__(
         self,
         rsend: RSend,
-        send_type: RSendParam,
+        send_type: SendType,
         receive_id: str,
         params: dict,
         send_id: int | None
