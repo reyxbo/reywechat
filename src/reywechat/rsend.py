@@ -12,6 +12,7 @@
 from __future__ import annotations
 from typing import Any, Literal, overload
 from collections.abc import Callable
+from enum import Enum, auto as enum_auto
 from functools import wraps as functools_wraps
 from os.path import join as os_join
 from queue import Queue
@@ -34,6 +35,32 @@ __all__ = (
 )
 
 
+class SendType(Enum):
+    """
+    Send type enumeration.
+
+    Attributes
+    ----------
+    SEND_TEXT : Send text message.
+    SEND_TEXT_AT : Send text message with @.
+    SEND_FILE : Send file message.
+    SEND_IMAGE : Send image message.
+    SEND_EMOTION : Send emotion message.
+    SEND_PAT : Send pat message.
+    SEND_PUBLIC : Send public account message.
+    SEND_FORWARD : Forward message.
+    """
+
+    SEND_TEXT = enum_auto()
+    SEND_TEXT_AT = enum_auto()
+    SEND_FILE = enum_auto()
+    SEND_IMAGE = enum_auto()
+    SEND_EMOTION = enum_auto()
+    SEND_PAT = enum_auto()
+    SEND_PUBLIC = enum_auto()
+    SEND_FORWARD = enum_auto()
+
+
 class RSendParam(object):
     """
     Rey's `send parameters` type.
@@ -43,7 +70,7 @@ class RSendParam(object):
     def __init__(
         self,
         rsend: RSend,
-        send_type: Literal[0, 1, 2, 3, 4, 5, 6, 7],
+        send_type: RSendParam,
         receive_id: str,
         params: dict,
         send_id: int | None
@@ -55,14 +82,14 @@ class RSendParam(object):
         ----------
         rsend : `RSend` instance.
         send_type : Send type.
-            - `Literal[0]` Send text message, use `RClient.send_text`: method.
-            - `Literal[1]` Send text message with `@`, use `RClient.send_text_at`: method.
-            - `Literal[2]` Send file message, use `RClient.send_file`: method.
-            - `Literal[3]` Send image message, use `RClient.send_image`: method.
-            - `Literal[4]` Send emotion message, use `RClient.send_emotion`: method.
-            - `Literal[5]` Send pat message, use `RClient.send_pat`: method.
-            - `Literal[6]` Send public account message, use `RClient.send_public`: method.
-            - `Literal[7]` Forward message, use `RClient.send_forward`: method.
+            - `Literal[SendType.SEND_TEXT]`: Send text message, use `RClient.send_text`: method.
+            - `Literal[SendType.SEND_TEXT_AT]`: Send text message with `@`, use `RClient.send_text_at`: method.
+            - `Literal[SendType.SEND_FILE]`: Send file message, use `RClient.send_file`: method.
+            - `Literal[SendType.SEND_IMAGE]`: Send image message, use `RClient.send_image`: method.
+            - `Literal[SendType.SEND_EMOTION]`: Send emotion message, use `RClient.send_emotion`: method.
+            - `Literal[SendType.SEND_PAT]`: Send pat message, use `RClient.send_pat`: method.
+            - `Literal[SendType.SEND_PUBLIC]`: Send public account message, use `RClient.send_public`: method.
+            - `Literal[SendType.SEND_FORWARD]`: Forward message, use `RClient.send_forward`: method.
         receive_id : User ID or chat room ID of receive message.
         params : Send parameters.
         send_id : Send ID of database.
@@ -81,7 +108,13 @@ class RSendParam(object):
 class RSend(object):
     """
     Rey's `send` type.
+
+    Attribute
+    ---------
+    SendType : Send type enumeration.
     """
+
+    SendType = SendType
 
 
     def __init__(
@@ -239,14 +272,14 @@ class RSend(object):
         match rsparam.send_type:
 
             ## Text.
-            case 0:
+            case SendType.SEND_TEXT:
                 self.rwechat.rclient.send_text(
                     rsparam.receive_id,
                     rsparam.params['text']
                 )
 
             ## Text with '@'.
-            case 1:
+            case SendType.SEND_TEXT_AT:
                 self.rwechat.rclient.send_text_at(
                     rsparam.receive_id,
                     rsparam.params['user_id'],
@@ -254,35 +287,35 @@ class RSend(object):
                 )
 
             ## File.
-            case 2:
+            case SendType.SEND_FILE:
                 self.rwechat.rclient.send_file(
                     rsparam.receive_id,
                     path
                 )
 
             ## Image.
-            case 3:
+            case SendType.SEND_IMAGE:
                 self.rwechat.rclient.send_image(
                     rsparam.receive_id,
                     path
                 )
 
             ## Emotion.
-            case 4:
+            case SendType.SEND_EMOTION:
                 self.rwechat.rclient.send_emotion(
                     rsparam.receive_id,
                     path
                 )
 
             ## Pat.
-            case 5:
+            case SendType.SEND_PAT:
                 self.rwechat.rclient.send_pat(
                     rsparam.receive_id,
                     rsparam.params['user_id']
                 )
 
             ## Public account.
-            case 6:
+            case SendType.SEND_PUBLIC:
                 self.rwechat.rclient.send_public(
                     rsparam.receive_id,
                     rsparam.params['page_url'],
@@ -294,7 +327,7 @@ class RSend(object):
                 )
 
             ## Forward.
-            case 7:
+            case SendType.SEND_FORWARD:
                 self.rwechat.rclient.send_forward(
                     rsparam.receive_id,
                     rsparam.params['message_id']
@@ -336,7 +369,7 @@ class RSend(object):
     @overload
     def send(
         self,
-        send_type: Literal[0],
+        send_type: Literal[SendType.SEND_TEXT],
         receive_id: str,
         send_id: int | None = None,
         *,
@@ -346,7 +379,7 @@ class RSend(object):
     @overload
     def send(
         self,
-        send_type: Literal[1],
+        send_type: Literal[SendType.SEND_TEXT_AT],
         receive_id: str,
         send_id: int | None = None,
         *,
@@ -357,7 +390,7 @@ class RSend(object):
     @overload
     def send(
         self,
-        send_type: Literal[2, 3, 4],
+        send_type: Literal[SendType.SEND_FILE, SendType.SEND_IMAGE, SendType.SEND_EMOTION],
         receive_id: str,
         send_id: int | None = None,
         *,
@@ -368,7 +401,7 @@ class RSend(object):
     @overload
     def send(
         self,
-        send_type: Literal[5],
+        send_type: Literal[SendType.SEND_PAT],
         receive_id: str,
         send_id: int | None = None,
         *,
@@ -378,7 +411,7 @@ class RSend(object):
     @overload
     def send(
         self,
-        send_type: Literal[6],
+        send_type: Literal[SendType.SEND_PUBLIC],
         receive_id: str,
         send_id: int | None = None,
         *,
@@ -393,7 +426,7 @@ class RSend(object):
     @overload
     def send(
         self,
-        send_type: Literal[7],
+        send_type: Literal[SendType.SEND_FORWARD],
         receive_id: str,
         send_id: int | None = None,
         *,
@@ -402,7 +435,7 @@ class RSend(object):
 
     def send(
         self,
-        send_type: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None = None,
+        send_type: SendType,
         receive_id: str | None = None,
         send_id: int | None = None,
         **params: Any
@@ -413,14 +446,14 @@ class RSend(object):
         Parameters
         ----------
         send_type : Send type.
-            - `Literal[0]` Send text message, use `RClient.send_text`: method.
-            - `Literal[1]` Send text message with `@`, use `RClient.send_text_at`: method.
-            - `Literal[2]` Send file message, use `RClient.send_file`: method.
-            - `Literal[3]` Send image message, use `RClient.send_image`: method.
-            - `Literal[4]` Send emotion message, use `RClient.send_emotion`: method.
-            - `Literal[5]` Send pat message, use `RClient.send_pat`: method.
-            - `Literal[6]` Send public account message, use `RClient.send_public`: method.
-            - `Literal[7]` Forward message, use `RClient.send_forward`: method.
+            - `Literal[SendType.SEND_TEXT]`: Send text message, use `RClient.send_text`: method.
+            - `Literal[SendType.SEND_TEXT_AT]`: Send text message with `@`, use `RClient.send_text_at`: method.
+            - `Literal[SendType.SEND_FILE]`: Send file message, use `RClient.send_file`: method.
+            - `Literal[SendType.SEND_IMAGE]`: Send image message, use `RClient.send_image`: method.
+            - `Literal[SendType.SEND_EMOTION]`: Send emotion message, use `RClient.send_emotion`: method.
+            - `Literal[SendType.SEND_PAT]`: Send pat message, use `RClient.send_pat`: method.
+            - `Literal[SendType.SEND_PUBLIC]`: Send public account message, use `RClient.send_public`: method.
+            - `Literal[SendType.SEND_FORWARD]`: Forward message, use `RClient.send_forward`: method.
         receive_id : User ID or chat room ID of receive message.
         send_id : Send ID of database.
         params : Send parameters.
@@ -430,7 +463,7 @@ class RSend(object):
         """
 
         # Check.
-        if send_type not in (0, 1, 2, 3, 4, 5, 6, 7):
+        if send_type not in SendType:
             throw(ValueError, send_type)
 
         rsparam = RSendParam(

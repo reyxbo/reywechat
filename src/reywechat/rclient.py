@@ -723,9 +723,9 @@ class RClient(object):
         ----------
         room_id : Chat room ID of receive message.
         user_id : User ID of `@`.
-            - `str`, `@`: one user.
-            - `list[str]` `@`: multiple users.
-            - `Literal['notify@all']` `@`: all users.
+            - `str`: @ one user.
+            - `list[str]`: @ multiple users.
+            - `Literal['notify@all']`: @ all users.
         text : Message text.
         """
 

@@ -26,6 +26,7 @@ from reykit.rtime import sleep, wait
 from reykit.rwrap import wrap_thread, wrap_exc
 
 from .rexception import RWeChatExecuteNoRuleReplyError, RWeChatExecuteTriggerReplyError
+from .rsend import SendType
 from .rwechat import RWeChat
 
 
@@ -718,7 +719,7 @@ class RMessage(object):
     @overload
     def reply(
         self,
-        send_type: Literal[0],
+        send_type: Literal[SendType.SEND_TEXT],
         *,
         text: str
     ) -> None: ...
@@ -726,16 +727,16 @@ class RMessage(object):
     @overload
     def reply(
         self,
-        send_type: Literal[1],
+        send_type: Literal[SendType.SEND_TEXT_AT],
         *,
-        user_id: str | list[str],
+        user_id: str | list[str] | Literal['notify@all'],
         text: str
     ) -> None: ...
 
     @overload
     def reply(
         self,
-        send_type: Literal[2, 3, 4],
+        send_type: Literal[SendType.SEND_FILE, SendType.SEND_IMAGE, SendType.SEND_EMOTION],
         *,
         path: str,
         file_name: str | None = None
@@ -744,7 +745,7 @@ class RMessage(object):
     @overload
     def reply(
         self,
-        send_type: Literal[5],
+        send_type: Literal[SendType.SEND_PAT],
         *,
         user_id: str
     ) -> None: ...
@@ -752,7 +753,7 @@ class RMessage(object):
     @overload
     def reply(
         self,
-        send_type: Literal[6],
+        send_type: Literal[SendType.SEND_PUBLIC],
         *,
         page_url: str,
         title: str,
@@ -765,14 +766,14 @@ class RMessage(object):
     @overload
     def reply(
         self,
-        send_type: Literal[7],
+        send_type: Literal[SendType.SEND_FORWARD],
         *,
         message_id: str
     ) -> None: ...
 
     def reply(
         self,
-        send_type: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None = None,
+        send_type: SendType | None = None,
         **params: Any
     ) -> None:
         """
@@ -781,14 +782,14 @@ class RMessage(object):
         Parameters
         ----------
         send_type : Send type.
-            - `Literal[0]` Send text message, use `RClient.send_text`: method.
-            - `Literal[1]` Send text message with `@`, use `RClient.send_text_at`: method.
-            - `Literal[2]` Send file message, use `RClient.send_file`: method.
-            - `Literal[3]` Send image message, use `RClient.send_image`: method.
-            - `Literal[4]` Send emotion message, use `RClient.send_emotion`: method.
-            - `Literal[5]` Send pat message, use `RClient.send_pat`: method.
-            - `Literal[6]` Send public account message, use `RClient.send_public`: method.
-            - `Literal[7]` Forward message, use `RClient.send_forward`: method.
+            - `Literal[SendType.SEND_TEXT]`: Send text message, use `RClient.send_text`: method.
+            - `Literal[SendType.SEND_TEXT_AT]`: Send text message with `@`, use `RClient.send_text_at`: method.
+            - `Literal[SendType.SEND_FILE]`: Send file message, use `RClient.send_file`: method.
+            - `Literal[SendType.SEND_IMAGE]`: Send image message, use `RClient.send_image`: method.
+            - `Literal[SendType.SEND_EMOTION]`: Send emotion message, use `RClient.send_emotion`: method.
+            - `Literal[SendType.SEND_PAT]`: Send pat message, use `RClient.send_pat`: method.
+            - `Literal[SendType.SEND_PUBLIC]`: Send public account message, use `RClient.send_public`: method.
+            - `Literal[SendType.SEND_FORWARD]`: Forward message, use `RClient.send_forward`: method.
         params : Send parameters.
             - `Callable`: Use execute return value.
             - `Any`: Use this value.
