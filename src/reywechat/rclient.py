@@ -18,7 +18,7 @@ from reykit.rexception import RError
 from reykit.ros import find_relpath
 from reykit.rsystem import dos_command, search_process, memory_read, memory_write, popup_select
 from reykit.rtime import wait
-from reykit.rtype import RConfigMeta
+from reykit.rtype import RBase, RConfigMeta
 
 from .rwechat import RWeChat
 
@@ -34,7 +34,7 @@ __all__ = (
 Response = TypedDict('Response', {'code': int, 'message': str, 'data': Any})
 
 
-class RConfigClient(object, metaclass=RConfigMeta):
+class RConfigClient(RBase, metaclass=RConfigMeta):
     """
     Rey's `config client` type.
     """
@@ -62,7 +62,7 @@ class RWeChatClientErorr(RWeChatError):
     """
 
 
-class RClient(object):
+class RClient(RBase):
     """
     Rey's `client` type.
     """

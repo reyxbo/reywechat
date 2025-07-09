@@ -15,6 +15,7 @@ from reydb.rconnection import RDatabase as RRDatabase
 from reykit.rexception import throw
 from reykit.ros import RFolder
 from reykit.rtime import to_time, time_to, sleep
+from reykit.rtype import RBase
 from reykit.rwrap import wrap_thread
 
 from .rreceive import RMessage
@@ -27,7 +28,7 @@ __all__ = (
 )
 
 
-class RDatabase(object):
+class RDatabase(RBase):
     """
     Rey's `database` type.
     """

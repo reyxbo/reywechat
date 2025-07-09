@@ -23,6 +23,7 @@ from reykit.rrandom import randn
 from reykit.rregex import sub
 from reykit.ros import RFile
 from reykit.rtime import sleep
+from reykit.rtype import RBase
 from reykit.rwrap import wrap_thread, wrap_exc
 
 from .rexception import RWeChatExecuteContinueError, RWeChatExecuteBreakError
@@ -61,7 +62,7 @@ class SendType(Enum):
     SEND_FORWARD = 7
 
 
-class RSendParam(object):
+class RSendParam(RBase):
     """
     Rey's `send parameters` type.
     """
@@ -105,7 +106,7 @@ class RSendParam(object):
         self.exc_reports: list[str] = []
 
 
-class RSend(object):
+class RSend(RBase):
     """
     Rey's `send` type.
 

@@ -15,6 +15,7 @@ from os.path import join as os_join
 from reydb.rconnection import RDatabase as RRDatabase
 from reykit.ros import create_folder as reytool_create_folder
 from reykit.rsystem import block
+from reykit.rtype import RBase
 
 
 __all__ = (
@@ -22,7 +23,7 @@ __all__ = (
 )
 
 
-class RWeChat(object):
+class RWeChat(RBase):
     """
     Rey's `WeChat` type.
 

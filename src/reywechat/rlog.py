@@ -11,6 +11,7 @@
 
 from os.path import join as os_join
 from reykit.rlog import RLog as RRLog
+from reykit.rtype import RBase
 
 from .rreceive import RMessage
 from .rsend import RSendParam
@@ -22,7 +23,7 @@ __all__ = (
 )
 
 
-class RLog(object):
+class RLog(RBase):
     """
     Rey's `log` type.
     """

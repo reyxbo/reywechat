@@ -13,12 +13,13 @@ from __future__ import annotations
 from typing import Any, Literal
 from collections.abc import Callable
 from reykit.rschedule import RSchedule as RRSchedule
+from reykit.rtype import RBase
 
 from .rsend import SendType
 from .rwechat import RWeChat
 
 
-class RSchedule(object):
+class RSchedule(RBase):
     """
     Rey's `schedule` type.
     """

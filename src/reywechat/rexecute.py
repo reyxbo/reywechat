@@ -12,6 +12,7 @@
 from typing import Any, TypedDict, Literal, NoReturn
 from collections.abc import Callable
 from reykit.rexception import catch_exc
+from reykit.rtype import RBase
 
 from .rexception import RWeChatExecuteContinueError, RWeChatExecuteBreakError
 from .rreceive import RMessage, RReceive
@@ -25,7 +26,7 @@ __all__ = (
 Rule = TypedDict('Rule', {'mode': Literal['trigger', 'reply'], 'executer': Callable[[RMessage], None], 'level': float})
 
 
-class RExecute(object):
+class RExecute(RBase):
     """
     Rey's `execute` type.
     """

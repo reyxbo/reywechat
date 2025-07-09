@@ -23,6 +23,7 @@ from reykit.rmultitask import RThreadPool
 from reykit.ros import RFile, RFolder, os_exists
 from reykit.rregex import search
 from reykit.rtime import sleep, wait
+from reykit.rtype import RBase
 from reykit.rwrap import wrap_thread, wrap_exc
 
 from .rexception import RWeChatExecuteNoRuleReplyError, RWeChatExecuteTriggerReplyError
@@ -52,7 +53,7 @@ MessageParameters = TypedDict(
     )
 
 
-class RMessage(object):
+class RMessage(RBase):
     """
     Rey's `message` type.
     """
@@ -819,7 +820,7 @@ class RMessage(object):
         )
 
 
-class RReceive(object):
+class RReceive(RBase):
     """
     Rey's `receive` type.
     """
