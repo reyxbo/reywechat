@@ -37,7 +37,7 @@ class RExecute(RBase):
         rreceive: RReceive
     ) -> None:
         """
-        Build `execute` attributes.
+        Build `execute` instance attributes.
 
         Parameters
         ----------

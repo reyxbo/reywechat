@@ -82,7 +82,7 @@ class RClient(RBase):
         rwechat: RWeChat
     ) -> None:
         """
-        Build `client` attributes.
+        Build `client` instance attributes.
 
         Parameters
         ----------

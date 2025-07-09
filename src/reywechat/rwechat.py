@@ -48,7 +48,7 @@ class RWeChat(RBase):
         project_dir: str | None = None
     ) -> None:
         """
-        Build `WeChat` attributes.
+        Build `WeChat` instance attributes.
 
         Parameters
         ----------

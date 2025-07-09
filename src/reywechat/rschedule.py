@@ -30,7 +30,7 @@ class RSchedule(RBase):
         rwechat: RWeChat
     ) -> None:
         """
-        Build `schedule` attributes.
+        Build `schedule` instance attributes.
 
         Parameters
         ----------

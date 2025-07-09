@@ -34,7 +34,7 @@ class RLog(RBase):
         rwechat: RWeChat
     ) -> None:
         """
-        Build `log` attributes.
+        Build `log` instance attributes.
 
         Parameters
         ----------

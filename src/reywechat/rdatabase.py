@@ -40,7 +40,7 @@ class RDatabase(RBase):
         rrdatabase: RRDatabase | dict[Literal['wechat', 'file'], RRDatabase]
     ) -> None:
         """
-        Build `database` attributes.
+        Build `database` instance attributes.
 
         Parameters
         ----------

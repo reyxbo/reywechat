@@ -77,7 +77,7 @@ class RSendParam(RBase):
         send_id: int | None
     ) -> None:
         """
-        Build `send parameters` attributes.
+        Build `send parameters` instance attributes.
 
         Parameters
         ----------
@@ -124,7 +124,7 @@ class RSend(RBase):
         bandwidth_upstream: float
     ) -> None:
         """
-        Build `send` attributes.
+        Build `send` instance attributes.
 
         Parameters
         ----------
