@@ -68,6 +68,11 @@ class RDatabase(RBase):
             case _:
                 throw(TypeError, rrdatabase)
 
+        # Check.
+        if 'sqlite' in (self.rrdatabase_wechat.drivername, self.rrdatabase_file.drivername):
+            text='not suitable for SQLite databases'
+            throw(AssertionError, text=text)
+
         # Build.
         self.build()
 
