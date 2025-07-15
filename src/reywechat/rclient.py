@@ -274,9 +274,9 @@ class RClient(RBase):
         url = f'http://127.0.0.1:{self.client_api_port}/api/{api}'
         if data is None:
             data = {}
-        if success_code.__class__ == int:
+        if type(success_code) == int:
             success_code = [success_code]
-        if fail_code.__class__ == int:
+        if type(fail_code) == int:
             fail_code = [fail_code]
 
         # Request.
@@ -731,7 +731,7 @@ class RClient(RBase):
 
         # Get parameter.
         api = 'sendAtText'
-        if user_id.__class__ != str:
+        if type(user_id) != str:
             user_id = ','.join(user_id)
         data = {
             'chatRoomId': room_id,

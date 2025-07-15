@@ -689,7 +689,7 @@ class RMessage(RBase):
         self._app_params = {
             bs_element.name: bs_element.text
             for bs_element in bs_appmsg.contents
-            if bs_element.__class__ == BSTag
+            if type(bs_element) == BSTag
         }
 
         return self._app_params
@@ -1019,7 +1019,7 @@ class RReceive(RBase):
 
         # Break.
         if (
-            rmessage.user.__class__ != str
+            rmessage.type(user) != str
             or not rmessage.user.endswith('chatroom')
         ):
             return

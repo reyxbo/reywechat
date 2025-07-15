@@ -553,7 +553,7 @@ class RSend(RBase):
         """
 
         # Handle parameter.
-        if receive_id.__class__ == str:
+        if type(receive_id) == str:
             receive_ids = [receive_id]
         else:
             receive_ids = receive_id
