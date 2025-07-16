@@ -12,9 +12,9 @@
 from typing import Literal
 from os import getcwd as os_getcwd
 from os.path import join as os_join
-from reydb.rconnection import RDatabase as RRDatabase
+from reydb.rdb import RDatabase as RRDatabase
 from reykit.ros import create_folder as reytool_create_folder
-from reykit.rsystem import block
+from reykit.rsys import block
 from reykit.rtype import RBase
 
 
@@ -67,7 +67,7 @@ class RWeChat(RBase):
 
         # Import.
         from .rclient import RClient
-        from .rdatabase import RDatabase
+        from .rdb import RDatabase
         from .rlog import RLog
         from .rreceive import RReceive
         from .rschedule import RSchedule

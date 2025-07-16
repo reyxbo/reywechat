@@ -10,9 +10,9 @@
 
 
 from .rclient import *
-from .rdatabase import *
-from .rexception import *
-from .rexecute import *
+from .rdb import *
+from .rexc import *
+from .rexe import *
 from .rlog import *
 from .rreceive import *
 from .rschedule import *

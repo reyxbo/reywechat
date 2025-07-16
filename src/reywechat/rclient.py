@@ -9,14 +9,13 @@
 """
 
 
-from __future__ import annotations
 from typing import Any, TypedDict, Literal, Final
 from os.path import abspath as os_abspath
-from reykit.rcomm import request as reytool_request
 from reykit.rdll import inject_dll
-from reykit.rexception import RError
+from reykit.rexc import RError
+from reykit.rnet import request as reytool_request
 from reykit.ros import find_relpath
-from reykit.rsystem import dos_command, search_process, memory_read, memory_write, popup_select
+from reykit.rsys import dos_command, search_process, memory_read, memory_write, popup_select
 from reykit.rtime import wait
 from reykit.rtype import RBase, RConfigMeta
 

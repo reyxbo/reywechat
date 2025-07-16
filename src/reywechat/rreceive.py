@@ -16,17 +16,17 @@ from queue import Queue
 from json import loads as json_loads
 from bs4 import BeautifulSoup as BSBeautifulSoup
 from bs4.element import Tag as BSTag
-from reykit.rcomm import get_file_stream_time, listen_socket
-from reykit.rexception import throw, catch_exc
+from reykit.rexc import throw, catch_exc
 from reykit.rimage import decode_qrcode
-from reykit.rmultitask import RThreadPool
+from reykit.rnet import compute_stream_time, listen_socket
 from reykit.ros import RFile, RFolder, os_exists
-from reykit.rregex import search
+from reykit.rre import search
+from reykit.rtask import RThreadPool
 from reykit.rtime import sleep, wait
 from reykit.rtype import RBase
 from reykit.rwrap import wrap_thread, wrap_exc
 
-from .rexception import RWeChatExecuteNoRuleReplyError, RWeChatExecuteTriggerReplyError
+from .rexc import RWeChatExecuteNoRuleReplyError, RWeChatExecuteTriggerReplyError
 from .rsend import SendType
 from .rwechat import RWeChat
 
@@ -100,7 +100,7 @@ class RMessage(RBase):
         """
 
         # Import.
-        from .rexecute import Rule
+        from .rexe import Rule
 
         # Set attribute.
         self.rreceive = rreceive
@@ -843,7 +843,7 @@ class RReceive(RBase):
         """
 
         # Import.
-        from .rexecute import RExecute
+        from .rexe import RExecute
 
         # Set attribute.
         self.rwechat = rwechat
@@ -1145,7 +1145,7 @@ class RReceive(RBase):
 
         # Wait.
         if generate_path is not None:
-            stream_time = get_file_stream_time(file_size, self.bandwidth_downstream)
+            stream_time = compute_stream_time(file_size, self.bandwidth_downstream)
             timeout = 10 + stream_time * (self.max_receiver + 1)
             wait(
                 os_exists,

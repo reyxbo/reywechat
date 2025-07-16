@@ -10,23 +10,23 @@
 
 
 from __future__ import annotations
-from typing import Any, Literal, Final, overload
+from typing import Any, Literal, overload
 from collections.abc import Callable
 from enum import Enum
 from functools import wraps as functools_wraps
 from os.path import join as os_join
 from queue import Queue
 from re import escape as re_escape
-from reykit.rcomm import get_file_stream_time
-from reykit.rexception import throw, catch_exc
-from reykit.rrandom import randn
-from reykit.rregex import sub
+from reykit.rexc import throw, catch_exc
+from reykit.rnet import compute_stream_time
 from reykit.ros import RFile
+from reykit.rrand import randn
+from reykit.rre import sub
 from reykit.rtime import sleep
 from reykit.rtype import RBase
 from reykit.rwrap import wrap_thread, wrap_exc
 
-from .rexception import RWeChatExecuteContinueError, RWeChatExecuteBreakError
+from .rexc import RWeChatExecuteContinueError, RWeChatExecuteBreakError
 from .rwechat import RWeChat
 
 
@@ -359,7 +359,7 @@ class RSend(RBase):
 
         ## File.
         if rsparam.send_type in (2, 3, 4):
-            stream_time = get_file_stream_time(rsparam.params['path'], self.bandwidth_upstream)
+            stream_time = compute_stream_time(rsparam.params['path'], self.bandwidth_upstream)
             if stream_time > seconds:
                 seconds = stream_time
 

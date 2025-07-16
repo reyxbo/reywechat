@@ -11,8 +11,8 @@
 
 from typing import Literal
 from json import loads as json_loads
-from reydb.rconnection import RDatabase as RRDatabase
-from reykit.rexception import throw
+from reydb.rdb import RDatabase as RRDatabase
+from reykit.rexc import throw
 from reykit.ros import RFolder
 from reykit.rtime import to_time, time_to, sleep
 from reykit.rtype import RBase

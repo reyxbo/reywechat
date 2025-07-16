@@ -15,9 +15,9 @@ Modules
 -------
 rall : All methods.
 rclient : Client methods.
-rdatabase : Database methods.
-rexception : Exception methods.
-rexecute: Execute methods.
+rdb : Database methods.
+rexc : Exception methods.
+rexe: Execute methods.
 rlog : Log methods.
 rreceive : Receive methods.
 rschedule : Schedule methods.
