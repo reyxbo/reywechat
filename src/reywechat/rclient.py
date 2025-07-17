@@ -12,58 +12,43 @@
 from typing import Any, TypedDict, Literal, Final
 from os.path import abspath as os_abspath
 from reykit.rdll import inject_dll
-from reykit.rexc import RError
+from reykit.rexc import Error
 from reykit.rnet import request as reytool_request
 from reykit.ros import find_relpath
 from reykit.rsys import dos_command, search_process, memory_read, memory_write, popup_select
 from reykit.rtime import wait
-from reykit.rtype import RBase, RConfigMeta
+from reykit.rtype import ConfigMeta
 
-from .rwechat import RWeChat
+from .rexc import WeChatClientErorr
+from .rtype import WeChatBase
+from .rwechat import WeChat
 
 
 __all__ = (
-    'RConfigClient',
-    'RWeChatClientErorr',
-    'RClient',
+    'WeChatResponse',
+    'CLIENT_VERSION_MEMORY_OFFSETS',
+    'WeChatClient',
     'simulate_client_version'
 )
 
 
-Response = TypedDict('Response', {'code': int, 'message': str, 'data': Any})
+WeChatResponse = TypedDict('WeChatResponse', {'code': int, 'message': str, 'data': Any})
 
 
-class RConfigClient(RBase, metaclass=RConfigMeta):
+CLIENT_VERSION_MEMORY_OFFSETS = (
+    61280212,
+    61372636,
+    61474056,
+    61638128,
+    61666264,
+    61674264,
+    61675784
+)
+
+
+class WeChatClient(WeChatBase):
     """
-    Rey's `config client` type.
-    """
-
-    # Set.
-    _client_version_memory_offsets = (
-        61280212,
-        61372636,
-        61474056,
-        61638128,
-        61666264,
-        61674264,
-        61675784
-    )
-
-
-class RWeChatError(RError):
-    """
-    Rey's `WeChat exception` type.
-    """
-
-class RWeChatClientErorr(RWeChatError):
-    """
-    Rey's `WeChat client exception` type.
-    """
-
-
-class RClient(RBase):
-    """
-    Rey's `client` type.
+    WeChat client type.
     """
 
 
@@ -78,14 +63,14 @@ class RClient(RBase):
 
     def __init__(
         self,
-        rwechat: RWeChat
+        rwechat: WeChat
     ) -> None:
         """
-        Build `client` instance attributes.
+        Build instance attributes.
 
         Parameters
         ----------
-        rwechat : `RWeChat` instance.
+        rwechat : `WeChat` instance.
         """
 
         # Start.
@@ -111,7 +96,7 @@ class RClient(RBase):
                 filter_file=[('', ['*微信*.exe', '*WeChat*.exe'])]
             )
             if wechat_path is None:
-                raise RWeChatClientErorr('WeChat client not started')
+                raise WeChatClientErorr('WeChat client not started')
             dos_command(wechat_path)
 
             ## Wait.
@@ -122,12 +107,12 @@ class RClient(RBase):
                 _raising=False
             )
             if seconds is None:
-                raise RWeChatClientErorr('WeChat client not started')
+                raise WeChatClientErorr('WeChat client not started')
 
         # Check client version.
         judge = self.check_client_version()
         if not judge:
-            raise RWeChatClientErorr(f'WeChat client version failed, must be "{self.client_version}"')
+            raise WeChatClientErorr(f'WeChat client version failed, must be "{self.client_version}"')
 
         # Check API.
         judge = self.check_api()
@@ -139,7 +124,7 @@ class RClient(RBase):
             # Check api.
             judge = self.check_api()
             if not judge:
-                raise RWeChatClientErorr('start WeChat client API failed')
+                raise WeChatClientErorr('start WeChat client API failed')
 
         # Check client login.
         judge = self.check_client_login()
@@ -154,7 +139,7 @@ class RClient(RBase):
                 _raising=False
             )
             if seconds is None:
-                raise RWeChatClientErorr('WeChat not logged in')
+                raise WeChatClientErorr('WeChat not logged in')
 
         # Report.
         print('Start WeChat client API successfully, address is "127.0.0.1:19088".')
@@ -189,7 +174,7 @@ class RClient(RBase):
         """
 
         # Check.
-        for offset in RConfigClient._client_version_memory_offsets:
+        for offset in CLIENT_VERSION_MEMORY_OFFSETS:
             value = memory_read(
                 'WeChat.exe',
                 'WeChatWin.dll',
@@ -249,7 +234,7 @@ class RClient(RBase):
         data: dict | None = None,
         success_code: int | list[int] | None = None,
         fail_code: int | list[int] | None = None
-    ) -> Response:
+    ) -> WeChatResponse:
         """
         Request client API.
 
@@ -304,7 +289,7 @@ class RClient(RBase):
                 and response['code'] in fail_code
             )
         ):
-            raise RWeChatClientErorr(f'client API "{api}" request failed', data, response)
+            raise WeChatClientErorr(f'client API "{api}" request failed', data, response)
 
         return response
 
@@ -368,7 +353,7 @@ class RClient(RBase):
             - `Key 'head_image'`: Head image URL.
             - `Key 'account_data_path'`: Current account data save path.
             - `Key 'wechat_data_path'`: WeChat data save path.
-            - `Key 'decrypt_key'`: Database decrypt key.
+            - `Key 'decrypt_key'`: WeChatDatabase decrypt key.
         """
 
         # Get parameter.
@@ -923,23 +908,23 @@ def simulate_client_version() -> None:
     # Check.
 
     ## Check client.
-    judge = RClient.check_client_started(RClient)
+    judge = WeChatClient.check_client_started(WeChatClient)
     if not judge:
-        raise RWeChatClientErorr('WeChat client not started')
+        raise WeChatClientErorr('WeChat client not started')
 
     ## Check client version.
-    judge = RClient.check_client_version(RClient)
+    judge = WeChatClient.check_client_version(WeChatClient)
     if not judge:
-        raise RWeChatClientErorr(f'WeChat client version failed, must be "{RClient.client_version}"')
+        raise WeChatClientErorr(f'WeChat client version failed, must be "{WeChatClient.client_version}"')
 
     # Simulate.
-    for offset in RConfigClient._client_version_memory_offsets:
+    for offset in CLIENT_VERSION_MEMORY_OFFSETS:
         memory_write(
             'WeChat.exe',
             'WeChatWin.dll',
             offset,
-            RClient.client_version_simulate_int
+            WeChatClient.client_version_simulate_int
         )
 
     # Report.
-    print(f'WeChat client version simulated be "{RClient.client_version_simulate}"')
+    print(f'WeChat client version simulated be "{WeChatClient.client_version_simulate}"')

@@ -12,34 +12,34 @@
 from __future__ import annotations
 from typing import Any, Literal
 from collections.abc import Callable
-from reykit.rschedule import RSchedule as RRSchedule
-from reykit.rtype import RBase
+from reykit.rschedule import Schedule
 
-from .rsend import SendType
-from .rwechat import RWeChat
+from .rsend import WeChatSendType
+from .rtype import WeChatBase
+from .rwechat import WeChat
 
 
-class RSchedule(RBase):
+class WeChatSchedule(WeChatBase):
     """
-    Rey's `schedule` type.
+    WeChat schedule type.
     """
 
 
     def __init__(
         self,
-        rwechat: RWeChat
+        rwechat: WeChat
     ) -> None:
         """
-        Build `schedule` instance attributes.
+        Build instance attributes.
 
         Parameters
         ----------
-        rwechat : `RClient` instance.
+        rwechat : `WeChatClient` instance.
         """
 
         # Set attribute.
         self.rwechat = rwechat
-        self.rrschedule = RRSchedule()
+        self.rrschedule = Schedule()
 
         # Start.
         self.rrschedule.start()
@@ -49,7 +49,7 @@ class RSchedule(RBase):
         self,
         trigger: Literal['date', 'interval', 'cron'],
         trigger_kwargs: dict,
-        send_type: SendType,
+        send_type: WeChatSendType,
         receive_id: str,
         **params: Callable[[], Any] | Any
     ) -> None:
@@ -61,14 +61,14 @@ class RSchedule(RBase):
         trigger : Trigger type.
         trigger_kwargs : Trigger keyword arguments.
         send_type : Send type.
-            - `Literal[SendType.SEND_TEXT]`: Send text message, use `RClient.send_text`: method.
-            - `Literal[SendType.SEND_TEXT_AT]`: Send text message with `@`, use `RClient.send_text_at`: method.
-            - `Literal[SendType.SEND_FILE]`: Send file message, use `RClient.send_file`: method.
-            - `Literal[SendType.SEND_IMAGE]`: Send image message, use `RClient.send_image`: method.
-            - `Literal[SendType.SEND_EMOTION]`: Send emotion message, use `RClient.send_emotion`: method.
-            - `Literal[SendType.SEND_PAT]`: Send pat message, use `RClient.send_pat`: method.
-            - `Literal[SendType.SEND_PUBLIC]`: Send public account message, use `RClient.send_public`: method.
-            - `Literal[SendType.SEND_FORWARD]`: Forward message, use `RClient.send_forward`: method.
+            - `Literal[WeChatSendType.SEND_TEXT]`: Send text message, use `WeChatClient.send_text`: method.
+            - `Literal[WeChatSendType.SEND_TEXT_AT]`: Send text message with `@`, use `WeChatClient.send_text_at`: method.
+            - `Literal[WeChatSendType.SEND_FILE]`: Send file message, use `WeChatClient.send_file`: method.
+            - `Literal[WeChatSendType.SEND_IMAGE]`: Send image message, use `WeChatClient.send_image`: method.
+            - `Literal[WeChatSendType.SEND_EMOTION]`: Send emotion message, use `WeChatClient.send_emotion`: method.
+            - `Literal[WeChatSendType.SEND_PAT]`: Send pat message, use `WeChatClient.send_pat`: method.
+            - `Literal[WeChatSendType.SEND_PUBLIC]`: Send public account message, use `WeChatClient.send_public`: method.
+            - `Literal[WeChatSendType.SEND_FORWARD]`: Forward message, use `WeChatClient.send_forward`: method.
         receive_id : User ID or chat room ID of receive message.
         params : Send parameters.
             - `Callable`: Use execute return value.
@@ -94,7 +94,7 @@ class RSchedule(RBase):
     def add(
         self,
         trigger: Literal['date', 'interval', 'cron'],
-        task: Callable[[RSchedule], Any],
+        task: Callable[[WeChatSchedule], Any],
         **trigger_kwargs: Any
     ) -> None:
         """
@@ -103,7 +103,7 @@ class RSchedule(RBase):
         Parameters
         ----------
         trigger : Trigger type.
-        task : Function of task. The parameter is the `RSchedule` instance.
+        task : Function of task. The parameter is the `WeChatSchedule` instance.
         trigger_kwargs : Trigger keyword arguments.
         """
 

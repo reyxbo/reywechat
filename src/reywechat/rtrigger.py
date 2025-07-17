@@ -5,48 +5,48 @@
 @Time    : 2024-07-16 16:20:34
 @Author  : Rey
 @Contact : reyxbo@163.com
-@Explain : Execute methods.
+@Explain : Trigger methods.
 """
 
 
 from typing import Any, TypedDict, Literal, NoReturn
 from collections.abc import Callable
 from reykit.rexc import catch_exc
-from reykit.rtype import RBase
 
-from .rexc import RWeChatExecuteContinueError, RWeChatExecuteBreakError
-from .rreceive import RMessage, RReceive
+from .rexc import WeChatExecuteContinueError, WeChatExecuteBreakError
+from .rreceive import WeChatMessage, WechatReceive
+from .rtype import WeChatBase
 
 
 __all__ = (
-    'RExecute',
+    'WeChatTrigger',
 )
 
 
-Rule = TypedDict('Rule', {'mode': Literal['trigger', 'reply'], 'executer': Callable[[RMessage], None], 'level': float})
+TriggerRule = TypedDict('TriggerRule', {'mode': Literal['trigger', 'reply'], 'executer': Callable[[WeChatMessage], None], 'level': float})
 
 
-class RExecute(RBase):
+class WeChatTrigger(WeChatBase):
     """
-    Rey's `execute` type.
+    WeChat trigger type.
     """
 
 
     def __init__(
         self,
-        rreceive: RReceive
+        rreceive: WechatReceive
     ) -> None:
         """
-        Build `execute` instance attributes.
+        Build instance attributes.
 
         Parameters
         ----------
-        rreceive : `RReceive` instance.
+        rreceive : `WechatReceive` instance.
         """
 
         # Set attribute.
         self.rreceive = rreceive
-        self.rules: list[Rule] = []
+        self.rules: list[TriggerRule] = []
 
         # Add handler.
         self.handler = self._execute_by_rule()
@@ -55,7 +55,7 @@ class RExecute(RBase):
         self._add_execute_valid()
 
 
-    def _execute_by_rule(self) -> Callable[[RMessage], None]:
+    def _execute_by_rule(self) -> Callable[[WeChatMessage], None]:
         """
         Add handler, execute message by rules.
 
@@ -66,13 +66,13 @@ class RExecute(RBase):
 
 
         # Define.
-        def handler_execute_by_rule(rmessage: RMessage) -> None:
+        def handler_execute_by_rule(rmessage: WeChatMessage) -> None:
             """
             Execute message by rules.
 
             Parameters
             ----------
-            rmessage : `RMessage` instance.
+            rmessage : `WeChatMessage` instance.
             """
 
             # Loop.
@@ -91,11 +91,11 @@ class RExecute(RBase):
                     rule['executer'](rmessage)
 
                 # Continue.
-                except RWeChatExecuteContinueError:
+                except WeChatExecuteContinueError:
                     continue
 
                 # Break.
-                except RWeChatExecuteBreakError:
+                except WeChatExecuteBreakError:
                     break
 
                 # Exception.
@@ -120,7 +120,7 @@ class RExecute(RBase):
     def add_rule(
         self,
         mode: Literal['trigger', 'reply'],
-        executer: Callable[[RMessage], Any],
+        executer: Callable[[WeChatMessage], Any],
         level: float = 0
     ) -> None:
         """
@@ -129,9 +129,9 @@ class RExecute(RBase):
         Parameters
         ----------
         mode : Execute mode.
-        executer : Function of execute. The parameter is the `RMessage` instance.
-            When throw `RWeChatExecuteContinueError` type exception, then continue next execution.
-            When throw `RWeChatExecuteBreakError` type exception, then stop executes.
+        executer : Function of execute. The parameter is the `WeChatMessage` instance.
+            When throw `WeChatExecuteContinueError` type exception, then continue next execution.
+            When throw `WeChatExecuteBreakError` type exception, then stop executes.
         level : Priority level, sort from large to small.
         """
 
@@ -155,20 +155,20 @@ class RExecute(RBase):
 
     def continue_(self) -> NoReturn:
         """
-        Continue execute by throwing `RWeChatExecuteContinueError` type exception.
+        Continue execute by throwing `WeChatExecuteContinueError` type exception.
         """
 
         # Raise.
-        raise RWeChatExecuteContinueError
+        raise WeChatExecuteContinueError
 
 
     def break_(self) -> NoReturn:
         """
-        Break execute by throwing `RWeChatExecuteBreakError` type exception.
+        Break execute by throwing `WeChatExecuteBreakError` type exception.
         """
 
         # Raise.
-        raise RWeChatExecuteBreakError
+        raise WeChatExecuteBreakError
 
 
     def _add_execute_valid(self) -> None:
@@ -182,13 +182,13 @@ class RExecute(RBase):
 
 
         # Define.
-        def execute_valid(rmessage: RMessage) -> None:
+        def execute_valid(rmessage: WeChatMessage) -> None:
             """
             Execute rule judge valid.
 
             Parameters
             ----------
-            rmessage : `RMessage` instance.
+            rmessage : `WeChatMessage` instance.
             """
 
             # Judge.

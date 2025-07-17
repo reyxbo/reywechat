@@ -19,26 +19,27 @@ from queue import Queue
 from re import escape as re_escape
 from reykit.rexc import throw, catch_exc
 from reykit.rnet import compute_stream_time
-from reykit.ros import RFile
+from reykit.ros import File
 from reykit.rrand import randn
 from reykit.rre import sub
 from reykit.rtime import sleep
-from reykit.rtype import RBase
 from reykit.rwrap import wrap_thread, wrap_exc
 
-from .rexc import RWeChatExecuteContinueError, RWeChatExecuteBreakError
-from .rwechat import RWeChat
+from .rexc import WeChatExecuteContinueError, WeChatExecuteBreakError
+from .rtype import WeChatBase
+from .rwechat import WeChat
 
 
 __all__ = (
-    'RSendParam',
-    'RSend'
+    'WeChatSendType',
+    'WeChatSendParameter',
+    'WeChatSend'
 )
 
 
-class SendType(Enum):
+class WeChatSendType(WeChatBase, Enum):
     """
-    Send type enumeration.
+    WeChat send type enumeration.
 
     Attributes
     ----------
@@ -62,35 +63,35 @@ class SendType(Enum):
     SEND_FORWARD = 7
 
 
-class RSendParam(RBase):
+class WeChatSendParameter(WeChatBase):
     """
-    Rey's `send parameters` type.
+    WeChat send parameters type.
     """
 
 
     def __init__(
         self,
-        rsend: RSend,
-        send_type: SendType,
+        rsend: WeChatSend,
+        send_type: WeChatSendType,
         receive_id: str,
         params: dict,
         send_id: int | None
     ) -> None:
         """
-        Build `send parameters` instance attributes.
+        Build instance attributes.
 
         Parameters
         ----------
-        rsend : `RSend` instance.
+        rsend : `WeChatSend` instance.
         send_type : Send type.
-            - `Literal[SendType.SEND_TEXT]`: Send text message, use `RClient.send_text`: method.
-            - `Literal[SendType.SEND_TEXT_AT]`: Send text message with `@`, use `RClient.send_text_at`: method.
-            - `Literal[SendType.SEND_FILE]`: Send file message, use `RClient.send_file`: method.
-            - `Literal[SendType.SEND_IMAGE]`: Send image message, use `RClient.send_image`: method.
-            - `Literal[SendType.SEND_EMOTION]`: Send emotion message, use `RClient.send_emotion`: method.
-            - `Literal[SendType.SEND_PAT]`: Send pat message, use `RClient.send_pat`: method.
-            - `Literal[SendType.SEND_PUBLIC]`: Send public account message, use `RClient.send_public`: method.
-            - `Literal[SendType.SEND_FORWARD]`: Forward message, use `RClient.send_forward`: method.
+            - `Literal[WeChatSendType.SEND_TEXT]`: Send text message, use `WeChatClient.send_text`: method.
+            - `Literal[WeChatSendType.SEND_TEXT_AT]`: Send text message with `@`, use `WeChatClient.send_text_at`: method.
+            - `Literal[WeChatSendType.SEND_FILE]`: Send file message, use `WeChatClient.send_file`: method.
+            - `Literal[WeChatSendType.SEND_IMAGE]`: Send image message, use `WeChatClient.send_image`: method.
+            - `Literal[WeChatSendType.SEND_EMOTION]`: Send emotion message, use `WeChatClient.send_emotion`: method.
+            - `Literal[WeChatSendType.SEND_PAT]`: Send pat message, use `WeChatClient.send_pat`: method.
+            - `Literal[WeChatSendType.SEND_PUBLIC]`: Send public account message, use `WeChatClient.send_public`: method.
+            - `Literal[WeChatSendType.SEND_FORWARD]`: Forward message, use `WeChatClient.send_forward`: method.
         receive_id : User ID or chat room ID of receive message.
         params : Send parameters.
         send_id : Send ID of database.
@@ -106,37 +107,37 @@ class RSendParam(RBase):
         self.exc_reports: list[str] = []
 
 
-class RSend(RBase):
+class WeChatSend(WeChatBase):
     """
-    Rey's `send` type.
+    WeChat send type.
 
     Attribute
     ---------
-    SendType : Send type enumeration.
+    WeChatSendType : Send type enumeration.
     """
 
-    SendType = SendType
+    WeChatSendType = WeChatSendType
 
 
     def __init__(
         self,
-        rwechat: RWeChat,
+        rwechat: WeChat,
         bandwidth_upstream: float
     ) -> None:
         """
-        Build `send` instance attributes.
+        Build instance attributes.
 
         Parameters
         ----------
-        rwechat : `RClient` instance.
+        rwechat : `WeChatClient` instance.
         bandwidth_upstream : Upload bandwidth, impact send interval, unit Mpbs.
         """
 
         # Set attribute.
         self.rwechat = rwechat
         self.bandwidth_upstream = bandwidth_upstream
-        self.queue: Queue[RSendParam] = Queue()
-        self.handlers: list[Callable[[RSendParam], Any]] = []
+        self.queue: Queue[WeChatSendParameter] = Queue()
+        self.handlers: list[Callable[[WeChatSendParameter], Any]] = []
         self.started: bool | None = False
 
         # Start.
@@ -212,7 +213,7 @@ class RSend(RBase):
 
 
         # Define.
-        def handler_delete_cache_file(rsparam: RSendParam) -> None:
+        def handler_delete_cache_file(rsparam: WeChatSendParameter) -> None:
             """
             Delete cache file.
 
@@ -225,7 +226,7 @@ class RSend(RBase):
             if rsparam.cache_path is None: return
 
             # Delete.
-            rfile = RFile(rsparam.cache_path)
+            rfile = File(rsparam.cache_path)
             rfile.remove()
 
 
@@ -235,7 +236,7 @@ class RSend(RBase):
 
     def _send(
         self,
-        rsparam: RSendParam
+        rsparam: WeChatSendParameter
     ) -> None:
         """
         Send message.
@@ -263,7 +264,7 @@ class RSend(RBase):
             (path := rsparam.params.get('path')) is not None
             and (file_name := rsparam.params.get('file_name')) is not None
         ):
-            rfile = RFile(path)
+            rfile = File(path)
             copy_path = os_join(self.rwechat.dir_file, file_name)
             rfile.copy(copy_path)
             rsparam.cache_path = copy_path
@@ -273,14 +274,14 @@ class RSend(RBase):
         match rsparam.send_type:
 
             ## Text.
-            case SendType.SEND_TEXT:
+            case WeChatSendType.SEND_TEXT:
                 self.rwechat.rclient.send_text(
                     rsparam.receive_id,
                     rsparam.params['text']
                 )
 
             ## Text with '@'.
-            case SendType.SEND_TEXT_AT:
+            case WeChatSendType.SEND_TEXT_AT:
                 self.rwechat.rclient.send_text_at(
                     rsparam.receive_id,
                     rsparam.params['user_id'],
@@ -288,35 +289,35 @@ class RSend(RBase):
                 )
 
             ## File.
-            case SendType.SEND_FILE:
+            case WeChatSendType.SEND_FILE:
                 self.rwechat.rclient.send_file(
                     rsparam.receive_id,
                     path
                 )
 
             ## Image.
-            case SendType.SEND_IMAGE:
+            case WeChatSendType.SEND_IMAGE:
                 self.rwechat.rclient.send_image(
                     rsparam.receive_id,
                     path
                 )
 
             ## Emotion.
-            case SendType.SEND_EMOTION:
+            case WeChatSendType.SEND_EMOTION:
                 self.rwechat.rclient.send_emotion(
                     rsparam.receive_id,
                     path
                 )
 
             ## Pat.
-            case SendType.SEND_PAT:
+            case WeChatSendType.SEND_PAT:
                 self.rwechat.rclient.send_pat(
                     rsparam.receive_id,
                     rsparam.params['user_id']
                 )
 
             ## Public account.
-            case SendType.SEND_PUBLIC:
+            case WeChatSendType.SEND_PUBLIC:
                 self.rwechat.rclient.send_public(
                     rsparam.receive_id,
                     rsparam.params['page_url'],
@@ -328,7 +329,7 @@ class RSend(RBase):
                 )
 
             ## Forward.
-            case SendType.SEND_FORWARD:
+            case WeChatSendType.SEND_FORWARD:
                 self.rwechat.rclient.send_forward(
                     rsparam.receive_id,
                     rsparam.params['message_id']
@@ -344,7 +345,7 @@ class RSend(RBase):
 
     def _wait(
         self,
-        rsparam: RSendParam
+        rsparam: WeChatSendParameter
     ) -> None:
         """
         Waiting after sending.
@@ -370,7 +371,7 @@ class RSend(RBase):
     @overload
     def send(
         self,
-        send_type: Literal[SendType.SEND_TEXT],
+        send_type: Literal[WeChatSendType.SEND_TEXT],
         receive_id: str,
         send_id: int | None = None,
         *,
@@ -380,7 +381,7 @@ class RSend(RBase):
     @overload
     def send(
         self,
-        send_type: Literal[SendType.SEND_TEXT_AT],
+        send_type: Literal[WeChatSendType.SEND_TEXT_AT],
         receive_id: str,
         send_id: int | None = None,
         *,
@@ -391,7 +392,7 @@ class RSend(RBase):
     @overload
     def send(
         self,
-        send_type: Literal[SendType.SEND_FILE, SendType.SEND_IMAGE, SendType.SEND_EMOTION],
+        send_type: Literal[WeChatSendType.SEND_FILE, WeChatSendType.SEND_IMAGE, WeChatSendType.SEND_EMOTION],
         receive_id: str,
         send_id: int | None = None,
         *,
@@ -402,7 +403,7 @@ class RSend(RBase):
     @overload
     def send(
         self,
-        send_type: Literal[SendType.SEND_PAT],
+        send_type: Literal[WeChatSendType.SEND_PAT],
         receive_id: str,
         send_id: int | None = None,
         *,
@@ -412,7 +413,7 @@ class RSend(RBase):
     @overload
     def send(
         self,
-        send_type: Literal[SendType.SEND_PUBLIC],
+        send_type: Literal[WeChatSendType.SEND_PUBLIC],
         receive_id: str,
         send_id: int | None = None,
         *,
@@ -427,7 +428,7 @@ class RSend(RBase):
     @overload
     def send(
         self,
-        send_type: Literal[SendType.SEND_FORWARD],
+        send_type: Literal[WeChatSendType.SEND_FORWARD],
         receive_id: str,
         send_id: int | None = None,
         *,
@@ -436,7 +437,7 @@ class RSend(RBase):
 
     def send(
         self,
-        send_type: SendType,
+        send_type: WeChatSendType,
         receive_id: str | None = None,
         send_id: int | None = None,
         **params: Any
@@ -447,14 +448,14 @@ class RSend(RBase):
         Parameters
         ----------
         send_type : Send type.
-            - `Literal[SendType.SEND_TEXT]`: Send text message, use `RClient.send_text`: method.
-            - `Literal[SendType.SEND_TEXT_AT]`: Send text message with `@`, use `RClient.send_text_at`: method.
-            - `Literal[SendType.SEND_FILE]`: Send file message, use `RClient.send_file`: method.
-            - `Literal[SendType.SEND_IMAGE]`: Send image message, use `RClient.send_image`: method.
-            - `Literal[SendType.SEND_EMOTION]`: Send emotion message, use `RClient.send_emotion`: method.
-            - `Literal[SendType.SEND_PAT]`: Send pat message, use `RClient.send_pat`: method.
-            - `Literal[SendType.SEND_PUBLIC]`: Send public account message, use `RClient.send_public`: method.
-            - `Literal[SendType.SEND_FORWARD]`: Forward message, use `RClient.send_forward`: method.
+            - `Literal[WeChatSendType.SEND_TEXT]`: Send text message, use `WeChatClient.send_text`: method.
+            - `Literal[WeChatSendType.SEND_TEXT_AT]`: Send text message with `@`, use `WeChatClient.send_text_at`: method.
+            - `Literal[WeChatSendType.SEND_FILE]`: Send file message, use `WeChatClient.send_file`: method.
+            - `Literal[WeChatSendType.SEND_IMAGE]`: Send image message, use `WeChatClient.send_image`: method.
+            - `Literal[WeChatSendType.SEND_EMOTION]`: Send emotion message, use `WeChatClient.send_emotion`: method.
+            - `Literal[WeChatSendType.SEND_PAT]`: Send pat message, use `WeChatClient.send_pat`: method.
+            - `Literal[WeChatSendType.SEND_PUBLIC]`: Send public account message, use `WeChatClient.send_public`: method.
+            - `Literal[WeChatSendType.SEND_FORWARD]`: Forward message, use `WeChatClient.send_forward`: method.
         receive_id : User ID or chat room ID of receive message.
         send_id : Send ID of database.
         params : Send parameters.
@@ -464,10 +465,10 @@ class RSend(RBase):
         """
 
         # Check.
-        if send_type not in SendType:
+        if send_type not in WeChatSendType:
             throw(ValueError, send_type)
 
-        rsparam = RSendParam(
+        rsparam = WeChatSendParameter(
             self,
             send_type,
             receive_id,
@@ -481,14 +482,14 @@ class RSend(RBase):
 
     def add_handler(
         self,
-        handler: Callable[[RSendParam], Any]
+        handler: Callable[[WeChatSendParameter], Any]
     ) -> None:
         """
         Add send handler function.
 
         Parameters
         ----------
-        handler : Handler method, input parameter is `RSendParam` instance.
+        handler : Handler method, input parameter is `WeChatSendParameter` instance.
         """
 
         # Add.
@@ -589,7 +590,7 @@ class RSend(RBase):
                 # Report.
                 if not isinstance(
                     exc_instance,
-                    (RWeChatExecuteContinueError, RWeChatExecuteBreakError)
+                    (WeChatExecuteContinueError, WeChatExecuteBreakError)
                 ):
                     text = '\n'.join(
                         [

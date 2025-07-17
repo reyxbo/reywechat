@@ -19,21 +19,21 @@ from bs4.element import Tag as BSTag
 from reykit.rexc import throw, catch_exc
 from reykit.rimage import decode_qrcode
 from reykit.rnet import compute_stream_time, listen_socket
-from reykit.ros import RFile, RFolder, os_exists
+from reykit.ros import File, Folder, os_exists
 from reykit.rre import search
-from reykit.rtask import RThreadPool
+from reykit.rtask import ThreadPool
 from reykit.rtime import sleep, wait
-from reykit.rtype import RBase
 from reykit.rwrap import wrap_thread, wrap_exc
 
-from .rexc import RWeChatExecuteNoRuleReplyError, RWeChatExecuteTriggerReplyError
-from .rsend import SendType
-from .rwechat import RWeChat
+from .rexc import WeChatExecuteNoRuleReplyError, WeChatExecuteTriggerReplyError
+from .rsend import WeChatSendType
+from .rtype import WeChatBase
+from .rwechat import WeChat
 
 
 __all__ = (
-    'RMessage',
-    'RReceive'
+    'WeChatMessage',
+    'WechatReceive'
 )
 
 
@@ -53,15 +53,15 @@ MessageParameters = TypedDict(
     )
 
 
-class RMessage(RBase):
+class WeChatMessage(WeChatBase):
     """
-    Rey's `message` type.
+    WeChat message type.
     """
 
 
     def __init__(
         self,
-        rreceive: RReceive,
+        rreceive: WechatReceive,
         time: int,
         id_: int,
         number: int,
@@ -73,11 +73,11 @@ class RMessage(RBase):
         file:  dict[Literal['path', 'name', 'md5', 'size'], str] | None = None
     ) -> None:
         """
-        Build `message` instance attributes.
+        Build instance attributes.
 
         Parameters
         ----------
-        rreceive : `RReceive` instance.
+        rreceive : `WechatReceive` instance.
         time : Message timestamp.
         id : Message ID.
         number : Message local number.
@@ -100,7 +100,7 @@ class RMessage(RBase):
         """
 
         # Import.
-        from .rexe import Rule
+        from .rtrigger import TriggerRule
 
         # Set attribute.
         self.rreceive = rreceive
@@ -134,7 +134,7 @@ class RMessage(RBase):
         self._is_app: bool | None = None
         self._app_params: dict | None = None
         self._valid: bool | None = None
-        self.ruling: Rule | None = None
+        self.ruling: TriggerRule | None = None
         self.replied: bool = False
         self.execute_continue = self.rreceive.rexecute.continue_
         self.execute_break = self.rreceive.rexecute.break_
@@ -720,7 +720,7 @@ class RMessage(RBase):
     @overload
     def reply(
         self,
-        send_type: Literal[SendType.SEND_TEXT],
+        send_type: Literal[WeChatSendType.SEND_TEXT],
         *,
         text: str
     ) -> None: ...
@@ -728,7 +728,7 @@ class RMessage(RBase):
     @overload
     def reply(
         self,
-        send_type: Literal[SendType.SEND_TEXT_AT],
+        send_type: Literal[WeChatSendType.SEND_TEXT_AT],
         *,
         user_id: str | list[str] | Literal['notify@all'],
         text: str
@@ -737,7 +737,7 @@ class RMessage(RBase):
     @overload
     def reply(
         self,
-        send_type: Literal[SendType.SEND_FILE, SendType.SEND_IMAGE, SendType.SEND_EMOTION],
+        send_type: Literal[WeChatSendType.SEND_FILE, WeChatSendType.SEND_IMAGE, WeChatSendType.SEND_EMOTION],
         *,
         path: str,
         file_name: str | None = None
@@ -746,7 +746,7 @@ class RMessage(RBase):
     @overload
     def reply(
         self,
-        send_type: Literal[SendType.SEND_PAT],
+        send_type: Literal[WeChatSendType.SEND_PAT],
         *,
         user_id: str
     ) -> None: ...
@@ -754,7 +754,7 @@ class RMessage(RBase):
     @overload
     def reply(
         self,
-        send_type: Literal[SendType.SEND_PUBLIC],
+        send_type: Literal[WeChatSendType.SEND_PUBLIC],
         *,
         page_url: str,
         title: str,
@@ -767,14 +767,14 @@ class RMessage(RBase):
     @overload
     def reply(
         self,
-        send_type: Literal[SendType.SEND_FORWARD],
+        send_type: Literal[WeChatSendType.SEND_FORWARD],
         *,
         message_id: str
     ) -> None: ...
 
     def reply(
         self,
-        send_type: SendType | None = None,
+        send_type: WeChatSendType | None = None,
         **params: Any
     ) -> None:
         """
@@ -783,14 +783,14 @@ class RMessage(RBase):
         Parameters
         ----------
         send_type : Send type.
-            - `Literal[SendType.SEND_TEXT]`: Send text message, use `RClient.send_text`: method.
-            - `Literal[SendType.SEND_TEXT_AT]`: Send text message with `@`, use `RClient.send_text_at`: method.
-            - `Literal[SendType.SEND_FILE]`: Send file message, use `RClient.send_file`: method.
-            - `Literal[SendType.SEND_IMAGE]`: Send image message, use `RClient.send_image`: method.
-            - `Literal[SendType.SEND_EMOTION]`: Send emotion message, use `RClient.send_emotion`: method.
-            - `Literal[SendType.SEND_PAT]`: Send pat message, use `RClient.send_pat`: method.
-            - `Literal[SendType.SEND_PUBLIC]`: Send public account message, use `RClient.send_public`: method.
-            - `Literal[SendType.SEND_FORWARD]`: Forward message, use `RClient.send_forward`: method.
+            - `Literal[WeChatSendType.SEND_TEXT]`: Send text message, use `WeChatClient.send_text`: method.
+            - `Literal[WeChatSendType.SEND_TEXT_AT]`: Send text message with `@`, use `WeChatClient.send_text_at`: method.
+            - `Literal[WeChatSendType.SEND_FILE]`: Send file message, use `WeChatClient.send_file`: method.
+            - `Literal[WeChatSendType.SEND_IMAGE]`: Send image message, use `WeChatClient.send_image`: method.
+            - `Literal[WeChatSendType.SEND_EMOTION]`: Send emotion message, use `WeChatClient.send_emotion`: method.
+            - `Literal[WeChatSendType.SEND_PAT]`: Send pat message, use `WeChatClient.send_pat`: method.
+            - `Literal[WeChatSendType.SEND_PUBLIC]`: Send public account message, use `WeChatClient.send_public`: method.
+            - `Literal[WeChatSendType.SEND_FORWARD]`: Forward message, use `WeChatClient.send_forward`: method.
         params : Send parameters.
             - `Callable`: Use execute return value.
             - `Any`: Use this value.
@@ -799,9 +799,9 @@ class RMessage(RBase):
 
         # Check.
         if self.ruling is None:
-            throw(RWeChatExecuteNoRuleReplyError)
+            throw(WeChatExecuteNoRuleReplyError)
         if self.ruling['mode'] != 'reply':
-            throw(RWeChatExecuteTriggerReplyError)
+            throw(WeChatExecuteTriggerReplyError)
 
         # Get parameter.
         if self.room is None:
@@ -820,39 +820,39 @@ class RMessage(RBase):
         )
 
 
-class RReceive(RBase):
+class WechatReceive(WeChatBase):
     """
-    Rey's `receive` type.
+    WeChat receive type.
     """
 
 
     def __init__(
         self,
-        rwechat: RWeChat,
+        rwechat: WeChat,
         max_receiver: int,
         bandwidth_downstream: float
     ) -> None:
         """
-        Build `receive` instance attributes.
+        Build instance attributes.
 
         Parameters
         ----------
-        rwechat : `RClient` instance.
+        rwechat : `WeChatClient` instance.
         max_receiver : Maximum number of receivers.
         bandwidth_downstream : Download bandwidth, impact receive timeout, unit Mpbs.
         """
 
         # Import.
-        from .rexe import RExecute
+        from .rtrigger import WeChatTrigger
 
         # Set attribute.
         self.rwechat = rwechat
         self.max_receiver = max_receiver
         self.bandwidth_downstream = bandwidth_downstream
-        self.queue: Queue[RMessage] = Queue()
-        self.handlers: list[Callable[[RMessage], Any]] = []
+        self.queue: Queue[WeChatMessage] = Queue()
+        self.handlers: list[Callable[[WeChatMessage], Any]] = []
         self.started: bool | None = False
-        self.rexecute = RExecute(self)
+        self.rexecute = WeChatTrigger(self)
 
         # Start.
         self._start_callback()
@@ -888,7 +888,7 @@ class RReceive(RBase):
             if 'msgId' not in data: return
 
             # Extract.
-            rmessage = RMessage(
+            rmessage = WeChatMessage(
                 self,
                 data['createTime'],
                 data['msgId'],
@@ -926,13 +926,13 @@ class RReceive(RBase):
 
 
         # Define.
-        def handles(rmessage: RMessage) -> None:
+        def handles(rmessage: WeChatMessage) -> None:
             """
             Use handlers to handle message.
 
             Parameters
             ----------
-            rmessage : `RMessage` instance.
+            rmessage : `WeChatMessage` instance.
             """
 
             # Set parameter.
@@ -970,7 +970,7 @@ class RReceive(RBase):
 
 
         # Thread pool.
-        thread_pool = RThreadPool(
+        thread_pool = ThreadPool(
             handles,
             _max_workers=max_receiver
         )
@@ -995,14 +995,14 @@ class RReceive(RBase):
 
     def add_handler(
         self,
-        handler: Callable[[RMessage], Any]
+        handler: Callable[[WeChatMessage], Any]
     ) -> None:
         """
         Add message handler function.
 
         Parameters
         ----------
-        handler : Handler method, input parameter is `RMessage` instance.
+        handler : Handler method, input parameter is `WeChatMessage` instance.
         """
 
         # Add.
@@ -1011,7 +1011,7 @@ class RReceive(RBase):
 
     def _handler_room(
         self,
-        rmessage: RMessage
+        rmessage: WeChatMessage
     ) -> None:
         """
         Handle room message.
@@ -1036,14 +1036,14 @@ class RReceive(RBase):
 
     def _handler_file(
         self,
-        rmessage: RMessage
+        rmessage: WeChatMessage
     ) -> None:
         """
         Handle file message.
         """
 
         # Save.
-        rfolder = RFolder(self.rwechat.dir_file)
+        rfolder = Folder(self.rwechat.dir_file)
         generate_path = None
         match rmessage.type:
 
@@ -1162,7 +1162,7 @@ class RReceive(RBase):
                 file_md5
             )
         else:
-            rfile = RFile(generate_path)
+            rfile = File(generate_path)
             search_path = None
             if file_md5 is None:
                 file_md5 = rfile.md5

@@ -15,12 +15,12 @@ Modules
 -------
 rall : All methods.
 rclient : Client methods.
-rdb : Database methods.
+rdb : WeChatDatabase methods.
 rexc : Exception methods.
-rexe: Execute methods.
 rlog : Log methods.
 rreceive : Receive methods.
 rschedule : Schedule methods.
 rsend : Send methods.
+rtrigger : Trigger methods.
 rwechat : WeChat methods.
 """

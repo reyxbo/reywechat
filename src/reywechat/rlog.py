@@ -10,44 +10,44 @@
 
 
 from os.path import join as os_join
-from reykit.rlog import RLog as RRLog
-from reykit.rtype import RBase
+from reykit.rlog import Log
 
-from .rreceive import RMessage
-from .rsend import RSendParam
-from .rwechat import RWeChat
+from .rreceive import WeChatMessage
+from .rsend import WeChatSendParameter
+from .rtype import WeChatBase
+from .rwechat import WeChat
 
 
 __all__ = (
-    'RLog',
+    'WeChatLog',
 )
 
 
-class RLog(RBase):
+class WeChatLog(WeChatBase):
     """
-    Rey's `log` type.
+    WeChat log type.
     """
 
 
     def __init__(
         self,
-        rwechat: RWeChat
+        rwechat: WeChat
     ) -> None:
         """
-        Build `log` instance attributes.
+        Build instance attributes.
 
         Parameters
         ----------
-        rwechat : `RClient` instance.
+        rwechat : `WeChatClient` instance.
         """
 
         # Set attribute.
         self.rwechat = rwechat
 
         # Logger.
-        self.rrlog = RRLog('WeChat')
-        self.rrlog_print = RRLog('WeChat.WeChatPrint')
-        self.rrlog_file = RRLog('WeChat.WeChatFile')
+        self.rrlog = Log('WeChat')
+        self.rrlog_print = Log('WeChat.WeChatPrint')
+        self.rrlog_file = Log('WeChat.WeChatFile')
 
         # Add handler.
         self._add_handler()
@@ -116,14 +116,14 @@ class RLog(RBase):
 
     def log_receive(
         self,
-        rmessage: RMessage
+        rmessage: WeChatMessage
     ) -> None:
         """
         Log receive message.
 
         Parameters
         ----------
-        rmessage : `RMessage` instance.
+        rmessage : `WeChatMessage` instance.
         """
 
         # Generate record.
@@ -159,7 +159,7 @@ class RLog(RBase):
 
     def log_send(
         self,
-        rsparam: RSendParam
+        rsparam: WeChatSendParameter
     ) -> None:
         """
         Log send message.

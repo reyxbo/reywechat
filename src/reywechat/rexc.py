@@ -9,57 +9,66 @@
 """
 
 
-from reykit.rexc import RError, RActiveError
+from reykit.rexc import Error, ActiveError
+
+from .rtype import WeChatBase
 
 
 __all__ = (
-    'RWeChatError',
-    'RWeChatExecuteError',
-    'RWeChatExecuteContinueError',
-    'RWeChatExecuteBreakError',
-    'RWeChatExecuteReplyError',
-    'RWeChatExecuteNoRuleReplyError',
-    'RWeChatExecuteTriggerReplyError'
+    'WeChatError',
+    'WeChatClientErorr',
+    'WeChatExecuteError',
+    'WeChatExecuteContinueError',
+    'WeChatExecuteBreakError',
+    'WeChatExecuteReplyError',
+    'WeChatExecuteNoRuleReplyError',
+    'WeChatExecuteTriggerReplyError'
 )
 
 
-class RWeChatError(RError):
+class WeChatError(Error, WeChatBase):
     """
-    Rey's `WeChat error` type.
-    """
-
-
-class RWeChatExecuteError(RWeChatError):
-    """
-    Rey's `WeChat execute error` type.
+    WeChat error type.
     """
 
 
-class RWeChatExecuteContinueError(RActiveError, RWeChatExecuteError):
+class WeChatClientErorr(WeChatError):
     """
-    Rey's `WeChat execute continue error` type.
-    """
-
-
-class RWeChatExecuteBreakError(RActiveError, RWeChatExecuteError):
-    """
-    Rey's `WeChat execute break error` type.
+    WeChat client exception type.
     """
 
 
-class RWeChatExecuteReplyError(RWeChatExecuteError):
+class WeChatExecuteError(WeChatError):
     """
-    Rey's `WeChat execute reply error` type.
-    """
-
-
-class RWeChatExecuteNoRuleReplyError(RWeChatExecuteReplyError):
-    """
-    Rey's `WeChat execute no rule reply error` type.
+    WeChat execute error type.
     """
 
 
-class RWeChatExecuteTriggerReplyError(RWeChatExecuteReplyError):
+class WeChatExecuteContinueError(ActiveError, WeChatExecuteError):
     """
-    Rey's `WeChat execute trigger function reply error` type.
+    WeChat execute continue error type.
+    """
+
+
+class WeChatExecuteBreakError(ActiveError, WeChatExecuteError):
+    """
+    WeChat execute break error type.
+    """
+
+
+class WeChatExecuteReplyError(WeChatExecuteError):
+    """
+    WeChat execute reply error type.
+    """
+
+
+class WeChatExecuteNoRuleReplyError(WeChatExecuteReplyError):
+    """
+    WeChat execute no rule reply error type.
+    """
+
+
+class WeChatExecuteTriggerReplyError(WeChatExecuteReplyError):
+    """
+    WeChat execute trigger function reply error type.
     """

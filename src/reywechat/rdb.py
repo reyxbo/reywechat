@@ -5,57 +5,57 @@
 @Time    : 2023-10-23 20:55:58
 @Author  : Rey
 @Contact : reyxbo@163.com
-@Explain : Database methods.
+@Explain : WeChatDatabase methods.
 """
 
 
 from typing import Literal
 from json import loads as json_loads
-from reydb.rdb import RDatabase as RRDatabase
+from reydb.rdb import Database
 from reykit.rexc import throw
-from reykit.ros import RFolder
+from reykit.ros import Folder
 from reykit.rtime import to_time, time_to, sleep
-from reykit.rtype import RBase
 from reykit.rwrap import wrap_thread
 
-from .rreceive import RMessage
-from .rsend import RSendParam
-from .rwechat import RWeChat
+from .rreceive import WeChatMessage
+from .rsend import WeChatSendParameter
+from .rtype import WeChatBase
+from .rwechat import WeChat
 
 
 __all__ = (
-    'RDatabase',
+    'WeChatDatabase',
 )
 
 
-class RDatabase(RBase):
+class WeChatDatabase(WeChatBase):
     """
-    Rey's `database` type.
+    WeChat database type.
     """
 
 
     def __init__(
         self,
-        rwechat: RWeChat,
-        rrdatabase: RRDatabase | dict[Literal['wechat', 'file'], RRDatabase]
+        rwechat: WeChat,
+        rrdatabase: Database | dict[Literal['wechat', 'file'], Database]
     ) -> None:
         """
-        Build `database` instance attributes.
+        Build instance attributes.
 
         Parameters
         ----------
-        rwechat : `RClient` instance.
-        rrdatabase : `RDatabase` instance of `reykit` package.
-            - `RDatabase`, Set all `RDatabase`: instances.
-            - `dict`, Set each `RDatabase`: instance, all item is required.
-                `Key 'wechat'`: `RDatabase` instance used in WeChat methods.
-                `Key 'file'`: `RDatabase` instance used in file methods.
+        rwechat : `WeChatClient` instance.
+        rrdatabase : `WeChatDatabase` instance of `reykit` package.
+            - `WeChatDatabase`, Set all `WeChatDatabase`: instances.
+            - `dict`, Set each `WeChatDatabase`: instance, all item is required.
+                `Key 'wechat'`: `WeChatDatabase` instance used in WeChat methods.
+                `Key 'file'`: `WeChatDatabase` instance used in file methods.
         """
 
         # Set attribute.
         self.rwechat = rwechat
         match rrdatabase:
-            case RRDatabase():
+            case Database():
                 self.rrdatabase_wechat = self.rrdatabase_file = rrdatabase
             case dict():
                 self.rrdatabase_wechat = rrdatabase.get('wechat')
@@ -92,7 +92,7 @@ class RDatabase(RBase):
 
         # Set parameter.
 
-        ## Database.
+        ## WeChatDatabase.
         databases = [
             {
                 'database': 'wechat'
@@ -716,13 +716,13 @@ class RDatabase(RBase):
 
 
         # Define.
-        def handler_to_contact_user(rmessage: RMessage) -> None:
+        def handler_to_contact_user(rmessage: WeChatMessage) -> None:
             """
             Write record to table `contact_user`.
 
             Parameters
             ----------
-            rmessage : `RMessage` instance.
+            rmessage : `WeChatMessage` instance.
             """
 
             # Add friend.
@@ -755,13 +755,13 @@ class RDatabase(RBase):
 
 
         # Define.
-        def handler_to_contact_room(rmessage: RMessage) -> None:
+        def handler_to_contact_room(rmessage: WeChatMessage) -> None:
             """
             Write record to table `contact_room`.
 
             Parameters
             ----------
-            rmessage : `RMessage` instance.
+            rmessage : `WeChatMessage` instance.
             """
 
             # Invite.
@@ -839,13 +839,13 @@ class RDatabase(RBase):
 
 
         # Define.
-        def handler_to_contact_room_user(rmessage: RMessage) -> None:
+        def handler_to_contact_room_user(rmessage: WeChatMessage) -> None:
             """
             Write record to table `contact_room_user`.
 
             Parameters
             ----------
-            rmessage : `RMessage` instance.
+            rmessage : `WeChatMessage` instance.
             """
 
             # Add memeber.
@@ -869,13 +869,13 @@ class RDatabase(RBase):
 
 
         # Define.
-        def handler_to_message_receive(rmessage: RMessage) -> None:
+        def handler_to_message_receive(rmessage: WeChatMessage) -> None:
             """
             Write record to table `message_receive`.
 
             Parameters
             ----------
-            rmessage : `RMessage` instance.
+            rmessage : `WeChatMessage` instance.
             """
 
             # Upload file.
@@ -920,7 +920,7 @@ class RDatabase(RBase):
 
 
         # Define.
-        def handler_to_message_send(rsparam: RSendParam) -> None:
+        def handler_to_message_send(rsparam: WeChatSendParameter) -> None:
             """
             Write record to table `message_send`.
 
@@ -995,7 +995,7 @@ class RDatabase(RBase):
 
         # Check.
         file_md5 = file_info['md5']
-        rfolder = RFolder(self.rwechat.dir_file)
+        rfolder = Folder(self.rwechat.dir_file)
         pattern = f'^{file_md5}$'
         search_path = rfolder.search(pattern)
 
@@ -1092,7 +1092,7 @@ class RDatabase(RBase):
 
 
         # Define.
-        def handler_update_send_status(rsparam: RSendParam) -> None:
+        def handler_update_send_status(rsparam: WeChatSendParameter) -> None:
             """
             Update field `status` of table `message_send`.
 
@@ -1138,14 +1138,14 @@ class RDatabase(RBase):
 
     def is_valid(
         self,
-        rmessage: RMessage
+        rmessage: WeChatMessage
     ) -> bool:
         """
         Judge if is valid user or chat room from database.
 
         Parameters
         ----------
-        rmessage : `RMessage` instance.
+        rmessage : `WeChatMessage` instance.
 
         Returns
         -------

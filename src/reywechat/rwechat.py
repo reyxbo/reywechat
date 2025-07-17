@@ -12,20 +12,21 @@
 from typing import Literal
 from os import getcwd as os_getcwd
 from os.path import join as os_join
-from reydb.rdb import RDatabase as RRDatabase
+from reydb.rdb import Database
 from reykit.ros import create_folder as reytool_create_folder
 from reykit.rsys import block
-from reykit.rtype import RBase
+
+from .rtype import WeChatBase
 
 
 __all__ = (
-    'RWeChat',
+    'WeChat',
 )
 
 
-class RWeChat(RBase):
+class WeChat(WeChatBase):
     """
-    Rey's `WeChat` type.
+    WeChat type.
 
     Will start client API service with port `19088` and message callback service with port '19089'.
 
@@ -41,22 +42,22 @@ class RWeChat(RBase):
 
     def __init__(
         self,
-        rrdatabase: RRDatabase | dict[Literal['wechat', 'file'], RRDatabase] | None,
+        rrdatabase: Database | dict[Literal['wechat', 'file'], Database] | None,
         max_receiver: int = 2,
         bandwidth_downstream: float = 5,
         bandwidth_upstream: float = 5,
         project_dir: str | None = None
     ) -> None:
         """
-        Build `WeChat` instance attributes.
+        Build instance attributes.
 
         Parameters
         ----------
-        rrdatabase : `RDatabase` instance of `reykit` package.
-            - `RDatabase`, Set all `RDatabase`: instances.
-            - `dict`, Set each `RDatabase`: instance, all item is required.
-                `Key 'wechat'`: `RDatabase` instance used in WeChat methods.
-                `Key 'file'`: `RDatabase` instance used in file methods.
+        rrdatabase : `WeChatDatabase` instance of `reykit` package.
+            - `WeChatDatabase`, Set all `WeChatDatabase`: instances.
+            - `dict`, Set each `WeChatDatabase`: instance, all item is required.
+                `Key 'wechat'`: `WeChatDatabase` instance used in WeChat methods.
+                `Key 'file'`: `WeChatDatabase` instance used in file methods.
         max_receiver : Maximum number of receivers.
         bandwidth_downstream : Download bandwidth, impact receive timeout, unit Mpbs.
         bandwidth_upstream : Upload bandwidth, impact send interval, unit Mpbs.
@@ -66,12 +67,12 @@ class RWeChat(RBase):
         """
 
         # Import.
-        from .rclient import RClient
-        from .rdb import RDatabase
-        from .rlog import RLog
-        from .rreceive import RReceive
-        from .rschedule import RSchedule
-        from .rsend import RSend
+        from .rclient import WeChatClient
+        from .rdb import WeChatDatabase
+        from .rlog import WeChatLog
+        from .rreceive import WechatReceive
+        from .rschedule import WeChatSchedule
+        from .rsend import WeChatSend
 
         # Create folder.
         project_dir = project_dir or os_getcwd()
@@ -80,12 +81,12 @@ class RWeChat(RBase):
         # Set attribute.
 
         ## Instance.
-        self.rclient = RClient(self)
-        self.rlog = RLog(self)
-        self.rreceive = RReceive(self, max_receiver, bandwidth_downstream)
-        self.rsend = RSend(self, bandwidth_upstream)
-        self.rdatabase = RDatabase(self, rrdatabase)
-        self.rschedule = RSchedule(self)
+        self.rclient = WeChatClient(self)
+        self.rlog = WeChatLog(self)
+        self.rreceive = WechatReceive(self, max_receiver, bandwidth_downstream)
+        self.rsend = WeChatSend(self, bandwidth_upstream)
+        self.rdatabase = WeChatDatabase(self, rrdatabase)
+        self.rschedule = WeChatSchedule(self)
 
         ## Client.
         self.client_version = self.rclient.client_version
