@@ -13,10 +13,10 @@ from typing import Literal
 from os import getcwd as os_getcwd
 from os.path import join as os_join
 from reydb.rdb import Database
+from reykit.rbase import block
 from reykit.ros import create_folder as reytool_create_folder
-from reykit.rsys import block
 
-from .rtype import WeChatBase
+from .rbase import BaseWeChat
 
 
 __all__ = (
@@ -24,7 +24,7 @@ __all__ = (
 )
 
 
-class WeChat(WeChatBase):
+class WeChat(BaseWeChat):
     """
     WeChat type.
 

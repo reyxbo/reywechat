@@ -17,7 +17,7 @@ from functools import wraps as functools_wraps
 from os.path import join as os_join
 from queue import Queue
 from re import escape as re_escape
-from reykit.rexc import throw, catch_exc
+from reykit.rbase import throw, catch_exc
 from reykit.rnet import compute_stream_time
 from reykit.ros import File
 from reykit.rrand import randn
@@ -25,8 +25,7 @@ from reykit.rre import sub
 from reykit.rtime import sleep
 from reykit.rwrap import wrap_thread, wrap_exc
 
-from .rexc import WeChatExecuteContinueError, WeChatExecuteBreakError
-from .rtype import WeChatBase
+from .rbase import BaseWeChat, WeChatTriggerContinueExit, WeChatTriggerBreakExit
 from .rwechat import WeChat
 
 
@@ -37,7 +36,7 @@ __all__ = (
 )
 
 
-class WeChatSendType(WeChatBase, Enum):
+class WeChatSendType(BaseWeChat, Enum):
     """
     WeChat send type enumeration.
 
@@ -63,7 +62,7 @@ class WeChatSendType(WeChatBase, Enum):
     SEND_FORWARD = 7
 
 
-class WeChatSendParameter(WeChatBase):
+class WeChatSendParameter(BaseWeChat):
     """
     WeChat send parameters type.
     """
@@ -107,7 +106,7 @@ class WeChatSendParameter(WeChatBase):
         self.exc_reports: list[str] = []
 
 
-class WeChatSend(WeChatBase):
+class WeChatSend(BaseWeChat):
     """
     WeChat send type.
 
@@ -590,7 +589,7 @@ class WeChatSend(WeChatBase):
                 # Report.
                 if not isinstance(
                     exc_instance,
-                    (WeChatExecuteContinueError, WeChatExecuteBreakError)
+                    (WeChatTriggerContinueExit, WeChatTriggerBreakExit)
                 ):
                     text = '\n'.join(
                         [

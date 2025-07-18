@@ -14,12 +14,12 @@ from typing import Any, Literal
 from collections.abc import Callable
 from reykit.rschedule import Schedule
 
+from .rbase import BaseWeChat
 from .rsend import WeChatSendType
-from .rtype import WeChatBase
 from .rwechat import WeChat
 
 
-class WeChatSchedule(WeChatBase):
+class WeChatSchedule(BaseWeChat):
     """
     WeChat schedule type.
     """

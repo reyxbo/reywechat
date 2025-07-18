@@ -16,7 +16,7 @@ from queue import Queue
 from json import loads as json_loads
 from bs4 import BeautifulSoup as BSBeautifulSoup
 from bs4.element import Tag as BSTag
-from reykit.rexc import throw, catch_exc
+from reykit.rbase import throw, catch_exc
 from reykit.rimage import decode_qrcode
 from reykit.rnet import compute_stream_time, listen_socket
 from reykit.ros import File, Folder, os_exists
@@ -25,9 +25,8 @@ from reykit.rtask import ThreadPool
 from reykit.rtime import sleep, wait
 from reykit.rwrap import wrap_thread, wrap_exc
 
-from .rexc import WeChatExecuteNoRuleReplyError, WeChatExecuteTriggerReplyError
+from .rbase import BaseWeChat, WeChatTriggerError
 from .rsend import WeChatSendType
-from .rtype import WeChatBase
 from .rwechat import WeChat
 
 
@@ -53,7 +52,7 @@ MessageParameters = TypedDict(
     )
 
 
-class WeChatMessage(WeChatBase):
+class WeChatMessage(BaseWeChat):
     """
     WeChat message type.
     """
@@ -799,9 +798,11 @@ class WeChatMessage(WeChatBase):
 
         # Check.
         if self.ruling is None:
-            throw(WeChatExecuteNoRuleReplyError)
+            text = 'WeChat trigger not rule'
+            throw(WeChatTriggerError, text=text)
         if self.ruling['mode'] != 'reply':
-            throw(WeChatExecuteTriggerReplyError)
+            text = 'WeChat trigger reply not allowed'
+            throw(WeChatTriggerError, text=text)
 
         # Get parameter.
         if self.room is None:
@@ -820,7 +821,7 @@ class WeChatMessage(WeChatBase):
         )
 
 
-class WechatReceive(WeChatBase):
+class WechatReceive(BaseWeChat):
     """
     WeChat receive type.
     """

@@ -12,9 +12,9 @@
 from os.path import join as os_join
 from reykit.rlog import Log
 
+from .rbase import BaseWeChat
 from .rreceive import WeChatMessage
 from .rsend import WeChatSendParameter
-from .rtype import WeChatBase
 from .rwechat import WeChat
 
 
@@ -23,7 +23,7 @@ __all__ = (
 )
 
 
-class WeChatLog(WeChatBase):
+class WeChatLog(BaseWeChat):
     """
     WeChat log type.
     """

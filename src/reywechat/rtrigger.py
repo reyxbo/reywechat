@@ -11,11 +11,10 @@
 
 from typing import Any, TypedDict, Literal, NoReturn
 from collections.abc import Callable
-from reykit.rexc import catch_exc
+from reykit.rbase import catch_exc
 
-from .rexc import WeChatExecuteContinueError, WeChatExecuteBreakError
+from .rbase import BaseWeChat, WeChatTriggerContinueExit, WeChatTriggerBreakExit
 from .rreceive import WeChatMessage, WechatReceive
-from .rtype import WeChatBase
 
 
 __all__ = (
@@ -26,7 +25,7 @@ __all__ = (
 TriggerRule = TypedDict('TriggerRule', {'mode': Literal['trigger', 'reply'], 'executer': Callable[[WeChatMessage], None], 'level': float})
 
 
-class WeChatTrigger(WeChatBase):
+class WeChatTrigger(BaseWeChat):
     """
     WeChat trigger type.
     """
@@ -91,11 +90,11 @@ class WeChatTrigger(WeChatBase):
                     rule['executer'](rmessage)
 
                 # Continue.
-                except WeChatExecuteContinueError:
+                except WeChatTriggerContinueExit:
                     continue
 
                 # Break.
-                except WeChatExecuteBreakError:
+                except WeChatTriggerBreakExit:
                     break
 
                 # Exception.
@@ -130,8 +129,8 @@ class WeChatTrigger(WeChatBase):
         ----------
         mode : Execute mode.
         executer : Function of execute. The parameter is the `WeChatMessage` instance.
-            When throw `WeChatExecuteContinueError` type exception, then continue next execution.
-            When throw `WeChatExecuteBreakError` type exception, then stop executes.
+            When throw `WeChatTriggerContinueExit` type exception, then continue next execution.
+            When throw `WeChatTriggerBreakExit` type exception, then stop executes.
         level : Priority level, sort from large to small.
         """
 
@@ -155,20 +154,20 @@ class WeChatTrigger(WeChatBase):
 
     def continue_(self) -> NoReturn:
         """
-        Continue execute by throwing `WeChatExecuteContinueError` type exception.
+        Continue execute by throwing `WeChatTriggerContinueExit` type exception.
         """
 
         # Raise.
-        raise WeChatExecuteContinueError
+        raise WeChatTriggerContinueExit
 
 
     def break_(self) -> NoReturn:
         """
-        Break execute by throwing `WeChatExecuteBreakError` type exception.
+        Break execute by throwing `WeChatTriggerBreakExit` type exception.
         """
 
         # Raise.
-        raise WeChatExecuteBreakError
+        raise WeChatTriggerBreakExit
 
 
     def _add_execute_valid(self) -> None:

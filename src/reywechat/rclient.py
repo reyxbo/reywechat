@@ -12,20 +12,16 @@
 from typing import Any, TypedDict, Literal, Final
 from os.path import abspath as os_abspath
 from reykit.rdll import inject_dll
-from reykit.rexc import Error
 from reykit.rnet import request as reytool_request
 from reykit.ros import find_relpath
-from reykit.rsys import dos_command, search_process, memory_read, memory_write, popup_select
+from reykit.rsys import run_cmd, search_process, memory_read, memory_write, popup_select
 from reykit.rtime import wait
-from reykit.rtype import ConfigMeta
 
-from .rexc import WeChatClientErorr
-from .rtype import WeChatBase
+from .rbase import BaseWeChat, WeChatClientErorr
 from .rwechat import WeChat
 
 
 __all__ = (
-    'WeChatResponse',
     'CLIENT_VERSION_MEMORY_OFFSETS',
     'WeChatClient',
     'simulate_client_version'
@@ -46,7 +42,7 @@ CLIENT_VERSION_MEMORY_OFFSETS = (
 )
 
 
-class WeChatClient(WeChatBase):
+class WeChatClient(BaseWeChat):
     """
     WeChat client type.
     """
@@ -97,7 +93,7 @@ class WeChatClient(WeChatBase):
             )
             if wechat_path is None:
                 raise WeChatClientErorr('WeChat client not started')
-            dos_command(wechat_path)
+            run_cmd(wechat_path)
 
             ## Wait.
             seconds = wait(

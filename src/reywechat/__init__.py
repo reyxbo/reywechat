@@ -14,9 +14,9 @@ data : Data file.
 Modules
 -------
 rall : All methods.
+rbase : Base methods.
 rclient : Client methods.
 rdb : WeChatDatabase methods.
-rexc : Exception methods.
 rlog : Log methods.
 rreceive : Receive methods.
 rschedule : Schedule methods.

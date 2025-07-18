@@ -12,14 +12,14 @@
 from typing import Literal
 from json import loads as json_loads
 from reydb.rdb import Database
-from reykit.rexc import throw
+from reykit.rbase import throw
 from reykit.ros import Folder
 from reykit.rtime import to_time, time_to, sleep
 from reykit.rwrap import wrap_thread
 
+from .rbase import BaseWeChat
 from .rreceive import WeChatMessage
 from .rsend import WeChatSendParameter
-from .rtype import WeChatBase
 from .rwechat import WeChat
 
 
@@ -28,7 +28,7 @@ __all__ = (
 )
 
 
-class WeChatDatabase(WeChatBase):
+class WeChatDatabase(BaseWeChat):
     """
     WeChat database type.
     """
