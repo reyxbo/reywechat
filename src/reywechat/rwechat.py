@@ -70,9 +70,9 @@ class WeChat(BaseWeChat):
         from .rclient import WeChatClient
         from .rdb import WeChatDatabase
         from .rlog import WeChatLog
-        from .rreceive import WechatReceive
+        from .rreceive import WechatReceiver
         from .rschedule import WeChatSchedule
-        from .rsend import WeChatSend
+        from .rsend import WeChatSender
 
         # Create folder.
         project_dir = project_dir or os_getcwd()
@@ -81,41 +81,41 @@ class WeChat(BaseWeChat):
         # Set attribute.
 
         ## Instance.
-        self.rclient = WeChatClient(self)
-        self.rlog = WeChatLog(self)
-        self.rreceive = WechatReceive(self, max_receiver, bandwidth_downstream)
-        self.rsend = WeChatSend(self, bandwidth_upstream)
-        self.rdatabase = WeChatDatabase(self, rrdatabase)
-        self.rschedule = WeChatSchedule(self)
+        self.client = WeChatClient(self)
+        self.log = WeChatLog(self)
+        self.receiver = WechatReceiver(self, max_receiver, bandwidth_downstream)
+        self.trigger = self.receiver.trigger
+        self.sender = WeChatSender(self, bandwidth_upstream)
+        self.database = WeChatDatabase(self, rrdatabase)
+        self.schedule = WeChatSchedule(self)
 
         ## Client.
-        self.client_version = self.rclient.client_version
-        self.client_version_int = self.rclient.client_version_int
-        self.client_version_simulate = self.rclient.client_version_simulate
-        self.client_version_simulate_int = self.rclient.client_version_simulate_int
-        self.client_api_port = self.rclient.client_api_port
-        self.message_callback_port = self.rclient.message_callback_port
+        self.client_version = self.client.client_version
+        self.client_version_int = self.client.client_version_int
+        self.client_version_simulate = self.client.client_version_simulate
+        self.client_version_simulate_int = self.client.client_version_simulate_int
+        self.client_api_port = self.client.client_api_port
+        self.message_callback_port = self.client.message_callback_port
 
         ## Receive.
-        self.receive_add_handler = self.rreceive.add_handler
-        self.receive_start = self.rreceive.start
-        self.receive_stop = self.rreceive.stop
+        self.receive_add_handler = self.receiver.add_handler
+        self.receive_start = self.receiver.start
+        self.receive_stop = self.receiver.stop
 
         ## Send.
-        self.send_add_handler = self.rsend.add_handler
-        self.send = self.rsend.send
-        self.send_start = self.rsend.start
-        self.send_stop = self.rsend.stop
-        self.wrap_try_send = self.rsend.wrap_try_send
+        self.send_add_handler = self.sender.add_handler
+        self.send = self.sender.send
+        self.send_start = self.sender.start
+        self.send_stop = self.sender.stop
+        self.wrap_try_send = self.sender.wrap_try_send
 
-        ## Execute.
-        self.rexecute = self.rreceive.rexecute
-        self.execute_add_rule = self.rexecute.add_rule
+        ## Trigger.
+        self.trigger_add_rule = self.trigger.add_rule
 
         ## Schedule.
-        self.schedule_add = self.rschedule.add
-        self.schedule_pause = self.rschedule.pause
-        self.schedule_resume = self.rschedule.resume
+        self.schedule_add_task = self.schedule.add_task
+        self.schedule_pause = self.schedule.pause
+        self.schedule_resume = self.schedule.resume
 
 
     def _create_folder(
@@ -182,7 +182,7 @@ class WeChat(BaseWeChat):
         """
 
         # Get parameter.
-        result = self.rlog.rrlog.print_colour
+        result = self.log.rrlog.print_colour
 
         return result
 
@@ -198,6 +198,6 @@ class WeChat(BaseWeChat):
         """
 
         # Set.
-        self.rlog.rrlog.print_colour = value
-        self.rlog.rrlog_print.print_colour = value
-        self.rlog.rrlog_file.print_colour = value
+        self.log.rrlog.print_colour = value
+        self.log.rrlog_print.print_colour = value
+        self.log.rrlog_file.print_colour = value

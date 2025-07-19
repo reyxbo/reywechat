@@ -19,7 +19,7 @@ from reykit.rwrap import wrap_thread
 
 from .rbase import BaseWeChat
 from .rreceive import WeChatMessage
-from .rsend import WeChatSendParameter
+from .rsend import WeChatSendType, WeChatSendParameter
 from .rwechat import WeChat
 
 
@@ -515,7 +515,7 @@ class WeChatDatabase(BaseWeChat):
         """
 
         # Get data.
-        contact_table = self.rwechat.rclient.get_contact_table('user')
+        contact_table = self.rwechat.client.get_contact_table('user')
 
         user_data = [
             {
@@ -571,7 +571,7 @@ class WeChatDatabase(BaseWeChat):
         """
 
         # Get data.
-        contact_table = self.rwechat.rclient.get_contact_table('room')
+        contact_table = self.rwechat.client.get_contact_table('room')
 
         room_data = [
             {
@@ -639,7 +639,7 @@ class WeChatDatabase(BaseWeChat):
 
         ## All.
         if room_id is None:
-            contact_table = self.rwechat.rclient.get_contact_table('room')
+            contact_table = self.rwechat.client.get_contact_table('room')
 
         ## Given.
         else:
@@ -654,7 +654,7 @@ class WeChatDatabase(BaseWeChat):
             }
             for row in contact_table
             for user_id, name
-            in self.rwechat.rclient.get_room_member_dict(row['id']).items()
+            in self.rwechat.client.get_room_member_dict(row['id']).items()
         ]
         room_user_ids = [
             '%s,%s' % (
@@ -716,22 +716,22 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Define.
-        def handler_to_contact_user(rmessage: WeChatMessage) -> None:
+        def handler_to_contact_user(message: WeChatMessage) -> None:
             """
             Write record to table `contact_user`.
 
             Parameters
             ----------
-            rmessage : `WeChatMessage` instance.
+            message : `WeChatMessage` instance.
             """
 
             # Add friend.
-            if rmessage.is_new_user:
+            if message.is_new_user:
 
                 ## Generate data.
-                name = self.rwechat.rclient.get_contact_name(rmessage.user)
+                name = self.rwechat.client.get_contact_name(message.user)
                 data = {
-                    'user_id': rmessage.user,
+                    'user_id': message.user,
                     'name': name,
                     'contact': 1
                 }
@@ -745,7 +745,7 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Add handler.
-        self.rwechat.rreceive.add_handler(handler_to_contact_user)
+        self.rwechat.receiver.add_handler(handler_to_contact_user)
 
 
     def _to_contact_room(self) -> None:
@@ -755,22 +755,22 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Define.
-        def handler_to_contact_room(rmessage: WeChatMessage) -> None:
+        def handler_to_contact_room(message: WeChatMessage) -> None:
             """
             Write record to table `contact_room`.
 
             Parameters
             ----------
-            rmessage : `WeChatMessage` instance.
+            message : `WeChatMessage` instance.
             """
 
             # Invite.
-            if rmessage.is_new_room:
+            if message.is_new_room:
 
                 ## Generate data.
-                name = self.rwechat.rclient.get_contact_name(rmessage.room)
+                name = self.rwechat.client.get_contact_name(message.room)
                 data = {
-                    'room_id': rmessage.room,
+                    'room_id': message.room,
                     'name': name,
                     'contact': 1
                 }
@@ -785,16 +785,16 @@ class WeChatDatabase(BaseWeChat):
                 )
 
                 ### 'contact_room_user'.
-                self.update_contact_room_user(rmessage.room)
+                self.update_contact_room_user(message.room)
 
             # Modify room name.
-            elif rmessage.is_change_room_name:
+            elif message.is_change_room_name:
 
                 ## Generate data.
-                _, name = rmessage.data.rsplit('“', 1)
+                _, name = message.data.rsplit('“', 1)
                 name = name[:-1]
                 data = {
-                    'room_id': rmessage.room,
+                    'room_id': message.room,
                     'name': name,
                     'limit': 1
                 }
@@ -808,15 +808,15 @@ class WeChatDatabase(BaseWeChat):
             elif (
 
                 # Kick out.
-                rmessage.is_kick_out_room
+                message.is_kick_out_room
 
                 # Dissolve.
-                or rmessage.is_dissolve_room
+                or message.is_dissolve_room
             ):
 
                 ## Generate data.
                 data = {
-                    'room_id': rmessage.room,
+                    'room_id': message.room,
                     'contact': 0,
                     'limit': 1
                 }
@@ -829,7 +829,7 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Add handler.
-        self.rwechat.rreceive.add_handler(handler_to_contact_room)
+        self.rwechat.receiver.add_handler(handler_to_contact_room)
 
 
     def _to_contact_room_user(self) -> None:
@@ -839,27 +839,27 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Define.
-        def handler_to_contact_room_user(rmessage: WeChatMessage) -> None:
+        def handler_to_contact_room_user(message: WeChatMessage) -> None:
             """
             Write record to table `contact_room_user`.
 
             Parameters
             ----------
-            rmessage : `WeChatMessage` instance.
+            message : `WeChatMessage` instance.
             """
 
             # Add memeber.
-            if rmessage.is_new_room_user:
+            if message.is_new_room_user:
 
                 ## Sleep.
                 sleep(1)
 
                 ## Insert.
-                self.update_contact_room_user(rmessage.room)
+                self.update_contact_room_user(message.room)
 
 
         # Add handler.
-        self.rwechat.rreceive.add_handler(handler_to_contact_room_user)
+        self.rwechat.receiver.add_handler(handler_to_contact_room_user)
 
 
     def _to_message_receive(self) -> None:
@@ -869,35 +869,35 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Define.
-        def handler_to_message_receive(rmessage: WeChatMessage) -> None:
+        def handler_to_message_receive(message: WeChatMessage) -> None:
             """
             Write record to table `message_receive`.
 
             Parameters
             ----------
-            rmessage : `WeChatMessage` instance.
+            message : `WeChatMessage` instance.
             """
 
             # Upload file.
-            if rmessage.file is None:
+            if message.file is None:
                 file_id = None
             else:
                 file_id = self.rrdatabase_file.file.upload(
-                    rmessage.file['path'],
-                    rmessage.file['name'],
+                    message.file['path'],
+                    message.file['name'],
                     'WeChat'
                 )
 
             # Generate data.
-            message_time_obj = to_time(rmessage.time)
+            message_time_obj = to_time(message.time)
             message_time_str = time_to(message_time_obj)
             data = {
                 'message_time': message_time_str,
-                'message_id': rmessage.id,
-                'room_id': rmessage.room,
-                'user_id': rmessage.user,
-                'type': rmessage.type,
-                'data': rmessage.data,
+                'message_id': message.id,
+                'room_id': message.room,
+                'user_id': message.user,
+                'type': message.type,
+                'data': message.data,
                 'file_id': file_id
             }
 
@@ -910,7 +910,7 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Add handler.
-        self.rwechat.rreceive.add_handler(handler_to_message_receive)
+        self.rwechat.receiver.add_handler(handler_to_message_receive)
 
 
     def _to_message_send(self) -> None:
@@ -920,23 +920,23 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Define.
-        def handler_to_message_send(rsparam: WeChatSendParameter) -> None:
+        def handler_to_message_send(sendparam: WeChatSendParameter) -> None:
             """
             Write record to table `message_send`.
 
             Parameters
             ----------
-            rsparam : `RSendParams` instance.
+            sendparam : `WeChatSendParameter` instance.
             """
 
             # Break.
-            if rsparam.send_id is not None: return
+            if sendparam.send_id is not None: return
 
             # Generate data.
-            path = rsparam.params.get('path')
+            path = sendparam.params.get('path')
             params = {
                 key: value
-                for key, value in rsparam.params.items()
+                for key, value in sendparam.params.items()
                 if key not in (
                     'send_type',
                     'receive_id',
@@ -952,14 +952,14 @@ class WeChatDatabase(BaseWeChat):
                 )
                 params['file_id'] = file_id
 
-            if rsparam.exc_reports == []:
+            if sendparam.exc_reports == []:
                 status = 2
             else:
                 status = 3
             data = {
                 'status': status,
-                'type': rsparam.send_type,
-                'receive_id': rsparam.receive_id,
+                'type': sendparam.send_type,
+                'receive_id': sendparam.receive_id,
                 'parameter': params
             }
 
@@ -971,7 +971,7 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Add handler.
-        self.rwechat.rsend.add_handler(handler_to_message_send)
+        self.rwechat.sender.add_handler(handler_to_message_send)
 
 
     def _download_file(
@@ -1064,6 +1064,7 @@ class WeChatDatabase(BaseWeChat):
         # Send.
         for row in table:
             send_id, type_, receive_id, parameter = row.values()
+            send_type = WeChatSendType(type_)
             parameter: dict = json_loads(parameter)
 
             ## Save file.
@@ -1074,7 +1075,7 @@ class WeChatDatabase(BaseWeChat):
                 parameter['file_name'] = file_name
 
             self.rwechat.send(
-                type_,
+                send_type,
                 receive_id,
                 send_id,
                 **parameter
@@ -1092,26 +1093,26 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Define.
-        def handler_update_send_status(rsparam: WeChatSendParameter) -> None:
+        def handler_update_send_status(sendparam: WeChatSendParameter) -> None:
             """
             Update field `status` of table `message_send`.
 
             Parameters
             ----------
-            rsparam : `RSendParams` instance.
+            sendparam : `WeChatSendParameter` instance.
             """
 
             # Break.
-            if rsparam.send_id is None:
+            if sendparam.send_id is None:
                 return
 
             # Get parameter.
-            if rsparam.exc_reports == []:
+            if sendparam.exc_reports == []:
                 status = 2
             else:
                 status = 3
             data = {
-                'send_id': rsparam.send_id,
+                'send_id': sendparam.send_id,
                 'status': status,
                 'limit': 1
             }
@@ -1124,7 +1125,7 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Add handler.
-        self.rwechat.rsend.add_handler(handler_update_send_status)
+        self.rwechat.sender.add_handler(handler_update_send_status)
 
         # Loop.
         while True:
@@ -1138,14 +1139,14 @@ class WeChatDatabase(BaseWeChat):
 
     def is_valid(
         self,
-        rmessage: WeChatMessage
+        message: WeChatMessage
     ) -> bool:
         """
         Judge if is valid user or chat room from database.
 
         Parameters
         ----------
-        rmessage : `WeChatMessage` instance.
+        message : `WeChatMessage` instance.
 
         Returns
         -------
@@ -1157,13 +1158,13 @@ class WeChatDatabase(BaseWeChat):
         # Judge.
 
         ## User.
-        if rmessage.room is None:
-            result = rmessage.rreceive.rwechat.rdatabase.rrdatabase_wechat.execute_select(
+        if message.room is None:
+            result = message.receiver.rwechat.database.rrdatabase_wechat.execute_select(
                 ('wechat', 'contact_user'),
                 ['valid'],
                 '`user_id` = :user_id',
                 limit=1,
-                user_id=rmessage.user
+                user_id=message.user
             )
 
         ## Room.
@@ -1183,10 +1184,10 @@ class WeChatDatabase(BaseWeChat):
             ') AS `a`\n'
             'WHERE `valid` = 1'
             )
-            result = rmessage.rreceive.rwechat.rdatabase.rrdatabase_wechat.execute(
+            result = message.receiver.rwechat.database.rrdatabase_wechat.execute(
                 sql,
-                room_id=rmessage.room,
-                user_id=rmessage.user
+                room_id=message.room,
+                user_id=message.user
             )
 
         valid = result.scalar()

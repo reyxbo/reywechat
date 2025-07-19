@@ -32,7 +32,7 @@ from .rwechat import WeChat
 
 __all__ = (
     'WeChatMessage',
-    'WechatReceive'
+    'WechatReceiver'
 )
 
 
@@ -60,7 +60,7 @@ class WeChatMessage(BaseWeChat):
 
     def __init__(
         self,
-        rreceive: WechatReceive,
+        receiver: WechatReceiver,
         time: int,
         id_: int,
         number: int,
@@ -76,7 +76,7 @@ class WeChatMessage(BaseWeChat):
 
         Parameters
         ----------
-        rreceive : `WechatReceive` instance.
+        receiver : `WechatReceiver` instance.
         time : Message timestamp.
         id : Message ID.
         number : Message local number.
@@ -102,7 +102,7 @@ class WeChatMessage(BaseWeChat):
         from .rtrigger import TriggerRule
 
         # Set attribute.
-        self.rreceive = rreceive
+        self.receiver = receiver
         self.time = time
         self.id = id_
         self.number = number
@@ -133,10 +133,10 @@ class WeChatMessage(BaseWeChat):
         self._is_app: bool | None = None
         self._app_params: dict | None = None
         self._valid: bool | None = None
-        self.ruling: TriggerRule | None = None
+        self.trigger_rule: TriggerRule | None = None
+        self.trigger_continue = self.receiver.trigger.continue_
+        self.trigger_break = self.receiver.trigger.break_
         self.replied: bool = False
-        self.execute_continue = self.rreceive.rexecute.continue_
-        self.execute_break = self.rreceive.rexecute.break_
         self.exc_reports: list[str] = []
 
 
@@ -196,7 +196,7 @@ class WeChatMessage(BaseWeChat):
             return self._user_name
 
         # Set.
-        self._user_name = self.rreceive.rwechat.rclient.get_contact_name(
+        self._user_name = self.receiver.rwechat.client.get_contact_name(
             self.user
         )
 
@@ -222,7 +222,7 @@ class WeChatMessage(BaseWeChat):
             return self._room_name
 
         # Set.
-        self._room_name = self.rreceive.rwechat.rclient.get_contact_name(
+        self._room_name = self.receiver.rwechat.client.get_contact_name(
             self.room
         )
 
@@ -269,7 +269,7 @@ class WeChatMessage(BaseWeChat):
         # Judge.
         self._is_quote_self = (
             self.is_quote
-            and '<chatusr>%s</chatusr>' % self.rreceive.rwechat.rclient.login_info['id'] in self.data
+            and '<chatusr>%s</chatusr>' % self.receiver.rwechat.client.login_info['id'] in self.data
         )
 
         return self._is_quote_self
@@ -372,7 +372,7 @@ class WeChatMessage(BaseWeChat):
             text = self.data
         elif self.is_quote:
             text = self.quote_params['text']
-        pattern = '@%s ' % self.rreceive.rwechat.rclient.login_info['name']
+        pattern = '@%s ' % self.receiver.rwechat.client.login_info['name']
         result = search(pattern, text)
         self._is_at_self = result is not None
 
@@ -711,7 +711,7 @@ class WeChatMessage(BaseWeChat):
             return self._valid
 
         # Judge.
-        self._valid = self.rreceive.rwechat.rdatabase.is_valid(self)
+        self._valid = self.receiver.rwechat.database.is_valid(self)
 
         return self._valid
 
@@ -797,12 +797,12 @@ class WeChatMessage(BaseWeChat):
         """
 
         # Check.
-        if self.ruling is None:
-            text = 'WeChat trigger not rule'
-            throw(WeChatTriggerError, text=text)
-        if self.ruling['mode'] != 'reply':
-            text = 'WeChat trigger reply not allowed'
-            throw(WeChatTriggerError, text=text)
+        if (
+            self.trigger_rule is None
+            or not self.trigger_rule['is_reply']
+        ):
+            text = 'can only be used by reply trigger'
+            throw(WeChatTriggerError, self.trigger_rule, text=text)
 
         # Get parameter.
         if self.room is None:
@@ -814,16 +814,16 @@ class WeChatMessage(BaseWeChat):
         self.replied = True
 
         # Send.
-        self.rreceive.rwechat.rsend.send(
+        self.receiver.rwechat.sender.send(
             send_type,
             receive_id=receive_id,
             **params
         )
 
 
-class WechatReceive(BaseWeChat):
+class WechatReceiver(BaseWeChat):
     """
-    WeChat receive type.
+    WeChat receiver type.
     """
 
 
@@ -853,14 +853,14 @@ class WechatReceive(BaseWeChat):
         self.queue: Queue[WeChatMessage] = Queue()
         self.handlers: list[Callable[[WeChatMessage], Any]] = []
         self.started: bool | None = False
-        self.rexecute = WeChatTrigger(self)
+        self.trigger = WeChatTrigger(self)
 
         # Start.
         self._start_callback()
         self._start_receiver(self.max_receiver)
-        self.rwechat.rclient.hook_message(
+        self.rwechat.client.hook_message(
             '127.0.0.1',
-            self.rwechat.rclient.message_callback_port,
+            self.rwechat.client.message_callback_port,
             60
         )
 
@@ -889,7 +889,7 @@ class WechatReceive(BaseWeChat):
             if 'msgId' not in data: return
 
             # Extract.
-            rmessage = WeChatMessage(
+            message = WeChatMessage(
                 self,
                 data['createTime'],
                 data['msgId'],
@@ -901,13 +901,13 @@ class WechatReceive(BaseWeChat):
             )
 
             # Put.
-            self.queue.put(rmessage)
+            self.queue.put(message)
 
 
         # Listen socket.
         listen_socket(
             '127.0.0.1',
-            self.rwechat.rclient.message_callback_port,
+            self.rwechat.client.message_callback_port,
             put_queue
         )
 
@@ -927,13 +927,13 @@ class WechatReceive(BaseWeChat):
 
 
         # Define.
-        def handles(rmessage: WeChatMessage) -> None:
+        def handles(message: WeChatMessage) -> None:
             """
             Use handlers to handle message.
 
             Parameters
             ----------
-            rmessage : `WeChatMessage` instance.
+            message : `WeChatMessage` instance.
             """
 
             # Set parameter.
@@ -955,19 +955,19 @@ class WechatReceive(BaseWeChat):
                 exc_report, *_ = catch_exc()
 
                 # Save.
-                rmessage.exc_reports.append(exc_report)
+                message.exc_reports.append(exc_report)
 
 
             ## Loop.
             for handler in handlers:
                 wrap_exc(
                     handler,
-                    rmessage,
+                    message,
                     _handler=handle_handler_exception
                 )
 
             # Log.
-            self.rwechat.rlog.log_receive(rmessage)
+            self.rwechat.log.log_receive(message)
 
 
         # Thread pool.
@@ -990,8 +990,8 @@ class WechatReceive(BaseWeChat):
                     break
 
             ## Submit.
-            rmessage = self.queue.get()
-            thread_pool(rmessage)
+            message = self.queue.get()
+            thread_pool(message)
 
 
     def add_handler(
@@ -1012,7 +1012,7 @@ class WechatReceive(BaseWeChat):
 
     def _handler_room(
         self,
-        rmessage: WeChatMessage
+        message: WeChatMessage
     ) -> None:
         """
         Handle room message.
@@ -1020,24 +1020,24 @@ class WechatReceive(BaseWeChat):
 
         # Break.
         if (
-            rmessage.type(user) != str
-            or not rmessage.user.endswith('chatroom')
+            type(message.user) != str
+            or not message.user.endswith('chatroom')
         ):
             return
 
         # Set attribute.
-        rmessage.room = rmessage.user
-        if ':\n' in rmessage.data:
-            user, data = rmessage.data.split(':\n', 1)
-            rmessage.user = user
-            rmessage.data = data
+        message.room = message.user
+        if ':\n' in message.data:
+            user, data = message.data.split(':\n', 1)
+            message.user = user
+            message.data = data
         else:
-            rmessage.user = None
+            message.user = None
 
 
     def _handler_file(
         self,
-        rmessage: WeChatMessage
+        message: WeChatMessage
     ) -> None:
         """
         Handle file message.
@@ -1046,15 +1046,15 @@ class WechatReceive(BaseWeChat):
         # Save.
         rfolder = Folder(self.rwechat.dir_file)
         generate_path = None
-        match rmessage.type:
+        match message.type:
 
             ## Image.
             case 3:
 
                 ### Get attribute.
-                file_name = f'{rmessage.id}.jpg'
+                file_name = f'{message.id}.jpg'
                 pattern = r'length="(\d+)".*?md5="([\da-f]{32})"'
-                file_size, file_md5 = search(pattern, rmessage.data)
+                file_size, file_md5 = search(pattern, message.data)
                 file_size = int(file_size)
 
                 ### Exist.
@@ -1063,40 +1063,40 @@ class WechatReceive(BaseWeChat):
 
                 ### Generate.
                 if search_path is None:
-                    self.rwechat.rclient.download_file(rmessage.id)
+                    self.rwechat.client.download_file(message.id)
                     generate_path = '%swxhelper/image/%s.dat' % (
-                        self.rwechat.rclient.login_info['account_data_path'],
-                        rmessage.id
+                        self.rwechat.client.login_info['account_data_path'],
+                        message.id
                     )
 
             ## Voice.
             case 34:
 
                 ### Get attribute.
-                file_name = f'{rmessage.id}.amr'
+                file_name = f'{message.id}.amr'
                 pattern = r'length="(\d+)"'
-                file_size = int(search(pattern, rmessage.data))
+                file_size = int(search(pattern, message.data))
                 file_md5 = None
 
                 ### Generate.
-                self.rwechat.rclient.download_voice(
-                    rmessage.id,
+                self.rwechat.client.download_voice(
+                    message.id,
                     self.rwechat.dir_file
                 )
                 generate_path = '%s/%s.amr' % (
                     self.rwechat.dir_file,
-                    rmessage.id
+                    message.id
                 )
 
             ## Video.
             case 43:
 
                 ### Get attribute.
-                file_name = f'{rmessage.id}.mp4'
+                file_name = f'{message.id}.mp4'
                 pattern = r'length="(\d+)"'
-                file_size = int(search(pattern, rmessage.data))
+                file_size = int(search(pattern, message.data))
                 pattern = r'md5="([\da-f]{32})"'
-                file_md5 = search(pattern, rmessage.data)
+                file_md5 = search(pattern, message.data)
 
                 ### Exist.
                 pattern = f'^{file_md5}$'
@@ -1104,10 +1104,10 @@ class WechatReceive(BaseWeChat):
 
                 ### Generate.
                 if search_path is None:
-                    self.rwechat.rclient.download_file(rmessage.id)
+                    self.rwechat.client.download_file(message.id)
                     generate_path = '%swxhelper/video/%s.mp4' % (
-                        self.rwechat.rclient.login_info['account_data_path'],
-                        rmessage.id
+                        self.rwechat.client.login_info['account_data_path'],
+                        message.id
                     )
 
             ## Other.
@@ -1115,17 +1115,17 @@ class WechatReceive(BaseWeChat):
 
                 ### Check.
                 pattern = r'^.+? : \[文件\](.+)$'
-                file_name = search(pattern, rmessage.display)
+                file_name = search(pattern, message.display)
                 if file_name is None:
                     return
-                if '<type>6</type>' not in rmessage.data:
+                if '<type>6</type>' not in message.data:
                     return
 
                 ### Get attribute.
                 pattern = r'<totallen>(\d+)</totallen>'
-                file_size = int(search(pattern, rmessage.data))
+                file_size = int(search(pattern, message.data))
                 pattern = r'<md5>([\da-f]{32})</md5>'
-                file_md5 = search(pattern, rmessage.data)
+                file_md5 = search(pattern, message.data)
 
                 ### Exist.
                 pattern = f'^{file_md5}$'
@@ -1133,10 +1133,10 @@ class WechatReceive(BaseWeChat):
 
                 ### Generate.
                 if search_path is None:
-                    self.rwechat.rclient.download_file(rmessage.id)
+                    self.rwechat.client.download_file(message.id)
                     generate_path = '%swxhelper/file/%s_%s' % (
-                        self.rwechat.rclient.login_info['account_data_path'],
-                        rmessage.id,
+                        self.rwechat.client.login_info['account_data_path'],
+                        message.id,
                         file_name
                     )
 
@@ -1186,7 +1186,7 @@ class WechatReceive(BaseWeChat):
             'md5': file_md5,
             'size': file_size
         }
-        rmessage.file = file
+        message.file = file
 
 
     def start(self) -> None:

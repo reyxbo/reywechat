@@ -116,28 +116,28 @@ class WeChatLog(BaseWeChat):
 
     def log_receive(
         self,
-        rmessage: WeChatMessage
+        message: WeChatMessage
     ) -> None:
         """
         Log receive message.
 
         Parameters
         ----------
-        rmessage : `WeChatMessage` instance.
+        message : `WeChatMessage` instance.
         """
 
         # Generate record.
-        if rmessage.room is None:
-            message_object = rmessage.user
+        if message.room is None:
+            message_object = message.user
         else:
-            message_object = rmessage.room
+            message_object = message.room
         content_print = 'RECEIVE | %-20s' % message_object
-        content_file = 'RECEIVE | %s' % rmessage.params
-        if rmessage.exc_reports == []:
+        content_file = 'RECEIVE | %s' % message.params
+        if message.exc_reports == []:
             level = self.rrlog.INFO
         else:
             level = self.rrlog.ERROR
-            exc_report = '\n'.join(rmessage.exc_reports)
+            exc_report = '\n'.join(message.exc_reports)
             content_print = '%s\n%s' % (content_print, exc_report)
             content_file = '%s\n%s' % (content_file, exc_report)
 
@@ -159,27 +159,27 @@ class WeChatLog(BaseWeChat):
 
     def log_send(
         self,
-        rsparam: WeChatSendParameter
+        sendparam: WeChatSendParameter
     ) -> None:
         """
         Log send message.
 
         Parameters
         ----------
-        rsparam : `RSendParams` instance.
+        sendparam : `WeChatSendParameter` instance.
         """
 
         # Generate record.
-        content_print = 'SEND    | %-20s' % rsparam.receive_id
+        content_print = 'SEND    | %-20s' % sendparam.receive_id
         content_file = 'SEND    | %s' % {
-            'receive_id': rsparam.receive_id,
-            **rsparam.params
+            'receive_id': sendparam.receive_id,
+            **sendparam.params
         }
-        if rsparam.exc_reports == []:
+        if sendparam.exc_reports == []:
             level = self.rrlog.INFO
         else:
             level = self.rrlog.ERROR
-            exc_report = '\n'.join(rsparam.exc_reports)
+            exc_report = '\n'.join(sendparam.exc_reports)
             content_print = '%s\n%s' % (content_print, exc_report)
             content_file = '%s\n%s' % (content_file, exc_report)
 

@@ -14,7 +14,7 @@ from collections.abc import Callable
 from reykit.rbase import catch_exc
 
 from .rbase import BaseWeChat, WeChatTriggerContinueExit, WeChatTriggerBreakExit
-from .rreceive import WeChatMessage, WechatReceive
+from .rreceive import WeChatMessage, WechatReceiver
 
 
 __all__ = (
@@ -22,7 +22,7 @@ __all__ = (
 )
 
 
-TriggerRule = TypedDict('TriggerRule', {'mode': Literal['trigger', 'reply'], 'executer': Callable[[WeChatMessage], None], 'level': float})
+TriggerRule = TypedDict('TriggerRule', {'level': float, 'execute': Callable[[WeChatMessage], None], 'is_reply': bool})
 
 
 class WeChatTrigger(BaseWeChat):
@@ -33,30 +33,30 @@ class WeChatTrigger(BaseWeChat):
 
     def __init__(
         self,
-        rreceive: WechatReceive
+        receiver: WechatReceiver
     ) -> None:
         """
         Build instance attributes.
 
         Parameters
         ----------
-        rreceive : `WechatReceive` instance.
+        receiver : `WechatReceiver` instance.
         """
 
         # Set attribute.
-        self.rreceive = rreceive
+        self.receiver = receiver
         self.rules: list[TriggerRule] = []
 
         # Add handler.
-        self.handler = self._execute_by_rule()
+        self.handler = self._trigger_by_rule()
 
-        # Add executer.
-        self._add_execute_valid()
+        # Add trigger.
+        self._add_trigger_valid()
 
 
-    def _execute_by_rule(self) -> Callable[[WeChatMessage], None]:
+    def _trigger_by_rule(self) -> Callable[[WeChatMessage], None]:
         """
-        Add handler, execute message by rules.
+        Add handler, trigger message by rules.
 
         Returns
         -------
@@ -65,29 +65,29 @@ class WeChatTrigger(BaseWeChat):
 
 
         # Define.
-        def handler_execute_by_rule(rmessage: WeChatMessage) -> None:
+        def handler_trigger_by_rule(message: WeChatMessage) -> None:
             """
-            Execute message by rules.
+            Trigger message by rules.
 
             Parameters
             ----------
-            rmessage : `WeChatMessage` instance.
+            message : `WeChatMessage` instance.
             """
 
             # Loop.
             for rule in self.rules:
-                rmessage.ruling = rule
+                message.trigger_rule = rule
 
-                # Break.
+                # Replied.
                 if (
-                    rule['mode'] == 'reply'
-                    and rmessage.replied
+                    message.replied
+                    and rule['is_reply']
                 ):
-                    break
+                    continue
 
-                # Execute.
+                # Trigger.
                 try:
-                    rule['executer'](rmessage)
+                    rule['execute'](message)
 
                 # Continue.
                 except WeChatTriggerContinueExit:
@@ -104,41 +104,40 @@ class WeChatTrigger(BaseWeChat):
                     exc_report, *_ = catch_exc()
 
                     ## Save.
-                    rmessage.exc_reports.append(exc_report)
+                    message.exc_reports.append(exc_report)
 
                 finally:
-                    rmessage.ruling = None
+                    message.trigger_rule = None
 
 
         # Add handler.
-        self.rreceive.add_handler(handler_execute_by_rule)
+        self.receiver.add_handler(handler_trigger_by_rule)
 
-        return handler_execute_by_rule
+        return handler_trigger_by_rule
 
 
     def add_rule(
         self,
-        mode: Literal['trigger', 'reply'],
-        executer: Callable[[WeChatMessage], Any],
+        execute: Callable[[WeChatMessage], Any],
         level: float = 0
     ) -> None:
         """
-        Add execute rule.
+        Add trigger rule.
 
         Parameters
         ----------
-        mode : Execute mode.
-        executer : Function of execute. The parameter is the `WeChatMessage` instance.
+        execute : Trigger execute function. The parameter is the `WeChatMessage` instance.
+            Function name must start with `reply_` to allow use of `WeChatMessage.reply`.
             When throw `WeChatTriggerContinueExit` type exception, then continue next execution.
             When throw `WeChatTriggerBreakExit` type exception, then stop executes.
         level : Priority level, sort from large to small.
         """
 
         # Get parameter.
-        rule = {
-            'mode': mode,
-            'executer': executer,
-            'level': level
+        rule: TriggerRule = {
+            'level': level,
+            'execute': execute,
+            'is_reply': execute.__name__.startswith('reply_')
         }
 
         # Add.
@@ -154,7 +153,7 @@ class WeChatTrigger(BaseWeChat):
 
     def continue_(self) -> NoReturn:
         """
-        Continue execute by throwing `WeChatTriggerContinueExit` type exception.
+        Continue trigger by throwing `WeChatTriggerContinueExit` type exception.
         """
 
         # Raise.
@@ -163,16 +162,16 @@ class WeChatTrigger(BaseWeChat):
 
     def break_(self) -> NoReturn:
         """
-        Break execute by throwing `WeChatTriggerBreakExit` type exception.
+        Break trigger by throwing `WeChatTriggerBreakExit` type exception.
         """
 
         # Raise.
         raise WeChatTriggerBreakExit
 
 
-    def _add_execute_valid(self) -> None:
+    def _add_trigger_valid(self) -> None:
         """
-        Add executer, execute rule judge valid.
+        Add trigger, trigger rule judge valid.
 
         Returns
         -------
@@ -181,21 +180,21 @@ class WeChatTrigger(BaseWeChat):
 
 
         # Define.
-        def execute_valid(rmessage: WeChatMessage) -> None:
+        def trigger_valid(message: WeChatMessage) -> None:
             """
-            Execute rule judge valid.
+            Trigger rule judge valid.
 
             Parameters
             ----------
-            rmessage : `WeChatMessage` instance.
+            message : `WeChatMessage` instance.
             """
 
             # Judge.
-            if not rmessage.valid:
+            if not message.valid:
 
                 # Break.
-                rmessage.execute_break()
+                message.trigger_break()
 
 
         # Add.
-        self.add_rule('trigger', execute_valid, float('inf'))
+        self.add_rule(trigger_valid, float('inf'))

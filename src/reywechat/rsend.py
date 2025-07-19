@@ -32,7 +32,7 @@ from .rwechat import WeChat
 __all__ = (
     'WeChatSendType',
     'WeChatSendParameter',
-    'WeChatSend'
+    'WeChatSender'
 )
 
 
@@ -70,7 +70,7 @@ class WeChatSendParameter(BaseWeChat):
 
     def __init__(
         self,
-        rsend: WeChatSend,
+        sender: WeChatSender,
         send_type: WeChatSendType,
         receive_id: str,
         params: dict,
@@ -81,7 +81,7 @@ class WeChatSendParameter(BaseWeChat):
 
         Parameters
         ----------
-        rsend : `WeChatSend` instance.
+        sender : `WeChatSender` instance.
         send_type : Send type.
             - `Literal[WeChatSendType.SEND_TEXT]`: Send text message, use `WeChatClient.send_text`: method.
             - `Literal[WeChatSendType.SEND_TEXT_AT]`: Send text message with `@`, use `WeChatClient.send_text_at`: method.
@@ -97,7 +97,7 @@ class WeChatSendParameter(BaseWeChat):
         """
 
         # Set attribute.
-        self.rsend = rsend
+        self.sender = sender
         self.send_type = send_type
         self.receive_id = receive_id
         self.params = params
@@ -106,9 +106,9 @@ class WeChatSendParameter(BaseWeChat):
         self.exc_reports: list[str] = []
 
 
-class WeChatSend(BaseWeChat):
+class WeChatSender(BaseWeChat):
     """
-    WeChat send type.
+    WeChat sender type.
 
     Attribute
     ---------
@@ -164,9 +164,9 @@ class WeChatSend(BaseWeChat):
                     break
 
             ## Send.
-            rsparam = self.queue.get()
+            sendparam = self.queue.get()
             try:
-                self._send(rsparam)
+                self._send(sendparam)
 
             ## Exception.
             except:
@@ -175,7 +175,7 @@ class WeChatSend(BaseWeChat):
                 exc_report, *_ = catch_exc()
 
                 # Save.
-                rsparam.exc_reports.append(exc_report)
+                sendparam.exc_reports.append(exc_report)
 
 
             ## Handle.
@@ -190,19 +190,19 @@ class WeChatSend(BaseWeChat):
                 exc_report, *_ = catch_exc()
 
                 # Save.
-                rsparam.exc_reports.append(exc_report)
+                sendparam.exc_reports.append(exc_report)
 
 
             ### Loop.
             for handler in self.handlers:
                 wrap_exc(
                     handler,
-                    rsparam,
+                    sendparam,
                     _handler=handle_handler_exception
                 )
 
             ## Log.
-            self.rwechat.rlog.log_send(rsparam)
+            self.rwechat.log.log_send(sendparam)
 
 
     def _delete_cache_file(self) -> None:
@@ -212,20 +212,20 @@ class WeChatSend(BaseWeChat):
 
 
         # Define.
-        def handler_delete_cache_file(rsparam: WeChatSendParameter) -> None:
+        def handler_delete_cache_file(sendparam: WeChatSendParameter) -> None:
             """
             Delete cache file.
 
             Parameters
             ----------
-            rsparam : `RSendParams` instance.
+            sendparam : `WeChatSendParameter` instance.
             """
 
             # Break.
-            if rsparam.cache_path is None: return
+            if sendparam.cache_path is None: return
 
             # Delete.
-            rfile = File(rsparam.cache_path)
+            rfile = File(sendparam.cache_path)
             rfile.remove()
 
 
@@ -235,131 +235,135 @@ class WeChatSend(BaseWeChat):
 
     def _send(
         self,
-        rsparam: WeChatSendParameter
+        sendparam: WeChatSendParameter
     ) -> None:
         """
         Send message.
 
         Parameters
         ----------
-        rsparam : `RSendParams` instance.
+        sendparam : `WeChatSendParameter` instance.
         """
 
         # Handle parameter.
-        for key, value in rsparam.params.items():
+        for key, value in sendparam.params.items():
 
             ## Callable.
             if callable(value):
-                rsparam.params[key] = value()
+                sendparam.params[key] = value()
 
         # File.
 
         ## From file ID.
-        if (file_id := rsparam.params.get('file_id')) is not None:
-            rsparam.params['path'], rsparam.params['file_name'] = self.rwechat.rdatabase._download_file(file_id)
+        if (file_id := sendparam.params.get('file_id')) is not None:
+            sendparam.params['path'], sendparam.params['file_name'] = self.rwechat.database._download_file(file_id)
 
         ## Set file name.
         if (
-            (path := rsparam.params.get('path')) is not None
-            and (file_name := rsparam.params.get('file_name')) is not None
+            (path := sendparam.params.get('path')) is not None
+            and (file_name := sendparam.params.get('file_name')) is not None
         ):
             rfile = File(path)
             copy_path = os_join(self.rwechat.dir_file, file_name)
             rfile.copy(copy_path)
-            rsparam.cache_path = copy_path
+            sendparam.cache_path = copy_path
             path = copy_path
 
         # Send.
-        match rsparam.send_type:
+        match sendparam.send_type:
 
             ## Text.
             case WeChatSendType.SEND_TEXT:
-                self.rwechat.rclient.send_text(
-                    rsparam.receive_id,
-                    rsparam.params['text']
+                self.rwechat.client.send_text(
+                    sendparam.receive_id,
+                    sendparam.params['text']
                 )
 
             ## Text with '@'.
             case WeChatSendType.SEND_TEXT_AT:
-                self.rwechat.rclient.send_text_at(
-                    rsparam.receive_id,
-                    rsparam.params['user_id'],
-                    rsparam.params['text']
+                self.rwechat.client.send_text_at(
+                    sendparam.receive_id,
+                    sendparam.params['user_id'],
+                    sendparam.params['text']
                 )
 
             ## File.
             case WeChatSendType.SEND_FILE:
-                self.rwechat.rclient.send_file(
-                    rsparam.receive_id,
+                self.rwechat.client.send_file(
+                    sendparam.receive_id,
                     path
                 )
 
             ## Image.
             case WeChatSendType.SEND_IMAGE:
-                self.rwechat.rclient.send_image(
-                    rsparam.receive_id,
+                self.rwechat.client.send_image(
+                    sendparam.receive_id,
                     path
                 )
 
             ## Emotion.
             case WeChatSendType.SEND_EMOTION:
-                self.rwechat.rclient.send_emotion(
-                    rsparam.receive_id,
+                self.rwechat.client.send_emotion(
+                    sendparam.receive_id,
                     path
                 )
 
             ## Pat.
             case WeChatSendType.SEND_PAT:
-                self.rwechat.rclient.send_pat(
-                    rsparam.receive_id,
-                    rsparam.params['user_id']
+                self.rwechat.client.send_pat(
+                    sendparam.receive_id,
+                    sendparam.params['user_id']
                 )
 
             ## Public account.
             case WeChatSendType.SEND_PUBLIC:
-                self.rwechat.rclient.send_public(
-                    rsparam.receive_id,
-                    rsparam.params['page_url'],
-                    rsparam.params['title'],
-                    rsparam.params['text'],
-                    rsparam.params['image_url'],
-                    rsparam.params['public_name'],
-                    rsparam.params['public_id']
+                self.rwechat.client.send_public(
+                    sendparam.receive_id,
+                    sendparam.params['page_url'],
+                    sendparam.params['title'],
+                    sendparam.params['text'],
+                    sendparam.params['image_url'],
+                    sendparam.params['public_name'],
+                    sendparam.params['public_id']
                 )
 
             ## Forward.
             case WeChatSendType.SEND_FORWARD:
-                self.rwechat.rclient.send_forward(
-                    rsparam.receive_id,
-                    rsparam.params['message_id']
+                self.rwechat.client.send_forward(
+                    sendparam.receive_id,
+                    sendparam.params['message_id']
                 )
 
             ## Throw exception.
             case _:
-                throw(ValueError, rsparam.send_type)
+                throw(ValueError, sendparam.send_type)
 
         # Wait.
-        self._wait(rsparam)
+        self._wait(sendparam)
 
 
     def _wait(
         self,
-        rsparam: WeChatSendParameter
+        sendparam: WeChatSendParameter
     ) -> None:
         """
         Waiting after sending.
 
         Parameters
         ----------
-        rsparam : `RSendParams` instance.
+        sendparam : `WeChatSendParameter` instance.
         """
 
         # Get parameter.
         seconds = randn(0.8, 1.2, precision=2)
 
         ## File.
-        if rsparam.send_type in (2, 3, 4):
-            stream_time = compute_stream_time(rsparam.params['path'], self.bandwidth_upstream)
+        if sendparam.send_type in (
+            WeChatSendType.SEND_FILE,
+            WeChatSendType.SEND_IMAGE,
+            WeChatSendType.SEND_EMOTION
+        ):
+            stream_time = compute_stream_time(sendparam.params['path'], self.bandwidth_upstream)
             if stream_time > seconds:
                 seconds = stream_time
 
@@ -467,7 +471,7 @@ class WeChatSend(BaseWeChat):
         if send_type not in WeChatSendType:
             throw(ValueError, send_type)
 
-        rsparam = WeChatSendParameter(
+        sendparam = WeChatSendParameter(
             self,
             send_type,
             receive_id,
@@ -476,7 +480,7 @@ class WeChatSend(BaseWeChat):
         )
 
         # Put.
-        self.queue.put(rsparam)
+        self.queue.put(sendparam)
 
 
     def add_handler(
@@ -514,8 +518,8 @@ class WeChatSend(BaseWeChat):
         """
 
         # Get parameter.
-        member_dict = self.rwechat.rclient.get_room_member_dict(room_id)
-        login_id = self.rwechat.rclient.login_info['id']
+        member_dict = self.rwechat.client.get_room_member_dict(room_id)
+        login_id = self.rwechat.client.login_info['id']
         if login_id in member_dict:
             del member_dict[login_id]
 
@@ -599,7 +603,7 @@ class WeChatSend(BaseWeChat):
                     )
                     for receive_id in receive_ids:
                         self.send(
-                            0,
+                            WeChatSendType.SEND_TEXT,
                             receive_id,
                             text=text
                         )

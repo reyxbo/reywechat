@@ -84,14 +84,14 @@ class WeChatSchedule(BaseWeChat):
 
         # Add.
         self.rrschedule.add_task(
-            self.rwechat.rsend.send,
+            self.rwechat.sender.send,
             trigger,
             kwargs=kwargs,
             **trigger_kwargs
         )
 
 
-    def add(
+    def add_task(
         self,
         trigger: Literal['date', 'interval', 'cron'],
         task: Callable[[WeChatSchedule], Any],
