@@ -300,7 +300,7 @@ class WeChatMessage(BaseWeChat):
 
         # Check.
         if not self.is_quote:
-            throw(value=self.is_quote)
+            throw(AssertionError, self.is_quote)
 
         # Extract.
         pattern = '<title>(.+?)</title>'
@@ -606,7 +606,7 @@ class WeChatMessage(BaseWeChat):
 
         # Check.
         if not self.is_image:
-            throw(value=self.is_image)
+            throw(AssertionError, self.is_image)
 
         # Extract.
         self._image_qrcodes = decode_qrcode(self.file['path'])
@@ -677,7 +677,7 @@ class WeChatMessage(BaseWeChat):
 
         # Check.
         if not self.is_app:
-            throw(value=self.is_app)
+            throw(AssertionError, self.is_app)
 
         # Extract.
         bs_document = BSBeautifulSoup(

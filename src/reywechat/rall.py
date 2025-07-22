@@ -10,7 +10,7 @@
 
 
 from .rbase import *
-from .client import *
+from .rclient import *
 from .rdb import *
 from .rlog import *
 from .rreceive import *
