@@ -930,7 +930,8 @@ class WeChatDatabase(BaseWeChat):
             """
 
             # Break.
-            if sendparam.send_id is not None: return
+            if sendparam.send_id is not None:
+                return
 
             # Generate data.
             path = sendparam.params.get('path')

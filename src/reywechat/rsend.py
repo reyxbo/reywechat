@@ -222,7 +222,8 @@ class WeChatSender(BaseWeChat):
             """
 
             # Break.
-            if sendparam.cache_path is None: return
+            if sendparam.cache_path is None:
+                return
 
             # Delete.
             rfile = File(sendparam.cache_path)

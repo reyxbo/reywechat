@@ -886,7 +886,8 @@ class WechatReceiver(BaseWeChat):
             data: dict = json_loads(data)
 
             # Break.
-            if 'msgId' not in data: return
+            if 'msgId' not in data:
+                return
 
             # Extract.
             message = WeChatMessage(
