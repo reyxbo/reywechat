@@ -15,7 +15,7 @@ from collections.abc import Callable
 from reykit.rschedule import Schedule
 
 from .rbase import BaseWeChat
-from .rsend import WeChatSendType
+from .rsend import WeChatSendEnum
 from .rwechat import WeChat
 
 
@@ -49,7 +49,7 @@ class WeChatSchedule(BaseWeChat):
         self,
         trigger: Literal['date', 'interval', 'cron'],
         trigger_kwargs: dict,
-        send_type: WeChatSendType,
+        send_type: WeChatSendEnum,
         receive_id: str,
         **params: Callable[[], Any] | Any
     ) -> None:
@@ -61,14 +61,14 @@ class WeChatSchedule(BaseWeChat):
         trigger : Trigger type.
         trigger_kwargs : Trigger keyword arguments.
         send_type : Send type.
-            - `Literal[WeChatSendType.SEND_TEXT]`: Send text message, use `WeChatClient.send_text`: method.
-            - `Literal[WeChatSendType.SEND_TEXT_AT]`: Send text message with `@`, use `WeChatClient.send_text_at`: method.
-            - `Literal[WeChatSendType.SEND_FILE]`: Send file message, use `WeChatClient.send_file`: method.
-            - `Literal[WeChatSendType.SEND_IMAGE]`: Send image message, use `WeChatClient.send_image`: method.
-            - `Literal[WeChatSendType.SEND_EMOTION]`: Send emotion message, use `WeChatClient.send_emotion`: method.
-            - `Literal[WeChatSendType.SEND_PAT]`: Send pat message, use `WeChatClient.send_pat`: method.
-            - `Literal[WeChatSendType.SEND_PUBLIC]`: Send public account message, use `WeChatClient.send_public`: method.
-            - `Literal[WeChatSendType.SEND_FORWARD]`: Forward message, use `WeChatClient.send_forward`: method.
+            - `Literal[WeChatSendEnum.SEND_TEXT]`: Send text message, use `WeChatClient.send_text`: method.
+            - `Literal[WeChatSendEnum.SEND_TEXT_AT]`: Send text message with `@`, use `WeChatClient.send_text_at`: method.
+            - `Literal[WeChatSendEnum.SEND_FILE]`: Send file message, use `WeChatClient.send_file`: method.
+            - `Literal[WeChatSendEnum.SEND_IMAGE]`: Send image message, use `WeChatClient.send_image`: method.
+            - `Literal[WeChatSendEnum.SEND_EMOTION]`: Send emotion message, use `WeChatClient.send_emotion`: method.
+            - `Literal[WeChatSendEnum.SEND_PAT]`: Send pat message, use `WeChatClient.send_pat`: method.
+            - `Literal[WeChatSendEnum.SEND_PUBLIC]`: Send public account message, use `WeChatClient.send_public`: method.
+            - `Literal[WeChatSendEnum.SEND_FORWARD]`: Forward message, use `WeChatClient.send_forward`: method.
         receive_id : User ID or chat room ID of receive message.
         params : Send parameters.
             - `Callable`: Use execute return value.

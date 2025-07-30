@@ -19,7 +19,7 @@ from reykit.rwrap import wrap_thread
 
 from .rbase import BaseWeChat
 from .rreceive import WeChatMessage
-from .rsend import WeChatSendType, WeChatSendParameter
+from .rsend import WeChatSendEnum, WeChatSendParameter
 from .rwechat import WeChat
 
 
@@ -1065,7 +1065,7 @@ class WeChatDatabase(BaseWeChat):
         # Send.
         for row in table:
             send_id, type_, receive_id, parameter = row.values()
-            send_type = WeChatSendType(type_)
+            send_type = WeChatSendEnum(type_)
             parameter: dict = json_loads(parameter)
 
             ## Save file.

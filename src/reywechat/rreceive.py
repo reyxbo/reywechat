@@ -26,7 +26,7 @@ from reykit.rtime import sleep, wait
 from reykit.rwrap import wrap_thread, wrap_exc
 
 from .rbase import BaseWeChat, WeChatTriggerError
-from .rsend import WeChatSendType
+from .rsend import WeChatSendEnum
 from .rwechat import WeChat
 
 
@@ -719,7 +719,7 @@ class WeChatMessage(BaseWeChat):
     @overload
     def reply(
         self,
-        send_type: Literal[WeChatSendType.SEND_TEXT],
+        send_type: Literal[WeChatSendEnum.SEND_TEXT],
         *,
         text: str
     ) -> None: ...
@@ -727,7 +727,7 @@ class WeChatMessage(BaseWeChat):
     @overload
     def reply(
         self,
-        send_type: Literal[WeChatSendType.SEND_TEXT_AT],
+        send_type: Literal[WeChatSendEnum.SEND_TEXT_AT],
         *,
         user_id: str | list[str] | Literal['notify@all'],
         text: str
@@ -736,7 +736,7 @@ class WeChatMessage(BaseWeChat):
     @overload
     def reply(
         self,
-        send_type: Literal[WeChatSendType.SEND_FILE, WeChatSendType.SEND_IMAGE, WeChatSendType.SEND_EMOTION],
+        send_type: Literal[WeChatSendEnum.SEND_FILE, WeChatSendEnum.SEND_IMAGE, WeChatSendEnum.SEND_EMOTION],
         *,
         path: str,
         file_name: str | None = None
@@ -745,7 +745,7 @@ class WeChatMessage(BaseWeChat):
     @overload
     def reply(
         self,
-        send_type: Literal[WeChatSendType.SEND_PAT],
+        send_type: Literal[WeChatSendEnum.SEND_PAT],
         *,
         user_id: str
     ) -> None: ...
@@ -753,7 +753,7 @@ class WeChatMessage(BaseWeChat):
     @overload
     def reply(
         self,
-        send_type: Literal[WeChatSendType.SEND_PUBLIC],
+        send_type: Literal[WeChatSendEnum.SEND_PUBLIC],
         *,
         page_url: str,
         title: str,
@@ -766,14 +766,14 @@ class WeChatMessage(BaseWeChat):
     @overload
     def reply(
         self,
-        send_type: Literal[WeChatSendType.SEND_FORWARD],
+        send_type: Literal[WeChatSendEnum.SEND_FORWARD],
         *,
         message_id: str
     ) -> None: ...
 
     def reply(
         self,
-        send_type: WeChatSendType | None = None,
+        send_type: WeChatSendEnum | None = None,
         **params: Any
     ) -> None:
         """
@@ -782,14 +782,14 @@ class WeChatMessage(BaseWeChat):
         Parameters
         ----------
         send_type : Send type.
-            - `Literal[WeChatSendType.SEND_TEXT]`: Send text message, use `WeChatClient.send_text`: method.
-            - `Literal[WeChatSendType.SEND_TEXT_AT]`: Send text message with `@`, use `WeChatClient.send_text_at`: method.
-            - `Literal[WeChatSendType.SEND_FILE]`: Send file message, use `WeChatClient.send_file`: method.
-            - `Literal[WeChatSendType.SEND_IMAGE]`: Send image message, use `WeChatClient.send_image`: method.
-            - `Literal[WeChatSendType.SEND_EMOTION]`: Send emotion message, use `WeChatClient.send_emotion`: method.
-            - `Literal[WeChatSendType.SEND_PAT]`: Send pat message, use `WeChatClient.send_pat`: method.
-            - `Literal[WeChatSendType.SEND_PUBLIC]`: Send public account message, use `WeChatClient.send_public`: method.
-            - `Literal[WeChatSendType.SEND_FORWARD]`: Forward message, use `WeChatClient.send_forward`: method.
+            - `Literal[WeChatSendEnum.SEND_TEXT]`: Send text message, use `WeChatClient.send_text`: method.
+            - `Literal[WeChatSendEnum.SEND_TEXT_AT]`: Send text message with `@`, use `WeChatClient.send_text_at`: method.
+            - `Literal[WeChatSendEnum.SEND_FILE]`: Send file message, use `WeChatClient.send_file`: method.
+            - `Literal[WeChatSendEnum.SEND_IMAGE]`: Send image message, use `WeChatClient.send_image`: method.
+            - `Literal[WeChatSendEnum.SEND_EMOTION]`: Send emotion message, use `WeChatClient.send_emotion`: method.
+            - `Literal[WeChatSendEnum.SEND_PAT]`: Send pat message, use `WeChatClient.send_pat`: method.
+            - `Literal[WeChatSendEnum.SEND_PUBLIC]`: Send public account message, use `WeChatClient.send_public`: method.
+            - `Literal[WeChatSendEnum.SEND_FORWARD]`: Forward message, use `WeChatClient.send_forward`: method.
         params : Send parameters.
             - `Callable`: Use execute return value.
             - `Any`: Use this value.

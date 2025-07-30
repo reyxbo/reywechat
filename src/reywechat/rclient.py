@@ -12,7 +12,7 @@
 from typing import Any, TypedDict, Literal, Final
 from os.path import abspath as os_abspath
 from reykit.rdll import inject_dll
-from reykit.rnet import request as reytool_request
+from reykit.rnet import request as reykit_request
 from reykit.ros import find_relpath
 from reykit.rsys import run_cmd, search_process, memory_read, memory_write, popup_select
 from reykit.rtime import wait
@@ -260,7 +260,7 @@ class WeChatClient(BaseWeChat):
             fail_code = [fail_code]
 
         # Request.
-        response = reytool_request(
+        response = reykit_request(
             url,
             json=data,
             method='post',
