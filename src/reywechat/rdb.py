@@ -1045,7 +1045,7 @@ class WeChatDatabase(BaseWeChat):
         # Convert.
         if result.empty:
             return
-        table = result.fetch_table()
+        table = result.to_table()
 
         # Update.
         send_ids = [
