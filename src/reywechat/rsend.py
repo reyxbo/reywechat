@@ -67,6 +67,8 @@ class WeChatSendParameter(BaseWeChat):
     WeChat send parameters type.
     """
 
+    SendEnum = WeChatSendEnum
+
 
     def __init__(
         self,
@@ -115,7 +117,7 @@ class WeChatSender(BaseWeChat):
     WeChatSendEnum : Send type enumeration.
     """
 
-    WeChatSendEnum = WeChatSendEnum
+    SendEnum = WeChatSendEnum
 
 
     def __init__(
@@ -140,12 +142,12 @@ class WeChatSender(BaseWeChat):
         self.started: bool | None = False
 
         # Start.
-        self._delete_cache_file()
-        self._start_sender()
+        self.__delete_cache_file()
+        self.__start_sender()
 
 
     @wrap_thread
-    def _start_sender(self) -> None:
+    def __start_sender(self) -> None:
         """
         Start sender, that will sequentially send message in the send queue.
         """
@@ -166,7 +168,7 @@ class WeChatSender(BaseWeChat):
             ## Send.
             sendparam = self.queue.get()
             try:
-                self._send(sendparam)
+                self.__send(sendparam)
 
             ## Exception.
             except:
@@ -205,7 +207,7 @@ class WeChatSender(BaseWeChat):
             self.rwechat.log.log_send(sendparam)
 
 
-    def _delete_cache_file(self) -> None:
+    def __delete_cache_file(self) -> None:
         """
         Add handler, Delete cache file.
         """
@@ -234,7 +236,7 @@ class WeChatSender(BaseWeChat):
         self.add_handler(handler_delete_cache_file)
 
 
-    def _send(
+    def __send(
         self,
         sendparam: WeChatSendParameter
     ) -> None:
@@ -257,7 +259,7 @@ class WeChatSender(BaseWeChat):
 
         ## From file ID.
         if (file_id := sendparam.params.get('file_id')) is not None:
-            sendparam.params['path'], sendparam.params['file_name'] = self.rwechat.database._download_file(file_id)
+            sendparam.params['path'], sendparam.params['file_name'] = self.rwechat.database.__download_file(file_id)
 
         ## Set file name.
         if (
@@ -340,10 +342,10 @@ class WeChatSender(BaseWeChat):
                 throw(ValueError, sendparam.send_type)
 
         # Wait.
-        self._wait(sendparam)
+        self.__wait(sendparam)
 
 
-    def _wait(
+    def __wait(
         self,
         sendparam: WeChatSendParameter
     ) -> None:

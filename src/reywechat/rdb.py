@@ -77,12 +77,12 @@ class WeChatDatabase(BaseWeChat):
         self.build()
 
         # Add handler.
-        self._to_contact_user()
-        self._to_contact_room()
-        self._to_contact_room_user()
-        self._to_message_receive()
-        self._to_message_send()
-        self._from_message_send_loop()
+        self.__to_contact_user()
+        self.__to_contact_room()
+        self.__to_contact_room_user()
+        self.__to_message_receive()
+        self.__to_message_send()
+        self.__from_message_send_loop()
 
 
     def build(self) -> None:
@@ -709,7 +709,7 @@ class WeChatDatabase(BaseWeChat):
         conn.close()
 
 
-    def _to_contact_user(self) -> None:
+    def __to_contact_user(self) -> None:
         """
         Add handler, write record to table `contact_user`.
         """
@@ -748,7 +748,7 @@ class WeChatDatabase(BaseWeChat):
         self.rwechat.receiver.add_handler(handler_to_contact_user)
 
 
-    def _to_contact_room(self) -> None:
+    def __to_contact_room(self) -> None:
         """
         Add handler, write record to table `contact_room`.
         """
@@ -832,7 +832,7 @@ class WeChatDatabase(BaseWeChat):
         self.rwechat.receiver.add_handler(handler_to_contact_room)
 
 
-    def _to_contact_room_user(self) -> None:
+    def __to_contact_room_user(self) -> None:
         """
         Add handler, write record to table `contact_room_user`.
         """
@@ -862,7 +862,7 @@ class WeChatDatabase(BaseWeChat):
         self.rwechat.receiver.add_handler(handler_to_contact_room_user)
 
 
-    def _to_message_receive(self) -> None:
+    def __to_message_receive(self) -> None:
         """
         Add handler, write record to table `message_receive`.
         """
@@ -913,7 +913,7 @@ class WeChatDatabase(BaseWeChat):
         self.rwechat.receiver.add_handler(handler_to_message_receive)
 
 
-    def _to_message_send(self) -> None:
+    def __to_message_send(self) -> None:
         """
         Add handler, write record to table `message_send`.
         """
@@ -975,7 +975,7 @@ class WeChatDatabase(BaseWeChat):
         self.rwechat.sender.add_handler(handler_to_message_send)
 
 
-    def _download_file(
+    def __download_file(
         self,
         file_id: int
     ) -> tuple[str, str]:
@@ -1017,7 +1017,7 @@ class WeChatDatabase(BaseWeChat):
         return save_path, file_name
 
 
-    def _from_message_send(self) -> None:
+    def __from_message_send(self) -> None:
         """
         Read record from table `message_send`, put send queue.
         """
@@ -1071,7 +1071,7 @@ class WeChatDatabase(BaseWeChat):
             ## Save file.
             file_id = parameter.get('file_id')
             if file_id is not None:
-                file_path, file_name = self._download_file(file_id)
+                file_path, file_name = self.__download_file(file_id)
                 parameter['path'] = file_path
                 parameter['file_name'] = file_name
 
@@ -1087,7 +1087,7 @@ class WeChatDatabase(BaseWeChat):
 
 
     @wrap_thread
-    def _from_message_send_loop(self) -> None:
+    def __from_message_send_loop(self) -> None:
         """
         In the thread, loop read record from table `message_send`, put send queue.
         """
@@ -1132,7 +1132,7 @@ class WeChatDatabase(BaseWeChat):
         while True:
 
             # Put.
-            self._from_message_send()
+            self.__from_message_send()
 
             # Wait.
             sleep(1)

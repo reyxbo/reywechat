@@ -48,13 +48,13 @@ class WeChatTrigger(BaseWeChat):
         self.rules: list[TriggerRule] = []
 
         # Add handler.
-        self.handler = self._trigger_by_rule()
+        self.handler = self.__trigger_by_rule()
 
         # Add trigger.
-        self._add_trigger_valid()
+        self.__add_trigger_valid()
 
 
-    def _trigger_by_rule(self) -> Callable[[WeChatMessage], None]:
+    def __trigger_by_rule(self) -> Callable[[WeChatMessage], None]:
         """
         Add handler, trigger message by rules.
 
@@ -169,7 +169,7 @@ class WeChatTrigger(BaseWeChat):
         raise WeChatTriggerBreakExit
 
 
-    def _add_trigger_valid(self) -> None:
+    def __add_trigger_valid(self) -> None:
         """
         Add trigger, trigger rule judge valid.
 

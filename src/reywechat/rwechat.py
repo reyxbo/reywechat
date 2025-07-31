@@ -76,7 +76,7 @@ class WeChat(BaseWeChat):
 
         # Create folder.
         project_dir = project_dir or os_getcwd()
-        self._create_folder(project_dir)
+        self.__create_folder(project_dir)
 
         # Set attribute.
 
@@ -118,7 +118,7 @@ class WeChat(BaseWeChat):
         self.schedule_resume = self.schedule.resume
 
 
-    def _create_folder(
+    def __create_folder(
         self,
         project_dir: str
     ) -> None:

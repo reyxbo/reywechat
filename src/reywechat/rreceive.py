@@ -856,8 +856,8 @@ class WechatReceiver(BaseWeChat):
         self.trigger = WeChatTrigger(self)
 
         # Start.
-        self._start_callback()
-        self._start_receiver(self.max_receiver)
+        self.__start_callback()
+        self.__start_receiver(self.max_receiver)
         self.rwechat.client.hook_message(
             '127.0.0.1',
             self.rwechat.client.message_callback_port,
@@ -866,7 +866,7 @@ class WechatReceiver(BaseWeChat):
 
 
     @wrap_thread
-    def _start_callback(self) -> None:
+    def __start_callback(self) -> None:
         """
         Start callback socket.
         """
@@ -914,7 +914,7 @@ class WechatReceiver(BaseWeChat):
 
 
     @wrap_thread
-    def _start_receiver(
+    def __start_receiver(
         self,
         max_receiver: int
     ) -> None:
@@ -939,8 +939,8 @@ class WechatReceiver(BaseWeChat):
 
             # Set parameter.
             handlers = [
-                self._handler_room,
-                self._handler_file,
+                self.__handler_room,
+                self.__handler_file,
                 *self.handlers
             ]
 
@@ -1011,7 +1011,7 @@ class WechatReceiver(BaseWeChat):
         self.handlers.append(handler)
 
 
-    def _handler_room(
+    def __handler_room(
         self,
         message: WeChatMessage
     ) -> None:
@@ -1036,7 +1036,7 @@ class WechatReceiver(BaseWeChat):
             message.user = None
 
 
-    def _handler_file(
+    def __handler_file(
         self,
         message: WeChatMessage
     ) -> None:

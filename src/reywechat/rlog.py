@@ -50,10 +50,10 @@ class WeChatLog(BaseWeChat):
         self.rrlog_file = Log('WeChat.WeChatFile')
 
         # Add handler.
-        self._add_handler()
+        self.__add_handler()
 
 
-    def _add_handler(self) -> None:
+    def __add_handler(self) -> None:
         """
         Add log handler.
         """
