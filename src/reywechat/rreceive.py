@@ -961,11 +961,8 @@ class WechatReceiver(BaseWeChat):
 
             ## Loop.
             for handler in handlers:
-                wrap_exc(
-                    handler,
-                    message,
-                    _handler=handle_handler_exception
-                )
+                handler = wrap_exc(handler, handler=handle_handler_exception)
+                handler(message)
 
             # Log.
             self.rwechat.log.log_receive(message)

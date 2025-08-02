@@ -197,11 +197,8 @@ class WeChatSender(BaseWeChat):
 
             ### Loop.
             for handler in self.handlers:
-                wrap_exc(
-                    handler,
-                    sendparam,
-                    _handler=handle_handler_exception
-                )
+                handler = wrap_exc(handler, handler=handle_handler_exception)
+                handler(sendparam)
 
             ## Log.
             self.rwechat.log.log_send(sendparam)
