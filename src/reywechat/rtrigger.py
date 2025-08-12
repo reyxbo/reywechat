@@ -48,13 +48,13 @@ class WeChatTrigger(BaseWeChat):
         self.rules: list[TriggerRule] = []
 
         # Add handler.
-        self.handler = self.__trigger_by_rule()
+        self.handler = self.__add_handler_trigger_by_rule()
 
         # Add trigger.
         self.__add_trigger_valid()
 
 
-    def __trigger_by_rule(self) -> Callable[[WeChatMessage], None]:
+    def __add_handler_trigger_by_rule(self) -> Callable[[WeChatMessage], None]:
         """
         Add handler, trigger message by rules.
 
@@ -119,7 +119,8 @@ class WeChatTrigger(BaseWeChat):
     def add_rule(
         self,
         execute: Callable[[WeChatMessage], Any],
-        level: float = 0
+        level: float,
+        is_reply: bool,
     ) -> None:
         """
         Add trigger rule.
@@ -131,13 +132,14 @@ class WeChatTrigger(BaseWeChat):
             When throw `WeChatTriggerContinueExit` type exception, then continue next execution.
             When throw `WeChatTriggerBreakExit` type exception, then stop executes.
         level : Priority level, sort from large to small.
+        is_reply : Whehter is reply function, allow call `WeChatMessage.reply`, can only reply once function.
         """
 
         # Get parameter.
         rule: TriggerRule = {
             'level': level,
             'execute': execute,
-            'is_reply': execute.__name__.startswith('reply_')
+            'is_reply': is_reply
         }
 
         # Add.

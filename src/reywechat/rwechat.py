@@ -14,7 +14,7 @@ from os import getcwd as os_getcwd
 from os.path import join as os_join
 from reydb.rdb import Database
 from reykit.rbase import block
-from reykit.ros import create_folder as reytool_create_folder
+from reykit.ros import make_dir as reykit_make_dir
 
 from .rbase import BaseWeChat
 
@@ -44,8 +44,6 @@ class WeChat(BaseWeChat):
         self,
         rrdatabase: Database | dict[Literal['wechat', 'file'], Database] | None,
         max_receiver: int = 2,
-        bandwidth_downstream: float = 5,
-        bandwidth_upstream: float = 5,
         project_dir: str | None = None
     ) -> None:
         """
@@ -59,8 +57,6 @@ class WeChat(BaseWeChat):
                 `Key 'wechat'`: `WeChatDatabase` instance used in WeChat methods.
                 `Key 'file'`: `WeChatDatabase` instance used in file methods.
         max_receiver : Maximum number of receivers.
-        bandwidth_downstream : Download bandwidth, impact receive timeout, unit Mpbs.
-        bandwidth_upstream : Upload bandwidth, impact send interval, unit Mpbs.
         project_dir: Project directory, will create sub folders.
             - `None`: Use working directory.
             - `str`: Use this directory.
@@ -74,18 +70,18 @@ class WeChat(BaseWeChat):
         from .rschedule import WeChatSchedule
         from .rsend import WeChatSender
 
-        # Create folder.
+        # Make directory.
         project_dir = project_dir or os_getcwd()
-        self.__create_folder(project_dir)
+        self.dir_cache, self.dir_log = self.__make_subdir(project_dir)
 
         # Set attribute.
 
         ## Instance.
         self.client = WeChatClient(self)
         self.log = WeChatLog(self)
-        self.receiver = WechatReceiver(self, max_receiver, bandwidth_downstream)
+        self.receiver = WechatReceiver(self, max_receiver)
         self.trigger = self.receiver.trigger
-        self.sender = WeChatSender(self, bandwidth_upstream)
+        self.sender = WeChatSender(self)
         self.database = WeChatDatabase(self, rrdatabase)
         self.schedule = WeChatSchedule(self)
 
@@ -118,35 +114,37 @@ class WeChat(BaseWeChat):
         self.schedule_resume = self.schedule.resume
 
 
-    def __create_folder(
+    def __make_subdir(
         self,
         project_dir: str
-    ) -> None:
+    ) -> tuple[str, str]:
         """
-        Create project standard folders.
+        Make project subdirectory, 'project_dir/cache' and 'project_dir/cache'.
 
         Parameters
         ----------
-        project_dir: Project directory, will create sub folders.
+        project_dir: Project directory.
+
+        Returns
+        -------
+        Subdirectorys path.
         """
 
         # Set parameter.
-        folders = (
-            'Log',
-            'File'
+        dir_names = (
+            'cache',
+            'log'
         )
-        folder_dict = {
-            folder: os_join(project_dir, folder)
-            for folder in folders
+        dir_dict = {
+            dir_name: os_join(project_dir, dir_name)
+            for dir_name in dir_names
         }
 
         # Create.
-        paths = folder_dict.values()
-        reytool_create_folder(*paths)
+        paths = dir_dict.values()
+        reykit_make_dir(*paths)
 
-        # Set attribute.
-        self.dir_log = folder_dict['Log']
-        self.dir_file = folder_dict['File']
+        return dir_dict['cache'], dir_dict['log']
 
 
     def start(self) -> None:

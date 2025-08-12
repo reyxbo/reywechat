@@ -59,18 +59,18 @@ class WeChatClient(BaseWeChat):
 
     def __init__(
         self,
-        rwechat: WeChat
+        wechat: WeChat
     ) -> None:
         """
         Build instance attributes.
 
         Parameters
         ----------
-        rwechat : `WeChat` instance.
+        wechat : `WeChat` instance.
         """
 
         # Start.
-        self.rwechat = rwechat
+        self.wechat = wechat
         self.start_api()
 
         # Set attribute.
@@ -459,7 +459,7 @@ class WeChatClient(BaseWeChat):
 
         Parameters
         ----------
-        id_ : Message ID.
+        id\_ : Message ID.
         """
 
         # Get parameter.
@@ -480,8 +480,8 @@ class WeChatClient(BaseWeChat):
 
         Parameters
         ----------
-        id_ : Message ID.
-        dir_ : Save directory.
+        id\_ : Message ID.
+        dir\_ : Save directory.
         """
 
         # Get parameter.
@@ -505,7 +505,7 @@ class WeChatClient(BaseWeChat):
 
         Parameters
         ----------
-        type_ : Return contact table type.
+        type\_ : Return contact table type.
             - `None`: Return all contact table.
             - `Literal['user']`: Return user contact table.
             - `Literal['room']`: Return chat room contact table.
@@ -579,7 +579,7 @@ class WeChatClient(BaseWeChat):
 
         Parameters
         ----------
-        id_ : User ID or chat room ID.
+        id\_ : User ID or chat room ID.
 
         Returns
         -------

@@ -31,18 +31,18 @@ class WeChatLog(BaseWeChat):
 
     def __init__(
         self,
-        rwechat: WeChat
+        wechat: WeChat
     ) -> None:
         """
         Build instance attributes.
 
         Parameters
         ----------
-        rwechat : `WeChatClient` instance.
+        wechat : `WeChatClient` instance.
         """
 
         # Set attribute.
-        self.rwechat = rwechat
+        self.wechat = wechat
 
         # Logger.
         self.rrlog = Log('WeChat')
@@ -74,7 +74,7 @@ class WeChatLog(BaseWeChat):
         self.rrlog_print.add_print(format_=format_)
 
         ## Add handler file.
-        file_path = os_join(self.rwechat.dir_log, 'WeChat')
+        file_path = os_join(self.wechat.dir_log, 'WeChat')
         self.rrlog_file.add_file(
             file_path,
             time='m',

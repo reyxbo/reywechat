@@ -20,7 +20,7 @@ from reykit.rbase import throw, catch_exc
 from reykit.rimage import decode_qrcode
 from reykit.rnet import compute_stream_time, listen_socket
 from reykit.ros import File, Folder, os_exists
-from reykit.rre import search
+from reykit.rre import search, findall
 from reykit.rtask import ThreadPool
 from reykit.rtime import sleep, wait
 from reykit.rwrap import wrap_thread, wrap_exc
@@ -36,8 +36,17 @@ __all__ = (
 )
 
 
-MessageParameters = TypedDict(
-        'MessageParameters',
+MessageParameterFile = TypedDict(
+    'MessageParameterFile',
+    {
+        'path': str,
+        'name': str,
+        'md5': str,
+        'size': int
+    }
+)
+MessageParameter = TypedDict(
+        'MessageParameter',
         {
             'time': int,
             'id': int,
@@ -47,7 +56,7 @@ MessageParameters = TypedDict(
             'type': int,
             'display': str,
             'data': str,
-            'file': dict[Literal['path', 'name', 'md5', 'size'], str]
+            'file': MessageParameterFile
         }
     )
 
@@ -56,6 +65,8 @@ class WeChatMessage(BaseWeChat):
     """
     WeChat message type.
     """
+
+    SendEnum = WeChatSendEnum
 
 
     def __init__(
@@ -69,7 +80,7 @@ class WeChatMessage(BaseWeChat):
         data: str,
         user: str | None = None,
         room: str | None = None,
-        file:  dict[Literal['path', 'name', 'md5', 'size'], str] | None = None
+        file: MessageParameterFile | None = None
     ) -> None:
         """
         Build instance attributes.
@@ -112,11 +123,14 @@ class WeChatMessage(BaseWeChat):
         self.user = user
         self.room = room
         self.file = file
+        self._window: str | None = None
         self._user_name: str | None = None
         self._room_name: str | None = None
+        self._window_name: str | None = None
         self._is_quote: bool | None = None
         self._is_quote_self: bool | None = None
         self._quote_params: dict[Literal['text', 'quote_id', 'quote_type', 'quote_user', 'quote_user_name', 'quote_data'], str] | None = None
+        self._at_names: list[str] = None
         self._is_at: bool | None = None
         self._is_at_self: bool | None = None
         self._is_new_user: bool | None = None
@@ -141,7 +155,7 @@ class WeChatMessage(BaseWeChat):
 
 
     @property
-    def params(self) -> MessageParameters:
+    def params(self) -> MessageParameter:
         """
         Return parameters dictionary.
 
@@ -151,7 +165,7 @@ class WeChatMessage(BaseWeChat):
         """
 
         # Get parameter.
-        params = {
+        params: MessageParameter = {
             'time': self.time,
             'id': self.id,
             'number': self.number,
@@ -182,6 +196,29 @@ class WeChatMessage(BaseWeChat):
 
 
     @property
+    def window(self) -> str:
+        """
+        Message sender window ID.
+
+        Returns
+        -------
+        Window ID.
+        """
+
+        # Cache.
+        if self._window is not None:
+            return self._window
+
+        # Set.
+        if self.room is None:
+            self._window = self.user
+        else:
+            self._window = self.room
+
+        return self._window
+
+
+    @property
     def user_name(self) -> str:
         """
         Message sender user name.
@@ -191,12 +228,12 @@ class WeChatMessage(BaseWeChat):
         User name.
         """
 
-        # Judged.
+        # Cache.
         if self._user_name is not None:
             return self._user_name
 
         # Set.
-        self._user_name = self.receiver.rwechat.client.get_contact_name(
+        self._user_name = self.receiver.wechat.client.get_contact_name(
             self.user
         )
 
@@ -204,7 +241,7 @@ class WeChatMessage(BaseWeChat):
 
 
     @property
-    def room_name(self) -> str:
+    def room_name(self) -> str | None:
         """
         Message sender chat room name.
 
@@ -217,16 +254,39 @@ class WeChatMessage(BaseWeChat):
         if self.room is None:
             return
 
-        # Judged.
+        # Cache.
         if self._room_name is not None:
             return self._room_name
 
         # Set.
-        self._room_name = self.receiver.rwechat.client.get_contact_name(
+        self._room_name = self.receiver.wechat.client.get_contact_name(
             self.room
         )
 
         return self._room_name
+
+
+    @property
+    def window_name(self) -> str:
+        """
+        Message sender window name.
+
+        Returns
+        -------
+        Window name.
+        """
+
+        # Cache.
+        if self._window_name is not None:
+            return self._window_name
+
+        # Set.
+        if self.room is None:
+            self._window_name = self.user_name
+        else:
+            self._window_name = self.room_name
+
+        return self._window_name
 
 
     @property
@@ -239,7 +299,7 @@ class WeChatMessage(BaseWeChat):
         Judge result.
         """
 
-        # Judged.
+        # Cache.
         if self._is_quote is not None:
             return self._is_quote
 
@@ -262,14 +322,14 @@ class WeChatMessage(BaseWeChat):
         Judge result.
         """
 
-        # Judged.
+        # Cache.
         if self._is_quote_self is not None:
             return self._is_quote_self
 
         # Judge.
         self._is_quote_self = (
             self.is_quote
-            and '<chatusr>%s</chatusr>' % self.receiver.rwechat.client.login_info['id'] in self.data
+            and '<chatusr>%s</chatusr>' % self.receiver.wechat.client.login_info['id'] in self.data
         )
 
         return self._is_quote_self
@@ -277,7 +337,7 @@ class WeChatMessage(BaseWeChat):
 
     @property
     def quote_params(self) -> dict[
-        Literal['text', 'quote_id', 'quote_type', 'quote_user', 'quote_user_name', 'quote_data'],
+        Literal['text', 'quote_id', 'quote_time', 'quote_type', 'quote_user', 'quote_user_name', 'quote_data'],
         str | None
     ]:
         """
@@ -288,6 +348,7 @@ class WeChatMessage(BaseWeChat):
         Quote parameters of message.
             - `Key 'text'`: Message text.
             - `Key 'quote_id'`: Quote message ID.
+            - `Key 'quote_time'`: Quote message timestamp, unit is seconds.
             - `Key 'quote_type'`: Quote message type.
             - `Key 'quote_user'`: Quote message user ID.
             - `Key 'quote_user_name'`: Quote message user name.
@@ -304,20 +365,26 @@ class WeChatMessage(BaseWeChat):
 
         # Extract.
         pattern = '<title>(.+?)</title>'
-        text = search(pattern, self.data)
+        text: str = search(pattern, self.data)
         pattern = r'<svrid>(\w+?)</svrid>'
         quote_id = search(pattern, self.data)
+        quote_id = int(quote_id)
+        pattern = r'<createtime>(\d{10})</createtime>'
+        quote_time = search(pattern, self.data)
+        quote_time = int(quote_time)
         pattern = r'<refermsg>\s*<type>(\d+?)</type>'
-        quote_type = int(search(pattern, self.data))
+        quote_type = search(pattern, self.data)
+        quote_type = int(quote_type)
         pattern = r'<chatusr>(\w+?)</chatusr>'
-        quote_user = search(pattern, self.data)
+        quote_user: str = search(pattern, self.data)
         pattern = '<displayname>(.+?)</displayname>'
-        quote_user_name = search(pattern, self.data)
+        quote_user_name: str = search(pattern, self.data)
         pattern = '<content>(.+?)</content>'
-        quote_data = search(pattern, self.data)
+        quote_data: str = search(pattern, self.data)
         self._quote_params = {
             'text': text,
             'quote_id': quote_id,
+            'quote_time': quote_time,
             'quote_type': quote_type,
             'quote_user': quote_user,
             'quote_user_name': quote_user_name,
@@ -325,6 +392,29 @@ class WeChatMessage(BaseWeChat):
         }
 
         return self._quote_params
+
+
+    @property
+    def at_names(self) -> list[str]:
+        """
+        Return `@` names.
+
+        Returns
+        -------
+        `@` names.
+        """
+
+        # Cache.
+        if self._at_names is not None:
+            return self._at_names
+
+        # Get.
+        if self.type == 1:
+            text = self.data
+        elif self.is_quote:
+            text = self.quote_params['text']
+        pattern = r'@\w+\u2005'
+        self._at_names = findall(pattern, text)
 
 
     @property
@@ -337,18 +427,12 @@ class WeChatMessage(BaseWeChat):
         Judge result.
         """
 
-        # Judged.
+        # Cache.
         if self._is_at is not None:
             return self._is_at
 
         # Judge.
-        if self.type == 1:
-            text = self.data
-        elif self.is_quote:
-            text = self.quote_params['text']
-        pattern = r'@\w+ '
-        result = search(pattern, text)
-        self._is_at = result is not None
+        self._is_at = self.at_names != []
 
         return self._is_at
 
@@ -363,18 +447,13 @@ class WeChatMessage(BaseWeChat):
         Judge result.
         """
 
-        # Judged.
+        # Cache.
         if self._is_at_self is not None:
             return self._is_at_self
 
         # Judge.
-        if self.type == 1:
-            text = self.data
-        elif self.is_quote:
-            text = self.quote_params['text']
-        pattern = '@%s ' % self.receiver.rwechat.client.login_info['name']
-        result = search(pattern, text)
-        self._is_at_self = result is not None
+        pattern = '@%s\u2005' % self.receiver.wechat.client.login_info['name']
+        self._is_at_self = pattern in self.at_names
 
         return self._is_at_self
 
@@ -389,7 +468,7 @@ class WeChatMessage(BaseWeChat):
         Judge result.
         """
 
-        # Judged.
+        # Cache.
         if self._is_new_user is not None:
             return self._is_new_user
 
@@ -415,7 +494,7 @@ class WeChatMessage(BaseWeChat):
         Judge result.
         """
 
-        # Judged.
+        # Cache.
         if self._is_new_room is not None:
             return self._is_new_room
 
@@ -441,7 +520,7 @@ class WeChatMessage(BaseWeChat):
         Judge result.
         """
 
-        # Judged.
+        # Cache.
         if self._is_new_room_user is not None:
             return self._is_new_room_user
 
@@ -487,7 +566,7 @@ class WeChatMessage(BaseWeChat):
         Judge result.
         """
 
-        # Judged.
+        # Cache.
         if self._is_change_room_name is not None:
             return self._is_change_room_name
 
@@ -532,7 +611,7 @@ class WeChatMessage(BaseWeChat):
         Judge result.
         """
 
-        # Judged.
+        # Cache.
         if self._is_kick_out_room is not None:
             return self._is_kick_out_room
 
@@ -556,7 +635,7 @@ class WeChatMessage(BaseWeChat):
         Judge result.
         """
 
-        # Judged.
+        # Cache.
         if self._is_dissolve_room is not None:
             return self._is_dissolve_room
 
@@ -580,7 +659,7 @@ class WeChatMessage(BaseWeChat):
         Judge result.
         """
 
-        # Judged.
+        # Cache.
         if self._is_image is not None:
             return self._is_image
 
@@ -624,7 +703,7 @@ class WeChatMessage(BaseWeChat):
         Judge result.
         """
 
-        # Judged.
+        # Cache.
         if self._is_xml is not None:
             return self._is_xml
 
@@ -647,7 +726,7 @@ class WeChatMessage(BaseWeChat):
         Judge result.
         """
 
-        # Judged.
+        # Cache.
         if self._is_app is not None:
             return self._is_app
 
@@ -711,7 +790,7 @@ class WeChatMessage(BaseWeChat):
             return self._valid
 
         # Judge.
-        self._valid = self.receiver.rwechat.database.is_valid(self)
+        self._valid = self.receiver.wechat.database.is_valid(self)
 
         return self._valid
 
@@ -773,7 +852,7 @@ class WeChatMessage(BaseWeChat):
 
     def reply(
         self,
-        send_type: WeChatSendEnum | None = None,
+        send_type: WeChatSendEnum,
         **params: Any
     ) -> None:
         """
@@ -804,19 +883,13 @@ class WeChatMessage(BaseWeChat):
             text = 'can only be used by reply trigger'
             throw(WeChatTriggerError, self.trigger_rule, text=text)
 
-        # Get parameter.
-        if self.room is None:
-            receive_id = self.user
-        else:
-            receive_id = self.room
-
         # Status.
         self.replied = True
 
-        # Send.
-        self.receiver.rwechat.sender.send(
+        # Swend.
+        self.receiver.wechat.sender.send(
             send_type,
-            receive_id=receive_id,
+            receive_id=self.window,
             **params
         )
 
@@ -826,30 +899,29 @@ class WechatReceiver(BaseWeChat):
     WeChat receiver type.
     """
 
+    SendEnum = WeChatSendEnum
+
 
     def __init__(
         self,
-        rwechat: WeChat,
-        max_receiver: int,
-        bandwidth_downstream: float
+        wechat: WeChat,
+        max_receiver: int
     ) -> None:
         """
         Build instance attributes.
 
         Parameters
         ----------
-        rwechat : `WeChatClient` instance.
+        wechat : `WeChatClient` instance.
         max_receiver : Maximum number of receivers.
-        bandwidth_downstream : Download bandwidth, impact receive timeout, unit Mpbs.
         """
 
         # Import.
         from .rtrigger import WeChatTrigger
 
         # Set attribute.
-        self.rwechat = rwechat
+        self.wechat = wechat
         self.max_receiver = max_receiver
-        self.bandwidth_downstream = bandwidth_downstream
         self.queue: Queue[WeChatMessage] = Queue()
         self.handlers: list[Callable[[WeChatMessage], Any]] = []
         self.started: bool | None = False
@@ -858,9 +930,9 @@ class WechatReceiver(BaseWeChat):
         # Start.
         self.__start_callback()
         self.__start_receiver(self.max_receiver)
-        self.rwechat.client.hook_message(
+        self.wechat.client.hook_message(
             '127.0.0.1',
-            self.rwechat.client.message_callback_port,
+            self.wechat.client.message_callback_port,
             60
         )
 
@@ -908,7 +980,7 @@ class WechatReceiver(BaseWeChat):
         # Listen socket.
         listen_socket(
             '127.0.0.1',
-            self.rwechat.client.message_callback_port,
+            self.wechat.client.message_callback_port,
             put_queue
         )
 
@@ -965,7 +1037,7 @@ class WechatReceiver(BaseWeChat):
                 handler(message)
 
             # Log.
-            self.rwechat.log.log_receive(message)
+            self.wechat.log.log_receive(message)
 
 
         # Thread pool.
@@ -1041,8 +1113,8 @@ class WechatReceiver(BaseWeChat):
         Handle file message.
         """
 
-        # Save.
-        rfolder = Folder(self.rwechat.dir_file)
+        # Download.
+        folder = Folder(self.wechat.dir_cache)
         generate_path = None
         match message.type:
 
@@ -1052,18 +1124,19 @@ class WechatReceiver(BaseWeChat):
                 ### Get attribute.
                 file_name = f'{message.id}.jpg'
                 pattern = r'length="(\d+)".*?md5="([\da-f]{32})"'
-                file_size, file_md5 = search(pattern, message.data)
+                result: tuple[str, str] = search(pattern, message.data)
+                file_size, file_md5 = result
                 file_size = int(file_size)
 
                 ### Exist.
                 pattern = f'^{file_md5}$'
-                search_path = rfolder.search(pattern)
+                cache_path = folder.search(pattern)
 
                 ### Generate.
-                if search_path is None:
-                    self.rwechat.client.download_file(message.id)
+                if cache_path is None:
+                    self.wechat.client.download_file(message.id)
                     generate_path = '%swxhelper/image/%s.dat' % (
-                        self.rwechat.client.login_info['account_data_path'],
+                        self.wechat.client.login_info['account_data_path'],
                         message.id
                     )
 
@@ -1077,12 +1150,12 @@ class WechatReceiver(BaseWeChat):
                 file_md5 = None
 
                 ### Generate.
-                self.rwechat.client.download_voice(
+                self.wechat.client.download_voice(
                     message.id,
-                    self.rwechat.dir_file
+                    self.wechat.dir_cache
                 )
                 generate_path = '%s/%s.amr' % (
-                    self.rwechat.dir_file,
+                    self.wechat.dir_cache,
                     message.id
                 )
 
@@ -1098,13 +1171,13 @@ class WechatReceiver(BaseWeChat):
 
                 ### Exist.
                 pattern = f'^{file_md5}$'
-                search_path = rfolder.search(pattern)
+                cache_path = folder.search(pattern)
 
                 ### Generate.
-                if search_path is None:
-                    self.rwechat.client.download_file(message.id)
+                if cache_path is None:
+                    self.wechat.client.download_file(message.id)
                     generate_path = '%swxhelper/video/%s.mp4' % (
-                        self.rwechat.client.login_info['account_data_path'],
+                        self.wechat.client.login_info['account_data_path'],
                         message.id
                     )
 
@@ -1127,13 +1200,13 @@ class WechatReceiver(BaseWeChat):
 
                 ### Exist.
                 pattern = f'^{file_md5}$'
-                search_path = rfolder.search(pattern)
+                cache_path = folder.search(pattern)
 
                 ### Generate.
-                if search_path is None:
-                    self.rwechat.client.download_file(message.id)
+                if cache_path is None:
+                    self.wechat.client.download_file(message.id)
                     generate_path = '%swxhelper/file/%s_%s' % (
-                        self.rwechat.client.login_info['account_data_path'],
+                        self.wechat.client.login_info['account_data_path'],
                         message.id,
                         file_name
                     )
@@ -1142,44 +1215,33 @@ class WechatReceiver(BaseWeChat):
             case _:
                 return
 
-        # Wait.
         if generate_path is not None:
-            stream_time = compute_stream_time(file_size, self.bandwidth_downstream)
-            timeout = 10 + stream_time * (self.max_receiver + 1)
+
+            ## Wait.
             wait(
                 os_exists,
                 generate_path,
                 _interval = 0.05,
-                _timeout=timeout
+                _timeout=3600
             )
             sleep(0.2)
 
-        # Move.
-        if generate_path is None:
-            save_path = '%s/%s' % (
-                self.rwechat.dir_file,
-                file_md5
-            )
-        else:
+            ## Move.
             rfile = File(generate_path)
-            search_path = None
+            cache_path = None
             if file_md5 is None:
                 file_md5 = rfile.md5
 
                 ### Exist.
                 pattern = f'^{file_md5}$'
-                search_path = rfolder.search(pattern)
+                cache_path = folder.search(pattern)
 
-            if search_path is None:
-                save_path = '%s/%s' % (
-                    self.rwechat.dir_file,
-                    file_md5
-                )
-                rfile.move(save_path)
+            if cache_path is None:
+                rfile.move(cache_path)
 
         # Set parameter.
-        file = {
-            'path': save_path,
+        file: MessageParameter = {
+            'path': cache_path,
             'name': file_name,
             'md5': file_md5,
             'size': file_size

@@ -9,7 +9,7 @@
 """
 
 
-from typing import Literal
+from typing import Any, Literal, overload
 from json import loads as json_loads
 from reydb.rdb import Database
 from reykit.rbase import throw
@@ -36,16 +36,16 @@ class WeChatDatabase(BaseWeChat):
 
     def __init__(
         self,
-        rwechat: WeChat,
-        rrdatabase: Database | dict[Literal['wechat', 'file'], Database]
+        wechat: WeChat,
+        rdatabase: Database | dict[Literal['wechat', 'file'], Database]
     ) -> None:
         """
         Build instance attributes.
 
         Parameters
         ----------
-        rwechat : `WeChatClient` instance.
-        rrdatabase : `WeChatDatabase` instance of `reykit` package.
+        wechat : `WeChatClient` instance.
+        rdatabase : `WeChatDatabase` instance of `reykit` package.
             - `WeChatDatabase`, Set all `WeChatDatabase`: instances.
             - `dict`, Set each `WeChatDatabase`: instance, all item is required.
                 `Key 'wechat'`: `WeChatDatabase` instance used in WeChat methods.
@@ -53,23 +53,23 @@ class WeChatDatabase(BaseWeChat):
         """
 
         # Set attribute.
-        self.rwechat = rwechat
-        match rrdatabase:
+        self.wechat = wechat
+        match rdatabase:
             case Database():
-                self.rrdatabase_wechat = self.rrdatabase_file = rrdatabase
+                self.rdatabase_wechat = self.rdatabase_file = rdatabase
             case dict():
-                self.rrdatabase_wechat = rrdatabase.get('wechat')
-                self.rrdatabase_file = rrdatabase.get('file')
+                self.rdatabase_wechat = rdatabase.get('wechat')
+                self.rdatabase_file = rdatabase.get('file')
                 if (
-                    self.rrdatabase_wechat
-                    or self.rrdatabase_file
+                    self.rdatabase_wechat
+                    or self.rdatabase_file
                 ):
-                    throw(ValueError, rrdatabase)
+                    throw(ValueError, rdatabase)
             case _:
-                throw(TypeError, rrdatabase)
+                throw(TypeError, rdatabase)
 
         # Check.
-        if 'sqlite' in (self.rrdatabase_wechat.backend, self.rrdatabase_file.backend):
+        if 'sqlite' in (self.rdatabase_wechat.backend, self.rdatabase_file.backend):
             text='not suitable for SQLite databases'
             throw(AssertionError, text=text)
 
@@ -77,12 +77,14 @@ class WeChatDatabase(BaseWeChat):
         self.build()
 
         # Add handler.
-        self.__to_contact_user()
-        self.__to_contact_room()
-        self.__to_contact_room_user()
-        self.__to_message_receive()
-        self.__to_message_send()
-        self.__from_message_send_loop()
+        self.__add_handler_to_contact_user()
+        self.__add_handler_to_contact_room()
+        self.__add_handler_to_contact_room_user()
+        self.__add_handler_to_message_receive()
+        self.__add_handler_update_send_status()
+
+        # Loop.
+        self.__start_from_message_send()
 
 
     def build(self) -> None:
@@ -401,10 +403,13 @@ class WeChatDatabase(BaseWeChat):
                         'name': 'parameter',
                         'type': 'json',
                         'constraint': 'NOT NULL',
-                        'comment': (
-                            'Send parameters, '
-                            "when parameter 'file_id' exists, then download file and convert to parameter 'path'."
-                        )
+                        'comment': 'Send parameters.'
+                    },
+                    {
+                        'name': 'file_id',
+                        'type': 'mediumint unsigned',
+                        'constraint': 'DEFAULT NULL',
+                        'comment': 'Send file ID, from the file database.'
                     }
                 ],
                 'primary': 'send_id',
@@ -498,10 +503,10 @@ class WeChatDatabase(BaseWeChat):
         # Build.
 
         ## WeChat.
-        self.rrdatabase_wechat.build.build(databases, tables, views_stats=views_stats)
+        self.rdatabase_wechat.build.build(databases, tables, views_stats=views_stats)
 
         ## File.
-        self.rrdatabase_file.file.build()
+        self.rdatabase_file.file.build()
 
         # Update.
         self.update_contact_user()
@@ -515,7 +520,7 @@ class WeChatDatabase(BaseWeChat):
         """
 
         # Get data.
-        contact_table = self.rwechat.client.get_contact_table('user')
+        contact_table = self.wechat.client.get_contact_table('user')
 
         user_data = [
             {
@@ -531,7 +536,7 @@ class WeChatDatabase(BaseWeChat):
         ]
 
         # Insert and update.
-        conn = self.rrdatabase_wechat.connect()
+        conn = self.rdatabase_wechat.connect()
 
         ## Insert.
         if contact_table != []:
@@ -571,7 +576,7 @@ class WeChatDatabase(BaseWeChat):
         """
 
         # Get data.
-        contact_table = self.rwechat.client.get_contact_table('room')
+        contact_table = self.wechat.client.get_contact_table('room')
 
         room_data = [
             {
@@ -587,7 +592,7 @@ class WeChatDatabase(BaseWeChat):
         ]
 
         # Insert and update.
-        conn = self.rrdatabase_wechat.connect()
+        conn = self.rdatabase_wechat.connect()
 
         ## Insert.
         if contact_table != []:
@@ -639,7 +644,7 @@ class WeChatDatabase(BaseWeChat):
 
         ## All.
         if room_id is None:
-            contact_table = self.rwechat.client.get_contact_table('room')
+            contact_table = self.wechat.client.get_contact_table('room')
 
         ## Given.
         else:
@@ -654,7 +659,7 @@ class WeChatDatabase(BaseWeChat):
             }
             for row in contact_table
             for user_id, name
-            in self.rwechat.client.get_room_member_dict(row['id']).items()
+            in self.wechat.client.get_room_member_dict(row['id']).items()
         ]
         room_user_ids = [
             '%s,%s' % (
@@ -665,7 +670,7 @@ class WeChatDatabase(BaseWeChat):
         ]
 
         # Insert and update.
-        conn = self.rrdatabase_wechat.connect()
+        conn = self.rdatabase_wechat.connect()
 
         ## Insert.
         if room_user_data != []:
@@ -709,7 +714,7 @@ class WeChatDatabase(BaseWeChat):
         conn.close()
 
 
-    def __to_contact_user(self) -> None:
+    def __add_handler_to_contact_user(self) -> None:
         """
         Add handler, write record to table `contact_user`.
         """
@@ -729,7 +734,7 @@ class WeChatDatabase(BaseWeChat):
             if message.is_new_user:
 
                 ## Generate data.
-                name = self.rwechat.client.get_contact_name(message.user)
+                name = self.wechat.client.get_contact_name(message.user)
                 data = {
                     'user_id': message.user,
                     'name': name,
@@ -737,7 +742,7 @@ class WeChatDatabase(BaseWeChat):
                 }
 
                 ## Insert.
-                self.rrdatabase_wechat.execute_insert(
+                self.rdatabase_wechat.execute_insert(
                     ('wechat', 'contact_user'),
                     data,
                     'update'
@@ -745,10 +750,10 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Add handler.
-        self.rwechat.receiver.add_handler(handler_to_contact_user)
+        self.wechat.receiver.add_handler(handler_to_contact_user)
 
 
-    def __to_contact_room(self) -> None:
+    def __add_handler_to_contact_room(self) -> None:
         """
         Add handler, write record to table `contact_room`.
         """
@@ -768,7 +773,7 @@ class WeChatDatabase(BaseWeChat):
             if message.is_new_room:
 
                 ## Generate data.
-                name = self.rwechat.client.get_contact_name(message.room)
+                name = self.wechat.client.get_contact_name(message.room)
                 data = {
                     'room_id': message.room,
                     'name': name,
@@ -778,7 +783,7 @@ class WeChatDatabase(BaseWeChat):
                 ## Insert.
 
                 ### 'contact_room'.
-                self.rrdatabase_wechat.execute_insert(
+                self.rdatabase_wechat.execute_insert(
                     ('wechat', 'contact_room'),
                     data,
                     'update'
@@ -800,7 +805,7 @@ class WeChatDatabase(BaseWeChat):
                 }
 
                 ## Update.
-                self.rrdatabase_wechat.execute_update(
+                self.rdatabase_wechat.execute_update(
                     ('wechat', 'contact_room'),
                     data
                 )
@@ -822,17 +827,17 @@ class WeChatDatabase(BaseWeChat):
                 }
 
                 ## Update.
-                self.rrdatabase_wechat.execute_update(
+                self.rdatabase_wechat.execute_update(
                     ('wechat', 'contact_room'),
                     data
                 )
 
 
         # Add handler.
-        self.rwechat.receiver.add_handler(handler_to_contact_room)
+        self.wechat.receiver.add_handler(handler_to_contact_room)
 
 
-    def __to_contact_room_user(self) -> None:
+    def __add_handler_to_contact_room_user(self) -> None:
         """
         Add handler, write record to table `contact_room_user`.
         """
@@ -859,10 +864,10 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Add handler.
-        self.rwechat.receiver.add_handler(handler_to_contact_room_user)
+        self.wechat.receiver.add_handler(handler_to_contact_room_user)
 
 
-    def __to_message_receive(self) -> None:
+    def __add_handler_to_message_receive(self) -> None:
         """
         Add handler, write record to table `message_receive`.
         """
@@ -882,7 +887,7 @@ class WeChatDatabase(BaseWeChat):
             if message.file is None:
                 file_id = None
             else:
-                file_id = self.rrdatabase_file.file.upload(
+                file_id = self.rdatabase_file.file.upload(
                     message.file['path'],
                     message.file['name'],
                     'WeChat'
@@ -902,7 +907,7 @@ class WeChatDatabase(BaseWeChat):
             }
 
             # Insert.
-            self.rrdatabase_wechat.execute_insert(
+            self.rdatabase_wechat.execute_insert(
                 ('wechat', 'message_receive'),
                 data,
                 'ignore'
@@ -910,69 +915,45 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Add handler.
-        self.rwechat.receiver.add_handler(handler_to_message_receive)
+        self.wechat.receiver.add_handler(handler_to_message_receive)
 
 
-    def __to_message_send(self) -> None:
+    def __add_handler_update_send_status(self) -> None:
         """
-        Add handler, write record to table `message_send`.
+        In the thread, loop read record from table `message_send`, put send queue.
         """
 
 
         # Define.
-        def handler_to_message_send(sendparam: WeChatSendParameter) -> None:
+        def handler_update_send_status(sendparam: WeChatSendParameter) -> None:
             """
-            Write record to table `message_send`.
+            Update field `status` of table `message_send`.
 
             Parameters
             ----------
             sendparam : `WeChatSendParameter` instance.
             """
 
-            # Break.
-            if sendparam.send_id is not None:
-                return
-
-            # Generate data.
-            path = sendparam.params.get('path')
-            params = {
-                key: value
-                for key, value in sendparam.params.items()
-                if key not in (
-                    'send_type',
-                    'receive_id',
-                    'path'
-                )
-            }
-
-            ## Upload file.
-            if path is not None:
-                file_id = self.rrdatabase_file.file.upload(
-                    path,
-                    note='WeChat'
-                )
-                params['file_id'] = file_id
-
+            # Get parameter.
             if sendparam.exc_reports == []:
                 status = 2
             else:
                 status = 3
             data = {
+                'send_id': sendparam.send_id,
                 'status': status,
-                'type': sendparam.send_type,
-                'receive_id': sendparam.receive_id,
-                'parameter': params
+                'limit': 1
             }
 
-            # Insert.
-            self.rrdatabase_wechat.execute_insert(
+            # Update.
+            self.rdatabase_wechat.execute_update(
                 ('wechat', 'message_send'),
                 data
             )
 
 
         # Add handler.
-        self.rwechat.sender.add_handler(handler_to_message_send)
+        self.wechat.sender.add_handler(handler_update_send_status)
 
 
     def __download_file(
@@ -992,147 +973,112 @@ class WeChatDatabase(BaseWeChat):
         """
 
         # Select.
-        file_info = self.rrdatabase_file.file.query(file_id)
+        file_info = self.rdatabase_file.file.query(file_id)
+        file_name = file_info['name']
+        file_md5 = file_info['md5']
 
         # Check.
-        file_md5 = file_info['md5']
-        rfolder = Folder(self.rwechat.dir_file)
+        rfolder = Folder(self.wechat.dir_cache)
         pattern = f'^{file_md5}$'
-        search_path = rfolder.search(pattern)
+        cache_path = rfolder.search(pattern)
 
         # Download.
-        if search_path is None:
-            save_path = '%s/%s' % (
-                self.rwechat.dir_file,
+        if cache_path is None:
+            cache_path = '%s/%s' % (
+                self.wechat.dir_cache,
                 file_md5
             )
-            save_path = self.rrdatabase_file.file.download(
+            self.rdatabase_file.file.download(
                 file_id,
-                save_path
-            )
-        else:
-            save_path = search_path
-
-        file_name = file_info['name']
-        return save_path, file_name
-
-
-    def __from_message_send(self) -> None:
-        """
-        Read record from table `message_send`, put send queue.
-        """
-
-        # Get parameter.
-        conn = self.rrdatabase_wechat.connect()
-
-        # Read.
-        where = (
-            '(\n'
-            '    `status` = 0\n'
-            '    AND (\n'
-            '        `plan_time` IS NULL\n'
-            '        OR `plan_time` < NOW()\n'
-            '    )\n'
-            ')'
-        )
-        result = conn.execute_select(
-            ('wechat', 'message_send'),
-            ['send_id', 'type', 'receive_id', 'parameter'],
-            where,
-            order='`plan_time` DESC, `send_id`'
-        )
-
-        # Convert.
-        if result.empty:
-            return
-        table = result.to_table()
-
-        # Update.
-        send_ids = [
-            row['send_id']
-            for row in table
-        ]
-        sql = (
-            'UPDATE `wechat`.`message_send`\n'
-            'SET `status` = 1\n'
-            'WHERE `send_id` IN :send_ids'
-        )
-        conn.execute(
-            sql,
-            send_ids=send_ids
-        )
-
-        # Send.
-        for row in table:
-            send_id, type_, receive_id, parameter = row.values()
-            send_type = WeChatSendEnum(type_)
-            parameter: dict = json_loads(parameter)
-
-            ## Save file.
-            file_id = parameter.get('file_id')
-            if file_id is not None:
-                file_path, file_name = self.__download_file(file_id)
-                parameter['path'] = file_path
-                parameter['file_name'] = file_name
-
-            self.rwechat.send(
-                send_type,
-                receive_id,
-                send_id,
-                **parameter
+                cache_path
             )
 
-        # Commit.
-        conn.commit()
+        return cache_path, file_name
 
 
     @wrap_thread
-    def __from_message_send_loop(self) -> None:
+    def __start_from_message_send(self) -> None:
         """
-        In the thread, loop read record from table `message_send`, put send queue.
+        Start loop read record from table `message_send`, put send queue.
         """
 
 
         # Define.
-        def handler_update_send_status(sendparam: WeChatSendParameter) -> None:
+        def __from_message_send() -> None:
             """
-            Update field `status` of table `message_send`.
-
-            Parameters
-            ----------
-            sendparam : `WeChatSendParameter` instance.
+            Read record from table `message_send`, put send queue.
             """
-
-            # Break.
-            if sendparam.send_id is None:
-                return
 
             # Get parameter.
-            if sendparam.exc_reports == []:
-                status = 2
-            else:
-                status = 3
-            data = {
-                'send_id': sendparam.send_id,
-                'status': status,
-                'limit': 1
-            }
+            conn = self.rdatabase_wechat.connect()
 
-            # Update.
-            self.rrdatabase_wechat.execute_update(
+            # Read.
+            where = (
+                '(\n'
+                '    `status` = 0\n'
+                '    AND (\n'
+                '        `plan_time` IS NULL\n'
+                '        OR `plan_time` < NOW()\n'
+                '    )\n'
+                ')'
+            )
+            result = conn.execute_select(
                 ('wechat', 'message_send'),
-                data
+                ['send_id', 'type', 'receive_id', 'parameter', 'file_id'],
+                where,
+                order='`plan_time` DESC, `send_id`'
             )
 
+            # Convert.
+            if result.empty:
+                return
+            table = result.to_table()
 
-        # Add handler.
-        self.rwechat.sender.add_handler(handler_update_send_status)
+            # Update.
+            send_ids = [
+                row['send_id']
+                for row in table
+            ]
+            sql = (
+                'UPDATE `wechat`.`message_send`\n'
+                'SET `status` = 1\n'
+                'WHERE `send_id` IN :send_ids'
+            )
+            conn.execute(
+                sql,
+                send_ids=send_ids
+            )
+
+            # Send.
+            for row in table:
+                send_id, type_, receive_id, parameter, file_id = row.values()
+                send_type = WeChatSendEnum(type_)
+                parameter: dict = json_loads(parameter)
+
+                ## Save file.
+                if file_id is not None:
+                    file_path, file_name = self.__download_file(file_id)
+                    parameter['file_path'] = file_path
+                    parameter['file_name'] = file_name
+
+                sendparam = WeChatSendParameter(
+                    self.wechat.sender,
+                    send_type,
+                    receive_id,
+                    send_id,
+                    **parameter
+                )
+                self.wechat.sender.__send(sendparam)
+
+            # Commit.
+            conn.commit()
+
 
         # Loop.
         while True:
 
             # Put.
-            self.__from_message_send()
+            __from_message_send()
 
             # Wait.
             sleep(1)
@@ -1160,7 +1106,7 @@ class WeChatDatabase(BaseWeChat):
 
         ## User.
         if message.room is None:
-            result = message.receiver.rwechat.database.rrdatabase_wechat.execute_select(
+            result = message.receiver.wechat.database.rdatabase_wechat.execute_select(
                 ('wechat', 'contact_user'),
                 ['valid'],
                 '`user_id` = :user_id',
@@ -1185,7 +1131,7 @@ class WeChatDatabase(BaseWeChat):
             ') AS `a`\n'
             'WHERE `valid` = 1'
             )
-            result = message.receiver.rwechat.database.rrdatabase_wechat.execute(
+            result = message.receiver.wechat.database.rdatabase_wechat.execute(
                 sql,
                 room_id=message.room,
                 user_id=message.user
@@ -1195,3 +1141,119 @@ class WeChatDatabase(BaseWeChat):
         judge = valid == 1
 
         return judge
+
+
+    @overload
+    def send(
+        self,
+        send_type: Literal[WeChatSendEnum.SEND_TEXT],
+        receive_id: str,
+        *,
+        text: str
+    ) -> None: ...
+
+    @overload
+    def send(
+        self,
+        send_type: Literal[WeChatSendEnum.SEND_TEXT_AT],
+        receive_id: str,
+        *,
+        user_id: str | list[str] | Literal['notify@all'],
+        text: str
+    ) -> None: ...
+
+    @overload
+    def send(
+        self,
+        send_type: Literal[WeChatSendEnum.SEND_FILE, WeChatSendEnum.SEND_IMAGE, WeChatSendEnum.SEND_EMOTION],
+        receive_id: str,
+        *,
+        file_path: str,
+        file_name: str | None = None
+    ) -> None: ...
+
+    @overload
+    def send(
+        self,
+        send_type: Literal[WeChatSendEnum.SEND_PAT],
+        receive_id: str,
+        *,
+        user_id: str
+    ) -> None: ...
+
+    @overload
+    def send(
+        self,
+        send_type: Literal[WeChatSendEnum.SEND_PUBLIC],
+        receive_id: str,
+        *,
+        page_url: str,
+        title: str,
+        text: str | None = None,
+        image_url: str | None = None,
+        public_name: str | None = None,
+        public_id: str | None = None
+    ) -> None: ...
+
+    @overload
+    def send(
+        self,
+        send_type: Literal[WeChatSendEnum.SEND_FORWARD],
+        receive_id: str,
+        *,
+        message_id: str
+    ) -> None: ...
+
+    def send(
+        self,
+        send_type: WeChatSendEnum,
+        receive_id: str | None = None,
+        **params: Any
+    ) -> None:
+        """
+        Insert into `wechat.message_send` table of database, wait send.
+
+        Parameters
+        ----------
+        send_type : Send type.
+            - `Literal[WeChatSendEnum.SEND_TEXT]`: Send text message, use `WeChatClient.send_text`: method.
+            - `Literal[WeChatSendEnum.SEND_TEXT_AT]`: Send text message with `@`, use `WeChatClient.send_text_at`: method.
+            - `Literal[WeChatSendEnum.SEND_FILE]`: Send file message, use `WeChatClient.send_file`: method.
+            - `Literal[WeChatSendEnum.SEND_IMAGE]`: Send image message, use `WeChatClient.send_image`: method.
+            - `Literal[WeChatSendEnum.SEND_EMOTION]`: Send emotion message, use `WeChatClient.send_emotion`: method.
+            - `Literal[WeChatSendEnum.SEND_PAT]`: Send pat message, use `WeChatClient.send_pat`: method.
+            - `Literal[WeChatSendEnum.SEND_PUBLIC]`: Send public account message, use `WeChatClient.send_public`: method.
+            - `Literal[WeChatSendEnum.SEND_FORWARD]`: Forward message, use `WeChatClient.send_forward`: method.
+        receive_id : User ID or chat room ID of receive message.
+        params : Send parameters.
+        """
+
+        # Get parameter.
+        data = {
+            'status': 0,
+            'type': send_type,
+            'receive_id': receive_id,
+            'parameter': params
+        }
+
+        # Upload file.
+        if 'file_path' in params:
+            file_path: str = params.pop('file_path')
+            if 'file_name' in params:
+                file_name: str = params.pop('file_name')
+            else:
+                file_name = None
+            file_id = self.rdatabase_file.file.upload(
+                file_path,
+                file_name,
+                'WeChat'
+            )
+        else:
+            file_id = None
+        data['file_id'] = file_id
+
+        # Insert.
+        self.rdatabase_wechat.execute_insert(
+            ('wechat', 'message_send'),
+            data
+        )

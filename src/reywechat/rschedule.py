@@ -24,71 +24,27 @@ class WeChatSchedule(BaseWeChat):
     WeChat schedule type.
     """
 
+    SendEnum = WeChatSendEnum
+
 
     def __init__(
         self,
-        rwechat: WeChat
+        wechat: WeChat
     ) -> None:
         """
         Build instance attributes.
 
         Parameters
         ----------
-        rwechat : `WeChatClient` instance.
+        wechat : `WeChatClient` instance.
         """
 
         # Set attribute.
-        self.rwechat = rwechat
+        self.wechat = wechat
         self.rrschedule = Schedule()
 
         # Start.
         self.rrschedule.start()
-
-
-    def send(
-        self,
-        trigger: Literal['date', 'interval', 'cron'],
-        trigger_kwargs: dict,
-        send_type: WeChatSendEnum,
-        receive_id: str,
-        **params: Callable[[], Any] | Any
-    ) -> None:
-        """
-        Schedule send message.
-
-        Parameters
-        ----------
-        trigger : Trigger type.
-        trigger_kwargs : Trigger keyword arguments.
-        send_type : Send type.
-            - `Literal[WeChatSendEnum.SEND_TEXT]`: Send text message, use `WeChatClient.send_text`: method.
-            - `Literal[WeChatSendEnum.SEND_TEXT_AT]`: Send text message with `@`, use `WeChatClient.send_text_at`: method.
-            - `Literal[WeChatSendEnum.SEND_FILE]`: Send file message, use `WeChatClient.send_file`: method.
-            - `Literal[WeChatSendEnum.SEND_IMAGE]`: Send image message, use `WeChatClient.send_image`: method.
-            - `Literal[WeChatSendEnum.SEND_EMOTION]`: Send emotion message, use `WeChatClient.send_emotion`: method.
-            - `Literal[WeChatSendEnum.SEND_PAT]`: Send pat message, use `WeChatClient.send_pat`: method.
-            - `Literal[WeChatSendEnum.SEND_PUBLIC]`: Send public account message, use `WeChatClient.send_public`: method.
-            - `Literal[WeChatSendEnum.SEND_FORWARD]`: Forward message, use `WeChatClient.send_forward`: method.
-        receive_id : User ID or chat room ID of receive message.
-        params : Send parameters.
-            - `Callable`: Use execute return value.
-            - `Any`: Use this value.
-        """
-
-        # Get parameter.
-        kwargs = {
-            'send_type': send_type,
-            'receive_id': receive_id,
-            **params
-        }
-
-        # Add.
-        self.rrschedule.add_task(
-            self.rwechat.sender.send,
-            trigger,
-            kwargs=kwargs,
-            **trigger_kwargs
-        )
 
 
     def add_task(
