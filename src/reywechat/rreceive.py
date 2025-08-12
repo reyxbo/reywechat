@@ -18,7 +18,7 @@ from bs4 import BeautifulSoup as BSBeautifulSoup
 from bs4.element import Tag as BSTag
 from reykit.rbase import throw, catch_exc
 from reykit.rimage import decode_qrcode
-from reykit.rnet import compute_stream_time, listen_socket
+from reykit.rnet import listen_socket
 from reykit.ros import File, Folder, os_exists
 from reykit.rre import search, findall
 from reykit.rtask import ThreadPool

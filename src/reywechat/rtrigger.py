@@ -9,7 +9,7 @@
 """
 
 
-from typing import Any, TypedDict, Literal, NoReturn
+from typing import Any, TypedDict, NoReturn
 from collections.abc import Callable
 from reykit.rbase import catch_exc
 
