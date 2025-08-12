@@ -98,15 +98,18 @@ class WeChat(BaseWeChat):
         self.receive_start = self.receiver.start
         self.receive_stop = self.receiver.stop
 
+        ## Trigger.
+        self.trigger_add_rule = self.trigger.add_rule
+
         ## Send.
         self.send_add_handler = self.sender.add_handler
-        self.send = self.sender.send
+        self.send = self.database.send
         self.send_start = self.sender.start
         self.send_stop = self.sender.stop
         self.wrap_try_send = self.sender.wrap_try_send
 
-        ## Trigger.
-        self.trigger_add_rule = self.trigger.add_rule
+        ## Database.
+        self.send = self.database.send
 
         ## Schedule.
         self.schedule_add_task = self.schedule.add_task

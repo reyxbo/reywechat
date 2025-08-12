@@ -48,15 +48,15 @@ class WeChatTrigger(BaseWeChat):
         self.rules: list[TriggerRule] = []
 
         # Add handler.
-        self.handler = self.__add_handler_trigger_by_rule()
+        self.handler = self.__add_receiver_handler_trigger_by_rule()
 
         # Add trigger.
         self.__add_trigger_valid()
 
 
-    def __add_handler_trigger_by_rule(self) -> Callable[[WeChatMessage], None]:
+    def __add_receiver_handler_trigger_by_rule(self) -> Callable[[WeChatMessage], None]:
         """
-        Add handler, trigger message by rules.
+        Add receiver handler, trigger message by rules.
 
         Returns
         -------
@@ -65,7 +65,7 @@ class WeChatTrigger(BaseWeChat):
 
 
         # Define.
-        def handler_trigger_by_rule(message: WeChatMessage) -> None:
+        def receiver_handler_trigger_by_rule(message: WeChatMessage) -> None:
             """
             Trigger message by rules.
 
@@ -111,9 +111,9 @@ class WeChatTrigger(BaseWeChat):
 
 
         # Add handler.
-        self.receiver.add_handler(handler_trigger_by_rule)
+        self.receiver.add_handler(receiver_handler_trigger_by_rule)
 
-        return handler_trigger_by_rule
+        return receiver_handler_trigger_by_rule
 
 
     def add_rule(
@@ -199,4 +199,4 @@ class WeChatTrigger(BaseWeChat):
 
 
         # Add.
-        self.add_rule(trigger_valid, float('inf'))
+        self.add_rule(trigger_valid, float('inf'), False)

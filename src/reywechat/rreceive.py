@@ -12,6 +12,7 @@
 from __future__ import annotations
 from typing import Any, TypedDict, Literal, overload
 from collections.abc import Callable
+from os.path import join as os_join
 from queue import Queue
 from json import loads as json_loads
 from bs4 import BeautifulSoup as BSBeautifulSoup
@@ -1011,21 +1012,22 @@ class WechatReceiver(BaseWeChat):
 
             # Set parameter.
             handlers = [
-                self.__handler_room,
-                self.__handler_file,
+                self.__receiver_handler_room,
+                self.__receiver_handler_file,
                 *self.handlers
             ]
 
             # Handle.
 
             ## Define.
-            def handle_handler_exception() -> None:
+            def handle_handler_exception(exc_report, *_) -> None:
                 """
                 Handle Handler exception.
-                """
 
-                # Catch exception.
-                exc_report, *_ = catch_exc()
+                Parameters
+                ----------
+                exc_report : Exception report text.
+                """
 
                 # Save.
                 message.exc_reports.append(exc_report)
@@ -1080,7 +1082,7 @@ class WechatReceiver(BaseWeChat):
         self.handlers.append(handler)
 
 
-    def __handler_room(
+    def __receiver_handler_room(
         self,
         message: WeChatMessage
     ) -> None:
@@ -1105,7 +1107,7 @@ class WechatReceiver(BaseWeChat):
             message.user = None
 
 
-    def __handler_file(
+    def __receiver_handler_file(
         self,
         message: WeChatMessage
     ) -> None:
@@ -1120,7 +1122,6 @@ class WechatReceiver(BaseWeChat):
 
             ## Image.
             case 3:
-
                 ### Get attribute.
                 file_name = f'{message.id}.jpg'
                 pattern = r'length="(\d+)".*?md5="([\da-f]{32})"'
@@ -1228,19 +1229,16 @@ class WechatReceiver(BaseWeChat):
 
             ## Move.
             rfile = File(generate_path)
-            cache_path = None
             if file_md5 is None:
                 file_md5 = rfile.md5
-
-                ### Exist.
                 pattern = f'^{file_md5}$'
                 cache_path = folder.search(pattern)
-
             if cache_path is None:
+                cache_path = os_join(self.wechat.dir_cache, file_md5)
                 rfile.move(cache_path)
 
         # Set parameter.
-        file: MessageParameter = {
+        file: MessageParameterFile = {
             'path': cache_path,
             'name': file_name,
             'md5': file_md5,

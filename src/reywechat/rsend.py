@@ -73,7 +73,7 @@ class WeChatSendParameter(BaseWeChat):
         sender: WeChatSender,
         send_type: Literal[WeChatSendEnum.SEND_TEXT],
         receive_id: str,
-        send_id: int | None = None,
+        send_id: int,
         *,
         text: str
     ) -> None: ...
@@ -84,7 +84,7 @@ class WeChatSendParameter(BaseWeChat):
         sender: WeChatSender,
         send_type: Literal[WeChatSendEnum.SEND_TEXT_AT],
         receive_id: str,
-        send_id: int | None = None,
+        send_id: int,
         *,
         user_id: str | list[str] | Literal['notify@all'],
         text: str
@@ -96,7 +96,7 @@ class WeChatSendParameter(BaseWeChat):
         sender: WeChatSender,
         send_type: Literal[WeChatSendEnum.SEND_FILE, WeChatSendEnum.SEND_IMAGE, WeChatSendEnum.SEND_EMOTION],
         receive_id: str,
-        send_id: int | None = None,
+        send_id: int,
         *,
         file_path: str,
         file_name: str
@@ -108,7 +108,7 @@ class WeChatSendParameter(BaseWeChat):
         sender: WeChatSender,
         send_type: Literal[WeChatSendEnum.SEND_PAT],
         receive_id: str,
-        send_id: int | None = None,
+        send_id: int,
         *,
         user_id: str
     ) -> None: ...
@@ -119,7 +119,7 @@ class WeChatSendParameter(BaseWeChat):
         sender: WeChatSender,
         send_type: Literal[WeChatSendEnum.SEND_PUBLIC],
         receive_id: str,
-        send_id: int | None = None,
+        send_id: int,
         *,
         page_url: str,
         title: str,
@@ -135,7 +135,7 @@ class WeChatSendParameter(BaseWeChat):
         sender: WeChatSender,
         send_type: Literal[WeChatSendEnum.SEND_FORWARD],
         receive_id: str,
-        send_id: int | None = None,
+        send_id: int,
         *,
         message_id: str
     ) -> None: ...
@@ -145,7 +145,7 @@ class WeChatSendParameter(BaseWeChat):
         sender: WeChatSender,
         send_type: WeChatSendEnum,
         receive_id: str,
-        send_id: int | None = None,
+        send_id: int,
         **params: Any
     ) -> None:
         """
@@ -175,6 +175,7 @@ class WeChatSendParameter(BaseWeChat):
         self.send_id = send_id
         self.params = params
         self.exc_reports: list[str] = []
+        self.sent: bool = False
 
 
 class WeChatSender(BaseWeChat):
@@ -200,7 +201,6 @@ class WeChatSender(BaseWeChat):
 
         # Set attribute.
         self.wechat = wechat
-        self.send = self.__call__ = self.wechat.database.send
         self.queue: Queue[WeChatSendParameter] = Queue()
         self.handlers: list[Callable[[WeChatSendParameter], Any]] = []
         self.started: bool | None = False
@@ -215,6 +215,21 @@ class WeChatSender(BaseWeChat):
         Start sender, that will sequentially send message in the send queue.
         """
 
+
+        # Define.
+        def handle_handler_exception(exc_report, *_) -> None:
+            """
+            Handle Handler exception.
+
+            Parameters
+            ----------
+            exc_report : Exception report text.
+            """
+
+            # Save.
+            sendparam.exc_reports.append(exc_report)
+
+
         # Loop.
         while True:
             match self.started:
@@ -228,8 +243,14 @@ class WeChatSender(BaseWeChat):
                 case None:
                     break
 
-            ## Send.
             sendparam = self.queue.get()
+
+            ## Handler.
+            for handler in self.handlers:
+                handler = wrap_exc(handler, handler=handle_handler_exception)
+                handler(sendparam)
+
+            ## Send.
             try:
                 self.__send(sendparam)
 
@@ -242,23 +263,9 @@ class WeChatSender(BaseWeChat):
                 # Save.
                 sendparam.exc_reports.append(exc_report)
 
+            sendparam.sent = True
 
-            ## Handle.
-
-            ### Define.
-            def handle_handler_exception() -> None:
-                """
-                Handle Handler exception.
-                """
-
-                # Catch exception.
-                exc_report, *_ = catch_exc()
-
-                # Save.
-                sendparam.exc_reports.append(exc_report)
-
-
-            ### Loop.
+            ## Handler.
             for handler in self.handlers:
                 handler = wrap_exc(handler, handler=handle_handler_exception)
                 handler(sendparam)
@@ -362,6 +369,7 @@ class WeChatSender(BaseWeChat):
             file_path is not None
             and file_name is not None
         ):
+            sleep(1)
             file = File(file_path_rename)
             file.rename(file_old_name)
 

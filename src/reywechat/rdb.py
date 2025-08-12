@@ -77,11 +77,11 @@ class WeChatDatabase(BaseWeChat):
         self.build()
 
         # Add handler.
-        self.__add_handler_to_contact_user()
-        self.__add_handler_to_contact_room()
-        self.__add_handler_to_contact_room_user()
-        self.__add_handler_to_message_receive()
-        self.__add_handler_update_send_status()
+        self.__add_receiver_handler_to_contact_user()
+        self.__add_receiver_handler_to_contact_room()
+        self.__add_receiver_handler_to_contact_room_user()
+        self.__add_receiver_handler_to_message_receive()
+        self.__add_sender_handler_update_send_status()
 
         # Loop.
         self.__start_from_message_send()
@@ -714,14 +714,14 @@ class WeChatDatabase(BaseWeChat):
         conn.close()
 
 
-    def __add_handler_to_contact_user(self) -> None:
+    def __add_receiver_handler_to_contact_user(self) -> None:
         """
-        Add handler, write record to table `contact_user`.
+        Add receiver handler, write record to table `contact_user`.
         """
 
 
         # Define.
-        def handler_to_contact_user(message: WeChatMessage) -> None:
+        def receiver_handler_to_contact_user(message: WeChatMessage) -> None:
             """
             Write record to table `contact_user`.
 
@@ -750,17 +750,17 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Add handler.
-        self.wechat.receiver.add_handler(handler_to_contact_user)
+        self.wechat.receiver.add_handler(receiver_handler_to_contact_user)
 
 
-    def __add_handler_to_contact_room(self) -> None:
+    def __add_receiver_handler_to_contact_room(self) -> None:
         """
-        Add handler, write record to table `contact_room`.
+        Add receiver handler, write record to table `contact_room`.
         """
 
 
         # Define.
-        def handler_to_contact_room(message: WeChatMessage) -> None:
+        def receiver_handler_to_contact_room(message: WeChatMessage) -> None:
             """
             Write record to table `contact_room`.
 
@@ -834,17 +834,17 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Add handler.
-        self.wechat.receiver.add_handler(handler_to_contact_room)
+        self.wechat.receiver.add_handler(receiver_handler_to_contact_room)
 
 
-    def __add_handler_to_contact_room_user(self) -> None:
+    def __add_receiver_handler_to_contact_room_user(self) -> None:
         """
-        Add handler, write record to table `contact_room_user`.
+        Add receiver handler, write record to table `contact_room_user`.
         """
 
 
         # Define.
-        def handler_to_contact_room_user(message: WeChatMessage) -> None:
+        def receiver_handler_to_contact_room_user(message: WeChatMessage) -> None:
             """
             Write record to table `contact_room_user`.
 
@@ -864,17 +864,17 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Add handler.
-        self.wechat.receiver.add_handler(handler_to_contact_room_user)
+        self.wechat.receiver.add_handler(receiver_handler_to_contact_room_user)
 
 
-    def __add_handler_to_message_receive(self) -> None:
+    def __add_receiver_handler_to_message_receive(self) -> None:
         """
-        Add handler, write record to table `message_receive`.
+        Add receiver handler, write record to table `message_receive`.
         """
 
 
         # Define.
-        def handler_to_message_receive(message: WeChatMessage) -> None:
+        def receiver_handler_to_message_receive(message: WeChatMessage) -> None:
             """
             Write record to table `message_receive`.
 
@@ -915,17 +915,17 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Add handler.
-        self.wechat.receiver.add_handler(handler_to_message_receive)
+        self.wechat.receiver.add_handler(receiver_handler_to_message_receive)
 
 
-    def __add_handler_update_send_status(self) -> None:
+    def __add_sender_handler_update_send_status(self) -> None:
         """
-        In the thread, loop read record from table `message_send`, put send queue.
+        Add sender handler, update field `status` of table `message_send`.
         """
 
 
         # Define.
-        def handler_update_send_status(sendparam: WeChatSendParameter) -> None:
+        def sender_handler_update_send_status(sendparam: WeChatSendParameter) -> None:
             """
             Update field `status` of table `message_send`.
 
@@ -953,7 +953,7 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Add handler.
-        self.wechat.sender.add_handler(handler_update_send_status)
+        self.wechat.sender.add_handler(sender_handler_update_send_status)
 
 
     def __download_file(
@@ -1068,7 +1068,7 @@ class WeChatDatabase(BaseWeChat):
                     send_id,
                     **parameter
                 )
-                self.wechat.sender.__send(sendparam)
+                self.wechat.sender.queue.put(sendparam)
 
             # Commit.
             conn.commit()
