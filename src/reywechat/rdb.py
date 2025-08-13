@@ -13,7 +13,7 @@ from typing import Any, Literal, overload
 from json import loads as json_loads
 from reydb.rdb import Database
 from reykit.rbase import throw
-from reykit.ros import Folder
+from reykit.ros import File, Folder
 from reykit.rtime import to_time, time_to, sleep
 from reykit.rwrap import wrap_thread
 
@@ -978,16 +978,14 @@ class WeChatDatabase(BaseWeChat):
         file_md5 = file_info['md5']
 
         # Check.
-        rfolder = Folder(self.wechat.dir_cache)
+        # 查询有缓存吗，有缓存就跳过，这里要改一下查询结构，没有就下载到新结构中
+        folder = self.wechat.cache.folder
         pattern = f'^{file_md5}$'
-        cache_path = rfolder.search(pattern)
+        cache_path = folder.search(pattern)
 
         # Download.
         if cache_path is None:
-            cache_path = '%s/%s' % (
-                self.wechat.dir_cache,
-                file_md5
-            )
+            cache_path = self.wechat.cache.folder + file_md5
             self.rdatabase_file.file.download(
                 file_id,
                 cache_path
@@ -1239,6 +1237,8 @@ class WeChatDatabase(BaseWeChat):
         # Upload file.
         if 'file_path' in params:
             file_path: str = params.pop('file_path')
+            file = File(file_path)
+            # 查询是否有缓存, 若没有则复制过去, 再上传
             if 'file_name' in params:
                 file_name: str = params.pop('file_name')
             else:

@@ -12,7 +12,6 @@
 from __future__ import annotations
 from typing import Any, TypedDict, Literal, overload
 from collections.abc import Callable
-from os.path import join as os_join
 from queue import Queue
 from json import loads as json_loads
 from bs4 import BeautifulSoup as BSBeautifulSoup
@@ -1116,25 +1115,28 @@ class WechatReceiver(BaseWeChat):
         """
 
         # Download.
-        folder = Folder(self.wechat.dir_cache)
         generate_path = None
         match message.type:
 
             ## Image.
             case 3:
                 ### Get attribute.
-                file_name = f'{message.id}.jpg'
                 pattern = r'length="(\d+)".*?md5="([\da-f]{32})"'
                 result: tuple[str, str] = search(pattern, message.data)
                 file_size, file_md5 = result
                 file_size = int(file_size)
+                # file_name = f'{file_md5}.jpg'
 
                 ### Exist.
-                pattern = f'^{file_md5}$'
-                cache_path = folder.search(pattern)
+                if file_md5 in self.wechat.cache.folder:
+
+                    pattern = f'^{file_md5}$'
+                    cache_path = self.wechat.cache.folder.search(pattern)
 
                 ### Generate.
-                if cache_path is None:
+                # if file_md5 in self.wechat.cache.folder:
+
+                if file_md5 not in self.wechat.cache.folder:
                     self.wechat.client.download_file(message.id)
                     generate_path = '%swxhelper/image/%s.dat' % (
                         self.wechat.client.login_info['account_data_path'],
@@ -1153,12 +1155,9 @@ class WechatReceiver(BaseWeChat):
                 ### Generate.
                 self.wechat.client.download_voice(
                     message.id,
-                    self.wechat.dir_cache
+                    self.wechat.cache.folder.path
                 )
-                generate_path = '%s/%s.amr' % (
-                    self.wechat.dir_cache,
-                    message.id
-                )
+                generate_path = self.wechat.cache.folder.join(file_name)
 
             ## Video.
             case 43:
@@ -1172,7 +1171,7 @@ class WechatReceiver(BaseWeChat):
 
                 ### Exist.
                 pattern = f'^{file_md5}$'
-                cache_path = folder.search(pattern)
+                cache_path = self.wechat.cache.folder.search(pattern)
 
                 ### Generate.
                 if cache_path is None:
@@ -1201,7 +1200,7 @@ class WechatReceiver(BaseWeChat):
 
                 ### Exist.
                 pattern = f'^{file_md5}$'
-                cache_path = folder.search(pattern)
+                cache_path = self.wechat.cache.folder.search(pattern)
 
                 ### Generate.
                 if cache_path is None:
@@ -1228,23 +1227,23 @@ class WechatReceiver(BaseWeChat):
             sleep(0.2)
 
             ## Move.
-            rfile = File(generate_path)
+            file = File(generate_path)
             if file_md5 is None:
-                file_md5 = rfile.md5
+                file_md5 = file.md5
                 pattern = f'^{file_md5}$'
-                cache_path = folder.search(pattern)
+                cache_path = self.wechat.cache.folder.search(pattern)
             if cache_path is None:
-                cache_path = os_join(self.wechat.dir_cache, file_md5)
-                rfile.move(cache_path)
+                cache_path = self.wechat.cache.folder.join(file_md5)
+                file.move(cache_path)
 
         # Set parameter.
-        file: MessageParameterFile = {
+        message_file: MessageParameterFile = {
             'path': cache_path,
             'name': file_name,
             'md5': file_md5,
             'size': file_size
         }
-        message.file = file
+        message.file = message_file
 
 
     def start(self) -> None:

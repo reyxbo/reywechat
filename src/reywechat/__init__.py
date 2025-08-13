@@ -15,6 +15,7 @@ Modules
 -------
 rall : All methods.
 rbase : Base methods.
+rcache : Cache methods.
 rclient : Client methods.
 rdb : WeChatDatabase methods.
 rlog : Log methods.

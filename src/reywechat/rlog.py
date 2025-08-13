@@ -11,6 +11,7 @@
 
 from os.path import join as os_join
 from reykit.rlog import Log
+from reykit.ros import Folder
 
 from .rbase import BaseWeChat
 from .rreceive import WeChatMessage
@@ -44,6 +45,9 @@ class WeChatLog(BaseWeChat):
         # Set attribute.
         self.wechat = wechat
 
+        # Make directory.
+        self.folder = self.__make_dir()
+
         # Logger.
         self.rrlog = Log('WeChat')
         self.rrlog_print = Log('WeChat.WeChatPrint')
@@ -51,6 +55,29 @@ class WeChatLog(BaseWeChat):
 
         # Add handler.
         self.__add_handler()
+
+
+    def __make_dir(self) -> Folder:
+        """
+        Make directory 'project_dir/log'.
+
+        Parameters
+        ----------
+        project_dir: Project directory.
+
+        Returns
+        -------
+        Folder instance.
+        """
+
+        # Set parameter.
+        dir_path = os_join(self.wechat.project_dir, 'log')
+
+        # Make.
+        folder = Folder(dir_path)
+        folder.make()
+
+        return folder
 
 
     def __add_handler(self) -> None:
@@ -74,7 +101,7 @@ class WeChatLog(BaseWeChat):
         self.rrlog_print.add_print(format_=format_)
 
         ## Add handler file.
-        file_path = os_join(self.wechat.dir_log, 'WeChat')
+        file_path = self.wechat.log.folder.join('wechat')
         self.rrlog_file.add_file(
             file_path,
             time='m',

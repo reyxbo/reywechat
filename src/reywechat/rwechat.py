@@ -14,7 +14,7 @@ from os import getcwd as os_getcwd
 from os.path import join as os_join
 from reydb.rdb import Database
 from reykit.rbase import block
-from reykit.ros import make_dir as reykit_make_dir
+from reykit.ros import make_dir as reykit_make_dir, Folder
 
 from .rbase import BaseWeChat
 
@@ -63,6 +63,7 @@ class WeChat(BaseWeChat):
         """
 
         # Import.
+        from .rcache import WeChatCache
         from .rclient import WeChatClient
         from .rdb import WeChatDatabase
         from .rlog import WeChatLog
@@ -70,14 +71,12 @@ class WeChat(BaseWeChat):
         from .rschedule import WeChatSchedule
         from .rsend import WeChatSender
 
-        # Make directory.
-        project_dir = project_dir or os_getcwd()
-        self.dir_cache, self.dir_log = self.__make_subdir(project_dir)
-
         # Set attribute.
+        self.project_dir = project_dir or os_getcwd()
 
         ## Instance.
         self.client = WeChatClient(self)
+        self.cache = WeChatCache(self)
         self.log = WeChatLog(self)
         self.receiver = WechatReceiver(self, max_receiver)
         self.trigger = self.receiver.trigger
@@ -120,7 +119,7 @@ class WeChat(BaseWeChat):
     def __make_subdir(
         self,
         project_dir: str
-    ) -> tuple[str, str]:
+    ) -> tuple[Folder, Folder]:
         """
         Make project subdirectory, 'project_dir/cache' and 'project_dir/cache'.
 
@@ -139,13 +138,13 @@ class WeChat(BaseWeChat):
             'log'
         )
         dir_dict = {
-            dir_name: os_join(project_dir, dir_name)
+            dir_name: Folder(os_join(project_dir, dir_name))
             for dir_name in dir_names
         }
 
         # Create.
-        paths = dir_dict.values()
-        reykit_make_dir(*paths)
+        for folder in dir_dict.values():
+            folder.create()
 
         return dir_dict['cache'], dir_dict['log']
 
