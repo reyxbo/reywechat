@@ -16,10 +16,10 @@ from queue import Queue
 from json import loads as json_loads
 from bs4 import BeautifulSoup as BSBeautifulSoup
 from bs4.element import Tag as BSTag
-from reykit.rbase import throw, catch_exc
+from reykit.rbase import throw
 from reykit.rimage import decode_qrcode
 from reykit.rnet import listen_socket
-from reykit.ros import File, Folder, os_exists
+from reykit.ros import File, os_exists
 from reykit.rre import search, findall
 from reykit.rtask import ThreadPool
 from reykit.rtime import sleep, wait
@@ -415,6 +415,8 @@ class WeChatMessage(BaseWeChat):
             text = self.quote_params['text']
         pattern = r'@\w+\u2005'
         self._at_names = findall(pattern, text)
+
+        return self._at_names
 
 
     @property
@@ -1121,7 +1123,8 @@ class WechatReceiver(BaseWeChat):
             case 3:
                 pattern = r' md5="([\da-f]{32})"'
                 file_md5: str = search(pattern, message.data)
-                cache_path = self.wechat.cache.index(file_md5, copy=True)
+                file_name = f'{file_md5}.jpg'
+                cache_path = self.wechat.cache.index(file_md5, file_name, copy=True)
 
                 ### Download.
                 if cache_path is None:
@@ -1133,6 +1136,8 @@ class WechatReceiver(BaseWeChat):
 
             ## Voice.
             case 34:
+                file_name = None
+                file_name_suffix = 'amr'
                 cache_path = None
 
                 ### Download.
@@ -1146,7 +1151,8 @@ class WechatReceiver(BaseWeChat):
             case 43:
                 pattern = r' md5="([\da-f]{32})"'
                 file_md5: str = search(pattern, message.data)
-                cache_path = self.wechat.cache.index(file_md5, copy=True)
+                file_name = f'{file_md5}.mp4'
+                cache_path = self.wechat.cache.index(file_md5, file_name, copy=True)
 
                 ### Download.
                 if cache_path is None:
@@ -1197,15 +1203,18 @@ class WechatReceiver(BaseWeChat):
             sleep(0.2)
 
             ## Cache.
+            download_file = File(download_path)
+            if file_name is None:
+                file_name = f'{download_file.md5}.{file_name_suffix}'
             cache_path = self.wechat.cache.store(download_path, file_name, delete=True)
 
         # Set parameter.
-        file = File(cache_path)
+        cache_file = File(cache_path)
         message_file: MessageParameterFile = {
             'path': cache_path,
-            'name': file.name,
-            'md5': file.md5,
-            'size': file.size
+            'name': cache_file.name_suffix,
+            'md5': cache_file.md5,
+            'size': cache_file.size
         }
         message.file = message_file
 

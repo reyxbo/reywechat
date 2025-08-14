@@ -9,7 +9,7 @@
 """
 
 
-from reykit.ros import FileCache
+from reykit.ros import FileCache, join_path
 
 from .rbase import BaseWeChat
 from .rwechat import WeChat
@@ -40,7 +40,8 @@ class WeChatCache(BaseWeChat, FileCache):
 
         # Set attribute.
         self.wechat = wechat
-        self.cache = FileCache(self.wechat.project_dir)
+        path = join_path(self.wechat.project_dir, 'cache')
+        self.cache = FileCache(path)
         self.folder = self.cache.folder
         self.index = self.cache.index
         self.store = self.cache.store

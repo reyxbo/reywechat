@@ -13,7 +13,6 @@ from typing import Literal
 from os import getcwd as os_getcwd
 from reydb.rdb import Database
 from reykit.rbase import block
-from reykit.ros import Folder, join_path
 
 from .rbase import BaseWeChat
 
@@ -107,7 +106,7 @@ class WeChat(BaseWeChat):
         self.wrap_try_send = self.sender.wrap_try_send
 
         ## Database.
-        self.send = self.database.send
+        self.send = self.sender.send = self.database.send
 
         ## Schedule.
         self.schedule_add_task = self.schedule.add_task

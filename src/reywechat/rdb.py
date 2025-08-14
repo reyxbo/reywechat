@@ -13,7 +13,7 @@ from typing import Any, Literal, overload
 from json import loads as json_loads
 from reydb.rdb import Database
 from reykit.rbase import throw
-from reykit.ros import File, Folder
+from reykit.ros import File
 from reykit.rtime import to_time, time_to, sleep
 from reykit.rwrap import wrap_thread
 
@@ -56,7 +56,7 @@ class WeChatDatabase(BaseWeChat):
         self.wechat = wechat
         match rdatabase:
             case Database():
-                self.rdatabase_wechat: Database = self.rdatabase_file = rdatabase
+                self.rdatabase_wechat = self.rdatabase_file = rdatabase
             case dict():
                 self.rdatabase_wechat: Database = rdatabase.get('wechat')
                 self.rdatabase_file: Database = rdatabase.get('file')
@@ -1234,7 +1234,8 @@ class WeChatDatabase(BaseWeChat):
             if 'file_name' in params:
                 file_name: str = params.pop('file_name')
             else:
-                file_name = None
+                file = File(file_path)
+                file_name = file.name_suffix
 
             ## Cache.
             cache_path = self.wechat.cache.store(file_path, file_name)

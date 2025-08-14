@@ -100,7 +100,7 @@ class WeChatLog(BaseWeChat):
         self.rrlog_print.add_print(format_=format_)
 
         ## Add handler file.
-        file_path = self.wechat.log.folder + 'wechat'
+        file_path = self.folder + 'wechat'
         self.rrlog_file.add_file(
             file_path,
             time='m',
