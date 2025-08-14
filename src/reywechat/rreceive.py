@@ -133,6 +133,7 @@ class WeChatMessage(BaseWeChat):
         self._at_names: list[str] = None
         self._is_at: bool | None = None
         self._is_at_self: bool | None = None
+        self._is_call: bool | None = None
         self._is_new_user: bool | None = None
         self._is_new_room: bool | None = None
         self._is_new_room_user: bool | None = None
@@ -458,6 +459,53 @@ class WeChatMessage(BaseWeChat):
         self._is_at_self = pattern in self.at_names
 
         return self._is_at_self
+
+
+    @property
+    def is_call(self) -> bool:
+        """
+        Whether if is message of call self.
+
+        Returns
+        -------
+        Judge result.
+        """
+
+        # Cache.
+        if self._is_call is not None:
+            return self._is_call
+
+        # Judge.
+        is_call = False
+        if (
+
+            ## Private chat.
+            self.room is None
+
+            ## At self.
+            or self.is_at_self
+
+            ## Quote self.
+            or self.is_quote_self
+        ):
+            is_call = True
+
+        ## Call name.
+        if self.type == 1:
+            text = self.data
+        elif self.is_quote:
+            text = self.quote_params['text']
+        else:
+            self._is_call = False
+            return self._is_call
+        pattern = fr'^\s*{self.receiver.call_name}[\s,，]*(.*?)\s*$'
+        result: str | None = search(pattern, text)
+        if result is not None:
+            is_call = True
+
+        self._is_call = is_call
+
+        return self._is_call
 
 
     @property
@@ -907,7 +955,8 @@ class WechatReceiver(BaseWeChat):
     def __init__(
         self,
         wechat: WeChat,
-        max_receiver: int
+        max_receiver: int,
+        call_name: str | None
     ) -> None:
         """
         Build instance attributes.
@@ -916,6 +965,8 @@ class WechatReceiver(BaseWeChat):
         ----------
         wechat : `WeChatClient` instance.
         max_receiver : Maximum number of receivers.
+        call_name : Trigger call name.
+            - `None`: Use account nickname.
         """
 
         # Import.
@@ -924,6 +975,9 @@ class WechatReceiver(BaseWeChat):
         # Set attribute.
         self.wechat = wechat
         self.max_receiver = max_receiver
+        if call_name is None:
+            call_name = self.wechat.client.login_info['name']
+        self.call_name = call_name
         self.queue: Queue[WeChatMessage] = Queue()
         self.handlers: list[Callable[[WeChatMessage], Any]] = []
         self.started: bool | None = False

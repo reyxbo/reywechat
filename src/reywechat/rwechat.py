@@ -42,6 +42,7 @@ class WeChat(BaseWeChat):
         self,
         rrdatabase: Database | dict[Literal['wechat', 'file'], Database] | None,
         max_receiver: int = 2,
+        call_name: str | None = None,
         project_dir: str | None = None
     ) -> None:
         """
@@ -55,6 +56,8 @@ class WeChat(BaseWeChat):
                 `Key 'wechat'`: `WeChatDatabase` instance used in WeChat methods.
                 `Key 'file'`: `WeChatDatabase` instance used in file methods.
         max_receiver : Maximum number of receivers.
+        call_name : Trigger call name.
+            - `None`: Use account nickname.
         project_dir: Project directory, will create sub folders.
             - `None`: Use working directory.
             - `str`: Use this directory.
@@ -76,7 +79,7 @@ class WeChat(BaseWeChat):
         self.client = WeChatClient(self)
         self.cache = WeChatCache(self)
         self.log = WeChatLog(self)
-        self.receiver = WechatReceiver(self, max_receiver)
+        self.receiver = WechatReceiver(self, max_receiver, call_name)
         self.trigger = self.receiver.trigger
         self.sender = WeChatSender(self)
         self.database = WeChatDatabase(self, rrdatabase)
