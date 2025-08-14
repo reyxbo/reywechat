@@ -9,8 +9,7 @@
 """
 
 
-from os.path import join as os_join
-from reykit.ros import Folder
+from reykit.ros import FileCache
 
 from .rbase import BaseWeChat
 from .rwechat import WeChat
@@ -21,9 +20,9 @@ __all__ = (
 )
 
 
-class WeChatCache(BaseWeChat):
+class WeChatCache(BaseWeChat, FileCache):
     """
-    WeChat cache type.
+    WeChat file cache type.
     """
 
 
@@ -41,29 +40,7 @@ class WeChatCache(BaseWeChat):
 
         # Set attribute.
         self.wechat = wechat
-
-        # Make directory.
-        self.folder = self.__make_dir()
-
-
-    def __make_dir(self) -> Folder:
-        """
-        Make directory 'project_dir/cache'.
-
-        Parameters
-        ----------
-        project_dir: Project directory.
-
-        Returns
-        -------
-        Folder instance.
-        """
-
-        # Set parameter.
-        dir_path = os_join(self.wechat.project_dir, 'cache')
-
-        # Make.
-        folder = Folder(dir_path)
-        folder.make()
-
-        return folder
+        self.cache = FileCache(self.wechat.project_dir)
+        self.folder = self.cache.folder
+        self.index = self.cache.index
+        self.store = self.cache.store

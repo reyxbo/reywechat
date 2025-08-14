@@ -56,10 +56,10 @@ class WeChatDatabase(BaseWeChat):
         self.wechat = wechat
         match rdatabase:
             case Database():
-                self.rdatabase_wechat = self.rdatabase_file = rdatabase
+                self.rdatabase_wechat: Database = self.rdatabase_file = rdatabase
             case dict():
-                self.rdatabase_wechat = rdatabase.get('wechat')
-                self.rdatabase_file = rdatabase.get('file')
+                self.rdatabase_wechat: Database = rdatabase.get('wechat')
+                self.rdatabase_file: Database = rdatabase.get('file')
                 if (
                     self.rdatabase_wechat
                     or self.rdatabase_file
@@ -972,24 +972,18 @@ class WeChatDatabase(BaseWeChat):
         File save path and file name.
         """
 
-        # Select.
+        # Information.
         file_info = self.rdatabase_file.file.query(file_id)
-        file_name = file_info['name']
         file_md5 = file_info['md5']
+        file_name = file_info['name']
 
-        # Check.
-        # 查询有缓存吗，有缓存就跳过，这里要改一下查询结构，没有就下载到新结构中
-        folder = self.wechat.cache.folder
-        pattern = f'^{file_md5}$'
-        cache_path = folder.search(pattern)
+        # Cache.
+        cache_path = self.wechat.cache.index(file_md5, file_name, True)
 
-        # Download.
+        ## Download.
         if cache_path is None:
-            cache_path = self.wechat.cache.folder + file_md5
-            self.rdatabase_file.file.download(
-                file_id,
-                cache_path
-            )
+            file_bytes = self.rdatabase_file.file.download(file_id)
+            cache_path = self.wechat.cache.store(file_bytes, file_name)
 
         return cache_path, file_name
 
@@ -1053,7 +1047,7 @@ class WeChatDatabase(BaseWeChat):
                 send_type = WeChatSendEnum(type_)
                 parameter: dict = json_loads(parameter)
 
-                ## Save file.
+                ## File.
                 if file_id is not None:
                     file_path, file_name = self.__download_file(file_id)
                     parameter['file_path'] = file_path
@@ -1237,14 +1231,16 @@ class WeChatDatabase(BaseWeChat):
         # Upload file.
         if 'file_path' in params:
             file_path: str = params.pop('file_path')
-            file = File(file_path)
-            # 查询是否有缓存, 若没有则复制过去, 再上传
             if 'file_name' in params:
                 file_name: str = params.pop('file_name')
             else:
                 file_name = None
+
+            ## Cache.
+            cache_path = self.wechat.cache.store(file_path, file_name)
+
             file_id = self.rdatabase_file.file.upload(
-                file_path,
+                cache_path,
                 file_name,
                 'WeChat'
             )

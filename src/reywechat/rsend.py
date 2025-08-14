@@ -286,15 +286,6 @@ class WeChatSender(BaseWeChat):
         sendparam : `WeChatSendParameter` instance.
         """
 
-        # File rename to new.
-        if (
-            (file_path := sendparam.params.get('file_path')) is not None
-            and (file_name := sendparam.params.get('file_name')) is not None
-        ):
-            file = File(file_path)
-            file_old_name = file.name
-            file_path_rename = file.rename(file_name)
-
         # Send.
         match sendparam.send_type:
 
@@ -317,21 +308,21 @@ class WeChatSender(BaseWeChat):
             case WeChatSendEnum.SEND_FILE:
                 self.wechat.client.send_file(
                     sendparam.receive_id,
-                    file_path_rename
+                    sendparam.params['file_path']
                 )
 
             ## Image.
             case WeChatSendEnum.SEND_IMAGE:
                 self.wechat.client.send_image(
                     sendparam.receive_id,
-                    file_path_rename
+                    sendparam.params['file_path']
                 )
 
             ## Emotion.
             case WeChatSendEnum.SEND_EMOTION:
                 self.wechat.client.send_emotion(
                     sendparam.receive_id,
-                    file_path_rename
+                    sendparam.params['file_path']
                 )
 
             ## Pat.
@@ -363,15 +354,6 @@ class WeChatSender(BaseWeChat):
             ## Throw exception.
             case send_type:
                 throw(ValueError, send_type)
-
-        # File rename to old.
-        if (
-            file_path is not None
-            and file_name is not None
-        ):
-            sleep(1)
-            file = File(file_path_rename)
-            file.rename(file_old_name)
 
 
     def add_handler(

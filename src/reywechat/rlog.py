@@ -9,9 +9,8 @@
 """
 
 
-from os.path import join as os_join
 from reykit.rlog import Log
-from reykit.ros import Folder
+from reykit.ros import Folder, join_path
 
 from .rbase import BaseWeChat
 from .rreceive import WeChatMessage
@@ -71,7 +70,7 @@ class WeChatLog(BaseWeChat):
         """
 
         # Set parameter.
-        dir_path = os_join(self.wechat.project_dir, 'log')
+        dir_path = join_path(self.wechat.project_dir, 'log')
 
         # Make.
         folder = Folder(dir_path)
@@ -101,7 +100,7 @@ class WeChatLog(BaseWeChat):
         self.rrlog_print.add_print(format_=format_)
 
         ## Add handler file.
-        file_path = self.wechat.log.folder.join('wechat')
+        file_path = self.wechat.log.folder + 'wechat'
         self.rrlog_file.add_file(
             file_path,
             time='m',

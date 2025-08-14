@@ -11,10 +11,9 @@
 
 from typing import Literal
 from os import getcwd as os_getcwd
-from os.path import join as os_join
 from reydb.rdb import Database
 from reykit.rbase import block
-from reykit.ros import make_dir as reykit_make_dir, Folder
+from reykit.ros import Folder, join_path
 
 from .rbase import BaseWeChat
 
@@ -114,39 +113,6 @@ class WeChat(BaseWeChat):
         self.schedule_add_task = self.schedule.add_task
         self.schedule_pause = self.schedule.pause
         self.schedule_resume = self.schedule.resume
-
-
-    def __make_subdir(
-        self,
-        project_dir: str
-    ) -> tuple[Folder, Folder]:
-        """
-        Make project subdirectory, 'project_dir/cache' and 'project_dir/cache'.
-
-        Parameters
-        ----------
-        project_dir: Project directory.
-
-        Returns
-        -------
-        Subdirectorys path.
-        """
-
-        # Set parameter.
-        dir_names = (
-            'cache',
-            'log'
-        )
-        dir_dict = {
-            dir_name: Folder(os_join(project_dir, dir_name))
-            for dir_name in dir_names
-        }
-
-        # Create.
-        for folder in dir_dict.values():
-            folder.create()
-
-        return dir_dict['cache'], dir_dict['log']
 
 
     def start(self) -> None:

@@ -1115,68 +1115,43 @@ class WechatReceiver(BaseWeChat):
         """
 
         # Download.
-        generate_path = None
         match message.type:
 
             ## Image.
             case 3:
-                ### Get attribute.
-                pattern = r'length="(\d+)".*?md5="([\da-f]{32})"'
-                result: tuple[str, str] = search(pattern, message.data)
-                file_size, file_md5 = result
-                file_size = int(file_size)
-                # file_name = f'{file_md5}.jpg'
+                pattern = r' md5="([\da-f]{32})"'
+                file_md5: str = search(pattern, message.data)
+                cache_path = self.wechat.cache.index(file_md5, copy=True)
 
-                ### Exist.
-                if file_md5 in self.wechat.cache.folder:
-
-                    pattern = f'^{file_md5}$'
-                    cache_path = self.wechat.cache.folder.search(pattern)
-
-                ### Generate.
-                # if file_md5 in self.wechat.cache.folder:
-
-                if file_md5 not in self.wechat.cache.folder:
+                ### Download.
+                if cache_path is None:
                     self.wechat.client.download_file(message.id)
-                    generate_path = '%swxhelper/image/%s.dat' % (
+                    download_path = '%swxhelper/image/%s.dat' % (
                         self.wechat.client.login_info['account_data_path'],
                         message.id
                     )
 
             ## Voice.
             case 34:
+                cache_path = None
 
-                ### Get attribute.
-                file_name = f'{message.id}.amr'
-                pattern = r'length="(\d+)"'
-                file_size = int(search(pattern, message.data))
-                file_md5 = None
-
-                ### Generate.
+                ### Download.
                 self.wechat.client.download_voice(
                     message.id,
                     self.wechat.cache.folder.path
                 )
-                generate_path = self.wechat.cache.folder.join(file_name)
+                download_path = self.wechat.cache.folder + f'{message.id}.amr'
 
             ## Video.
             case 43:
+                pattern = r' md5="([\da-f]{32})"'
+                file_md5: str = search(pattern, message.data)
+                cache_path = self.wechat.cache.index(file_md5, copy=True)
 
-                ### Get attribute.
-                file_name = f'{message.id}.mp4'
-                pattern = r'length="(\d+)"'
-                file_size = int(search(pattern, message.data))
-                pattern = r'md5="([\da-f]{32})"'
-                file_md5 = search(pattern, message.data)
-
-                ### Exist.
-                pattern = f'^{file_md5}$'
-                cache_path = self.wechat.cache.folder.search(pattern)
-
-                ### Generate.
+                ### Download.
                 if cache_path is None:
                     self.wechat.client.download_file(message.id)
-                    generate_path = '%swxhelper/video/%s.mp4' % (
+                    download_path = '%swxhelper/video/%s.mp4' % (
                         self.wechat.client.login_info['account_data_path'],
                         message.id
                     )
@@ -1186,26 +1161,21 @@ class WechatReceiver(BaseWeChat):
 
                 ### Check.
                 pattern = r'^.+? : \[文件\](.+)$'
-                file_name = search(pattern, message.display)
-                if file_name is None:
-                    return
-                if '<type>6</type>' not in message.data:
+                file_name: str | None = search(pattern, message.display)
+                if (
+                    file_name is None
+                    or '<type>6</type>' not in message.data
+                ):
                     return
 
-                ### Get attribute.
-                pattern = r'<totallen>(\d+)</totallen>'
-                file_size = int(search(pattern, message.data))
                 pattern = r'<md5>([\da-f]{32})</md5>'
-                file_md5 = search(pattern, message.data)
+                file_md5: str = search(pattern, message.data)
+                cache_path = self.wechat.cache.index(file_md5, file_name, copy=True)
 
-                ### Exist.
-                pattern = f'^{file_md5}$'
-                cache_path = self.wechat.cache.folder.search(pattern)
-
-                ### Generate.
+                ### Download.
                 if cache_path is None:
                     self.wechat.client.download_file(message.id)
-                    generate_path = '%swxhelper/file/%s_%s' % (
+                    download_path = '%swxhelper/file/%s_%s' % (
                         self.wechat.client.login_info['account_data_path'],
                         message.id,
                         file_name
@@ -1215,33 +1185,27 @@ class WechatReceiver(BaseWeChat):
             case _:
                 return
 
-        if generate_path is not None:
+        if cache_path is None:
 
             ## Wait.
             wait(
                 os_exists,
-                generate_path,
+                download_path,
                 _interval = 0.05,
                 _timeout=3600
             )
             sleep(0.2)
 
-            ## Move.
-            file = File(generate_path)
-            if file_md5 is None:
-                file_md5 = file.md5
-                pattern = f'^{file_md5}$'
-                cache_path = self.wechat.cache.folder.search(pattern)
-            if cache_path is None:
-                cache_path = self.wechat.cache.folder.join(file_md5)
-                file.move(cache_path)
+            ## Cache.
+            cache_path = self.wechat.cache.store(download_path, file_name, delete=True)
 
         # Set parameter.
+        file = File(cache_path)
         message_file: MessageParameterFile = {
             'path': cache_path,
-            'name': file_name,
-            'md5': file_md5,
-            'size': file_size
+            'name': file.name,
+            'md5': file.md5,
+            'size': file.size
         }
         message.file = message_file
 
