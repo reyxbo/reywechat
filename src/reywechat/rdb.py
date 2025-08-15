@@ -68,6 +68,17 @@ class WeChatDatabase(BaseWeChat):
             case _:
                 throw(TypeError, rdatabase)
 
+        ## Database path name.
+        self.path_names = {
+            'wechat': 'wechat',
+            'wechat.contact_user': 'contact_user',
+            'wechat.contact_room': 'contact_room',
+            'wechat.contact_room_user': 'contact_room_user',
+            'wechat.message_receive': 'message_receive',
+            'wechat.message_send': 'message_send',
+            'wechat.stats': 'stats'
+        }
+
         # Check.
         if 'sqlite' in (self.rdatabase_wechat.backend, self.rdatabase_file.backend):
             text='not suitable for SQLite databases'
@@ -89,7 +100,7 @@ class WeChatDatabase(BaseWeChat):
 
     def build(self) -> None:
         """
-        Check and build all standard databases and tables.
+        Check and build all standard databases and tables, by `self.path_names`.
         """
 
         # Set parameter.
@@ -97,7 +108,7 @@ class WeChatDatabase(BaseWeChat):
         ## WeChatDatabase.
         databases = [
             {
-                'database': 'wechat'
+                'name': self.path_names['wechat']
             }
         ]
 
@@ -106,7 +117,7 @@ class WeChatDatabase(BaseWeChat):
 
             ### 'contact_user'.
             {
-                'path': ('wechat', 'contact_user'),
+                'path': (self.path_names['wechat'], self.path_names['wechat.contact_user']),
                 'fields': [
                     {
                         'name': 'create_time',
@@ -151,7 +162,7 @@ class WeChatDatabase(BaseWeChat):
 
             ### 'contact_room'.
             {
-                'path': ('wechat', 'contact_room'),
+                'path': (self.path_names['wechat'], self.path_names['wechat.contact_room']),
                 'fields': [
                     {
                         'name': 'create_time',
@@ -196,7 +207,7 @@ class WeChatDatabase(BaseWeChat):
 
             ### 'contact_room_user'.
             {
-                'path': ('wechat', 'contact_room_user'),
+                'path': (self.path_names['wechat'], self.path_names['wechat.contact_room_user']),
                 'fields': [
                     {
                         'name': 'create_time',
@@ -248,7 +259,7 @@ class WeChatDatabase(BaseWeChat):
 
             ### 'message_receive'.
             {
-                'path': ('wechat', 'message_receive'),
+                'path': (self.path_names['wechat'], self.path_names['wechat.message_receive']),
                 'fields': [
                     {
                         'name': 'create_time',
@@ -338,7 +349,7 @@ class WeChatDatabase(BaseWeChat):
 
             ### 'message_send'.
             {
-                'path': ('wechat', 'message_send'),
+                'path': (self.path_names['wechat'], self.path_names['wechat.message_send']),
                 'fields': [
                     {
                         'name': 'create_time',
@@ -436,7 +447,7 @@ class WeChatDatabase(BaseWeChat):
 
             ### 'stats'.
             {
-                'path': ('wechat', 'stats'),
+                'path': (self.path_names['wechat'], self.path_names['wechat.stats']),
                 'items': [
                     {
                         'name': 'count_receive',
@@ -541,7 +552,7 @@ class WeChatDatabase(BaseWeChat):
         ## Insert.
         if contact_table != []:
             conn.execute_insert(
-                ('wechat', 'contact_user'),
+                (self.path_names['wechat'], self.path_names['wechat.contact_user']),
                 user_data,
                 'update'
             )
@@ -597,7 +608,7 @@ class WeChatDatabase(BaseWeChat):
         ## Insert.
         if contact_table != []:
             conn.execute_insert(
-                ('wechat', 'contact_room'),
+                (self.path_names['wechat'], self.path_names['wechat.contact_room']),
                 room_data,
                 'update'
             )
@@ -675,7 +686,7 @@ class WeChatDatabase(BaseWeChat):
         ## Insert.
         if room_user_data != []:
             conn.execute_insert(
-                ('wechat', 'contact_room_user'),
+                (self.path_names['wechat'], self.path_names['wechat.contact_room_user']),
                 room_user_data,
                 'update'
             )
@@ -743,7 +754,7 @@ class WeChatDatabase(BaseWeChat):
 
                 ## Insert.
                 self.rdatabase_wechat.execute_insert(
-                    ('wechat', 'contact_user'),
+                    (self.path_names['wechat'], self.path_names['wechat.contact_user']),
                     data,
                     'update'
                 )
@@ -784,7 +795,7 @@ class WeChatDatabase(BaseWeChat):
 
                 ### 'contact_room'.
                 self.rdatabase_wechat.execute_insert(
-                    ('wechat', 'contact_room'),
+                    (self.path_names['wechat'], self.path_names['wechat.contact_room']),
                     data,
                     'update'
                 )
@@ -806,7 +817,7 @@ class WeChatDatabase(BaseWeChat):
 
                 ## Update.
                 self.rdatabase_wechat.execute_update(
-                    ('wechat', 'contact_room'),
+                    (self.path_names['wechat'], self.path_names['wechat.contact_room']),
                     data
                 )
 
@@ -828,7 +839,7 @@ class WeChatDatabase(BaseWeChat):
 
                 ## Update.
                 self.rdatabase_wechat.execute_update(
-                    ('wechat', 'contact_room'),
+                    (self.path_names['wechat'], self.path_names['wechat.contact_room']),
                     data
                 )
 
@@ -908,7 +919,7 @@ class WeChatDatabase(BaseWeChat):
 
             # Insert.
             self.rdatabase_wechat.execute_insert(
-                ('wechat', 'message_receive'),
+                (self.path_names['wechat'], self.path_names['wechat.message_receive']),
                 data,
                 'ignore'
             )
@@ -947,7 +958,7 @@ class WeChatDatabase(BaseWeChat):
 
             # Update.
             self.rdatabase_wechat.execute_update(
-                ('wechat', 'message_send'),
+                (self.path_names['wechat'], self.path_names['wechat.message_send']),
                 data
             )
 
@@ -1015,7 +1026,7 @@ class WeChatDatabase(BaseWeChat):
                 ')'
             )
             result = conn.execute_select(
-                ('wechat', 'message_send'),
+                (self.path_names['wechat'], self.path_names['wechat.message_send']),
                 ['send_id', 'type', 'receive_id', 'parameter', 'file_id'],
                 where,
                 order='`plan_time` DESC, `send_id`'
@@ -1099,7 +1110,7 @@ class WeChatDatabase(BaseWeChat):
         ## User.
         if message.room is None:
             result = message.receiver.wechat.database.rdatabase_wechat.execute_select(
-                ('wechat', 'contact_user'),
+                (self.path_names['wechat'], self.path_names['wechat.contact_user']),
                 ['valid'],
                 '`user_id` = :user_id',
                 limit=1,
@@ -1251,6 +1262,6 @@ class WeChatDatabase(BaseWeChat):
 
         # Insert.
         self.rdatabase_wechat.execute_insert(
-            ('wechat', 'message_send'),
+            (self.path_names['wechat'], self.path_names['wechat.message_send']),
             data
         )
