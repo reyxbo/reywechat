@@ -20,7 +20,7 @@ from reykit.rbase import throw
 from reykit.rimage import decode_qrcode
 from reykit.rnet import listen_socket
 from reykit.ros import File, os_exists
-from reykit.rre import search, findall
+from reykit.rre import search, search_batch, findall
 from reykit.rtask import ThreadPool
 from reykit.rtime import sleep, wait
 from reykit.rwrap import wrap_thread, wrap_exc
@@ -166,7 +166,7 @@ class WeChatMessage(BaseWeChat):
         Parameters dictionary.
         """
 
-        # Get parameter.
+        # Handle parameter.
         params: MessageParameter = {
             'time': self.time,
             'id': self.id,
@@ -900,6 +900,39 @@ class WeChatMessage(BaseWeChat):
             self.trigger_continue()
 
 
+    def check_search_text(self, *patterns: str, text: str | None = None) -> str | tuple[str | None, ...]:
+        """
+        Regular search text, return first successful match.
+        When no match, then throw exception `WeChatTriggerContinueExit`.
+
+        Parameters
+        ----------
+        pattern : Regular pattern, period match any character.
+        text : Match text.
+            - `None`: Use `self.data`.
+
+        Returns
+        -------
+        Matching result.
+            - When match to and not use `group`, then return `str`.
+            - When match to and use `group`, then return tuple with value `str` or `None`.
+                If tuple length is `1`, extract and return `str`.
+            - When no match, then return `None`.
+        """
+
+        # Handle parameter.
+        text = text or self.data
+
+        # Search.
+        result = search_batch(text, *patterns)
+
+        # Check.
+        if result is None:
+            self.trigger_continue
+
+        return result
+
+
     @overload
     def reply(
         self,
@@ -1030,8 +1063,7 @@ class WechatReceiver(BaseWeChat):
         # Set attribute.
         self.wechat = wechat
         self.max_receiver = max_receiver
-        if call_name is None:
-            call_name = self.wechat.client.login_info['name']
+        call_name = call_name or self.wechat.client.login_info['name']
         self.call_name = call_name
         self.queue: Queue[WeChatMessage] = Queue()
         self.handlers: list[Callable[[WeChatMessage], Any]] = []
@@ -1313,8 +1345,7 @@ class WechatReceiver(BaseWeChat):
 
             ## Cache.
             download_file = File(download_path)
-            if file_name is None:
-                file_name = f'{download_file.md5}.{file_name_suffix}'
+            file_name = file_name or f'{download_file.md5}.{file_name_suffix}'
             cache_path = self.wechat.cache.store(download_path, file_name, delete=True)
 
         # Set parameter.

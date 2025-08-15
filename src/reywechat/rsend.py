@@ -389,7 +389,7 @@ class WeChatSender(BaseWeChat):
         Added text.
         """
 
-        # Get parameter.
+        # Handle parameter.
         member_dict = self.wechat.client.get_room_member_dict(room_id)
         login_id = self.wechat.client.login_info['id']
         if login_id in member_dict:

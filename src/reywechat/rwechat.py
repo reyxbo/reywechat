@@ -149,7 +149,7 @@ class WeChat(BaseWeChat):
         Result.
         """
 
-        # Get parameter.
+        # Handle parameter.
         result = self.log.rrlog.print_colour
 
         return result

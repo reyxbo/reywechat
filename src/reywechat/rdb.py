@@ -934,7 +934,7 @@ class WeChatDatabase(BaseWeChat):
             sendparam : `WeChatSendParameter` instance.
             """
 
-            # Get parameter.
+            # Handle parameter.
             if sendparam.exc_reports == []:
                 status = 2
             else:
@@ -1001,7 +1001,7 @@ class WeChatDatabase(BaseWeChat):
             Read record from table `message_send`, put send queue.
             """
 
-            # Get parameter.
+            # Handle parameter.
             conn = self.rdatabase_wechat.connect()
 
             # Read.
@@ -1220,7 +1220,7 @@ class WeChatDatabase(BaseWeChat):
         params : Send parameters.
         """
 
-        # Get parameter.
+        # Handle parameter.
         data = {
             'status': 0,
             'type': send_type,

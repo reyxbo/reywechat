@@ -63,7 +63,7 @@ class WeChatSchedule(BaseWeChat):
         trigger_kwargs : Trigger keyword arguments.
         """
 
-        # Get parameter.
+        # Handle parameter.
         args = (self,)
 
         # Add.
