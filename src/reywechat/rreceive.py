@@ -889,7 +889,6 @@ class WeChatMessage(BaseWeChat):
         return self._valid
 
 
-    @property
     def check_call(self) -> None:
         """
         Check if is call self name, if not, throw exception `WeChatTriggerContinueExit`.
@@ -928,7 +927,7 @@ class WeChatMessage(BaseWeChat):
 
         # Check.
         if result is None:
-            self.trigger_continue
+            self.trigger_continue()
 
         return result
 
