@@ -37,7 +37,7 @@ class WeChatDatabase(BaseWeChat):
     def __init__(
         self,
         wechat: WeChat,
-        rdatabase: Database | dict[Literal['wechat', 'file'], Database]
+        database: Database | dict[Literal['wechat', 'file'], Database]
     ) -> None:
         """
         Build instance attributes.
@@ -45,28 +45,28 @@ class WeChatDatabase(BaseWeChat):
         Parameters
         ----------
         wechat : `WeChatClient` instance.
-        rdatabase : `WeChatDatabase` instance of `reykit` package.
-            - `WeChatDatabase`, Set all `WeChatDatabase`: instances.
-            - `dict`, Set each `WeChatDatabase`: instance, all item is required.
-                `Key 'wechat'`: `WeChatDatabase` instance used in WeChat methods.
-                `Key 'file'`: `WeChatDatabase` instance used in file methods.
+        database : `Database` instance of `reykit` package.
+            - `Database`, Set all `Database`: instances.
+            - `dict`, Set each `Database`: instance, all item is required.
+                `Key 'wechat'`: `Database` instance used in WeChat methods.
+                `Key 'file'`: `Database` instance used in file methods.
         """
 
         # Set attribute.
         self.wechat = wechat
-        match rdatabase:
+        match database:
             case Database():
-                self.rdatabase_wechat = self.rdatabase_file = rdatabase
+                self.database_wechat = self.database_file = database
             case dict():
-                self.rdatabase_wechat: Database = rdatabase.get('wechat')
-                self.rdatabase_file: Database = rdatabase.get('file')
+                self.database_wechat: Database = database.get('wechat')
+                self.database_file: Database = database.get('file')
                 if (
-                    self.rdatabase_wechat
-                    or self.rdatabase_file
+                    self.database_wechat
+                    or self.database_file
                 ):
-                    throw(ValueError, rdatabase)
+                    throw(ValueError, database)
             case _:
-                throw(TypeError, rdatabase)
+                throw(TypeError, database)
 
         ## Database path name.
         self.path_names = {
@@ -80,7 +80,7 @@ class WeChatDatabase(BaseWeChat):
         }
 
         # Check.
-        if 'sqlite' in (self.rdatabase_wechat.backend, self.rdatabase_file.backend):
+        if 'sqlite' in (self.database_wechat.backend, self.database_file.backend):
             text='not suitable for SQLite databases'
             throw(AssertionError, text=text)
 
@@ -514,10 +514,10 @@ class WeChatDatabase(BaseWeChat):
         # Build.
 
         ## WeChat.
-        self.rdatabase_wechat.build.build(databases, tables, views_stats=views_stats)
+        self.database_wechat.build.build(databases, tables, views_stats=views_stats)
 
         ## File.
-        self.rdatabase_file.file.build()
+        self.database_file.file.build()
 
         # Update.
         self.update_contact_user()
@@ -547,7 +547,7 @@ class WeChatDatabase(BaseWeChat):
         ]
 
         # Insert and update.
-        conn = self.rdatabase_wechat.connect()
+        conn = self.database_wechat.connect()
 
         ## Insert.
         if contact_table != []:
@@ -603,7 +603,7 @@ class WeChatDatabase(BaseWeChat):
         ]
 
         # Insert and update.
-        conn = self.rdatabase_wechat.connect()
+        conn = self.database_wechat.connect()
 
         ## Insert.
         if contact_table != []:
@@ -681,7 +681,7 @@ class WeChatDatabase(BaseWeChat):
         ]
 
         # Insert and update.
-        conn = self.rdatabase_wechat.connect()
+        conn = self.database_wechat.connect()
 
         ## Insert.
         if room_user_data != []:
@@ -753,7 +753,7 @@ class WeChatDatabase(BaseWeChat):
                 }
 
                 ## Insert.
-                self.rdatabase_wechat.execute_insert(
+                self.database_wechat.execute_insert(
                     (self.path_names['wechat'], self.path_names['wechat.contact_user']),
                     data,
                     'update'
@@ -794,7 +794,7 @@ class WeChatDatabase(BaseWeChat):
                 ## Insert.
 
                 ### 'contact_room'.
-                self.rdatabase_wechat.execute_insert(
+                self.database_wechat.execute_insert(
                     (self.path_names['wechat'], self.path_names['wechat.contact_room']),
                     data,
                     'update'
@@ -816,7 +816,7 @@ class WeChatDatabase(BaseWeChat):
                 }
 
                 ## Update.
-                self.rdatabase_wechat.execute_update(
+                self.database_wechat.execute_update(
                     (self.path_names['wechat'], self.path_names['wechat.contact_room']),
                     data
                 )
@@ -838,7 +838,7 @@ class WeChatDatabase(BaseWeChat):
                 }
 
                 ## Update.
-                self.rdatabase_wechat.execute_update(
+                self.database_wechat.execute_update(
                     (self.path_names['wechat'], self.path_names['wechat.contact_room']),
                     data
                 )
@@ -898,7 +898,7 @@ class WeChatDatabase(BaseWeChat):
             if message.file is None:
                 file_id = None
             else:
-                file_id = self.rdatabase_file.file.upload(
+                file_id = self.database_file.file.upload(
                     message.file['path'],
                     message.file['name'],
                     'WeChat'
@@ -918,7 +918,7 @@ class WeChatDatabase(BaseWeChat):
             }
 
             # Insert.
-            self.rdatabase_wechat.execute_insert(
+            self.database_wechat.execute_insert(
                 (self.path_names['wechat'], self.path_names['wechat.message_receive']),
                 data,
                 'ignore'
@@ -957,7 +957,7 @@ class WeChatDatabase(BaseWeChat):
             }
 
             # Update.
-            self.rdatabase_wechat.execute_update(
+            self.database_wechat.execute_update(
                 (self.path_names['wechat'], self.path_names['wechat.message_send']),
                 data
             )
@@ -984,7 +984,7 @@ class WeChatDatabase(BaseWeChat):
         """
 
         # Information.
-        file_info = self.rdatabase_file.file.query(file_id)
+        file_info = self.database_file.file.query(file_id)
         file_md5 = file_info['md5']
         file_name = file_info['name']
 
@@ -993,7 +993,7 @@ class WeChatDatabase(BaseWeChat):
 
         ## Download.
         if cache_path is None:
-            file_bytes = self.rdatabase_file.file.download(file_id)
+            file_bytes = self.database_file.file.download(file_id)
             cache_path = self.wechat.cache.store(file_bytes, file_name)
 
         return cache_path, file_name
@@ -1013,7 +1013,7 @@ class WeChatDatabase(BaseWeChat):
             """
 
             # Handle parameter.
-            conn = self.rdatabase_wechat.connect()
+            conn = self.database_wechat.connect()
 
             # Read.
             where = (
@@ -1109,7 +1109,7 @@ class WeChatDatabase(BaseWeChat):
 
         ## User.
         if message.room is None:
-            result = message.receiver.wechat.database.rdatabase_wechat.execute_select(
+            result = message.receiver.wechat.database.database_wechat.execute_select(
                 (self.path_names['wechat'], self.path_names['wechat.contact_user']),
                 ['valid'],
                 '`user_id` = :user_id',
@@ -1134,7 +1134,7 @@ class WeChatDatabase(BaseWeChat):
             ') AS `a`\n'
             'WHERE `valid` = 1'
             )
-            result = message.receiver.wechat.database.rdatabase_wechat.execute(
+            result = message.receiver.wechat.database.database_wechat.execute(
                 sql,
                 room_id=message.room,
                 user_id=message.user
@@ -1251,7 +1251,7 @@ class WeChatDatabase(BaseWeChat):
             ## Cache.
             cache_path = self.wechat.cache.store(file_path, file_name)
 
-            file_id = self.rdatabase_file.file.upload(
+            file_id = self.database_file.file.upload(
                 cache_path,
                 file_name,
                 'WeChat'
@@ -1261,7 +1261,7 @@ class WeChatDatabase(BaseWeChat):
         data['file_id'] = file_id
 
         # Insert.
-        self.rdatabase_wechat.execute_insert(
+        self.database_wechat.execute_insert(
             (self.path_names['wechat'], self.path_names['wechat.message_send']),
             data
         )
