@@ -395,7 +395,7 @@ class WeChatDatabase(BaseWeChat):
                         'comment': (
                             'Send type, '
                             '0 is text message, '
-                            "1 is text message with '@', "
+                            "1 is text message with \\'@\\', "
                             '2 is file message, '
                             '3 is image message, '
                             '4 is emoticon message, '
