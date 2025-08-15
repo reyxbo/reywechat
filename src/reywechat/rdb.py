@@ -61,8 +61,8 @@ class WeChatDatabase(BaseWeChat):
                 self.database_wechat: Database = database.get('wechat')
                 self.database_file: Database = database.get('file')
                 if (
-                    self.database_wechat
-                    or self.database_file
+                    self.database_wechat is None
+                    or self.database_file is None
                 ):
                     throw(ValueError, database)
             case _:
