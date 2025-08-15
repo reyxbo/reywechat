@@ -134,6 +134,7 @@ class WeChatMessage(BaseWeChat):
         self._is_at: bool | None = None
         self._is_at_self: bool | None = None
         self._is_call: bool | None = None
+        self._call_text: str | None = None
         self._is_new_user: bool | None = None
         self._is_new_room: bool | None = None
         self._is_new_room_user: bool | None = None
@@ -414,7 +415,7 @@ class WeChatMessage(BaseWeChat):
             text = self.data
         elif self.is_quote:
             text = self.quote_params['text']
-        pattern = r'@\w+\u2005'
+        pattern = r'@(\w+)\u2005'
         self._at_names = findall(pattern, text)
 
         return self._at_names
@@ -455,8 +456,7 @@ class WeChatMessage(BaseWeChat):
             return self._is_at_self
 
         # Judge.
-        pattern = '@%s\u2005' % self.receiver.wechat.client.login_info['name']
-        self._is_at_self = pattern in self.at_names
+        self._is_at_self = self.receiver.wechat.client.login_info['name'] in self.at_names
 
         return self._is_at_self
 
@@ -464,7 +464,7 @@ class WeChatMessage(BaseWeChat):
     @property
     def is_call(self) -> bool:
         """
-        Whether if is message of call self.
+        Whether if is message of call self name.
 
         Returns
         -------
@@ -475,37 +475,81 @@ class WeChatMessage(BaseWeChat):
         if self._is_call is not None:
             return self._is_call
 
-        # Judge.
-        is_call = False
-        if (
-
-            ## Private chat.
-            self.room is None
-
-            ## At self.
-            or self.is_at_self
-
-            ## Quote self.
-            or self.is_quote_self
-        ):
-            is_call = True
-
-        ## Call name.
+        # Text.
         if self.type == 1:
             text = self.data
         elif self.is_quote:
             text = self.quote_params['text']
         else:
             self._is_call = False
+            self._call_text = None
             return self._is_call
-        pattern = fr'^\s*{self.receiver.call_name}[\s,，]*(.*?)\s*$'
+        text = text.strip()
+
+        ## At self.
+        at_self_keyword = '@%s\u2005' % self.receiver.wechat.client.login_info['name']
+        if at_self_keyword in text:
+            is_at_self = True
+            text = text.replace(at_self_keyword, '')
+        else:
+            is_at_self = False
+
+        ## Call self.
+        pattern = fr'^{self.receiver.call_name}[\s,，]*(.*)$'
         result: str | None = search(pattern, text)
         if result is not None:
+            is_call_name = True
+            text = result
+        else:
+            is_call_name = False
+
+        # Judge.
+        if (
+
+            ## Private chat.
+            self.room is None
+
+            ## At self.
+            or is_at_self
+
+            ## Call self.
+            or is_call_name
+
+            ## Quote self.
+            or self.is_quote_self
+
+        ):
             is_call = True
+            call_text = text
+        else:
+            is_call = False
+            call_text = None
 
         self._is_call = is_call
+        self._call_text = call_text
 
         return self._is_call
+
+
+    @property
+    def call_text(self) -> str:
+        """
+        Message call text of call self name.
+
+        Returns
+        -------
+        Call text.
+        """
+
+        # Cache.
+        if self._call_text is not None:
+            return self._call_text
+
+        # Check.
+        if not self.is_call:
+            throw(AssertionError, self.is_call)
+
+        return self._call_text
 
 
     @property
@@ -843,6 +887,17 @@ class WeChatMessage(BaseWeChat):
         self._valid = self.receiver.wechat.database.is_valid(self)
 
         return self._valid
+
+
+    @property
+    def check_call(self) -> None:
+        """
+        Check if is call self name, if not, throw exception `WeChatTriggerContinueExit`.
+        """
+
+        # Check.
+        if not self.is_call:
+            self.trigger_continue()
 
 
     @overload
