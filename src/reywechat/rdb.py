@@ -31,6 +31,7 @@ __all__ = (
 class WeChatDatabase(BaseWeChat):
     """
     WeChat database type.
+    Can create database used `self.build` method.
     """
 
 
@@ -69,7 +70,7 @@ class WeChatDatabase(BaseWeChat):
                 throw(TypeError, database)
 
         ## Database path name.
-        self.path_names = {
+        self.db_names = {
             'wechat': 'wechat',
             'wechat.contact_user': 'contact_user',
             'wechat.contact_room': 'contact_room',
@@ -84,9 +85,6 @@ class WeChatDatabase(BaseWeChat):
             text='not suitable for SQLite databases'
             throw(AssertionError, text=text)
 
-        # Build.
-        self.build()
-
         # Add handler.
         self.__add_receiver_handler_to_contact_user()
         self.__add_receiver_handler_to_contact_room()
@@ -100,7 +98,7 @@ class WeChatDatabase(BaseWeChat):
 
     def build(self) -> None:
         """
-        Check and build all standard databases and tables, by `self.path_names`.
+        Check and build all standard databases and tables, by `self.db_names`.
         """
 
         # Set parameter.
@@ -108,7 +106,7 @@ class WeChatDatabase(BaseWeChat):
         ## WeChatDatabase.
         databases = [
             {
-                'name': self.path_names['wechat']
+                'name': self.db_names['wechat']
             }
         ]
 
@@ -117,7 +115,7 @@ class WeChatDatabase(BaseWeChat):
 
             ### 'contact_user'.
             {
-                'path': (self.path_names['wechat'], self.path_names['wechat.contact_user']),
+                'path': (self.db_names['wechat'], self.db_names['wechat.contact_user']),
                 'fields': [
                     {
                         'name': 'create_time',
@@ -162,7 +160,7 @@ class WeChatDatabase(BaseWeChat):
 
             ### 'contact_room'.
             {
-                'path': (self.path_names['wechat'], self.path_names['wechat.contact_room']),
+                'path': (self.db_names['wechat'], self.db_names['wechat.contact_room']),
                 'fields': [
                     {
                         'name': 'create_time',
@@ -207,7 +205,7 @@ class WeChatDatabase(BaseWeChat):
 
             ### 'contact_room_user'.
             {
-                'path': (self.path_names['wechat'], self.path_names['wechat.contact_room_user']),
+                'path': (self.db_names['wechat'], self.db_names['wechat.contact_room_user']),
                 'fields': [
                     {
                         'name': 'create_time',
@@ -259,7 +257,7 @@ class WeChatDatabase(BaseWeChat):
 
             ### 'message_receive'.
             {
-                'path': (self.path_names['wechat'], self.path_names['wechat.message_receive']),
+                'path': (self.db_names['wechat'], self.db_names['wechat.message_receive']),
                 'fields': [
                     {
                         'name': 'create_time',
@@ -349,7 +347,7 @@ class WeChatDatabase(BaseWeChat):
 
             ### 'message_send'.
             {
-                'path': (self.path_names['wechat'], self.path_names['wechat.message_send']),
+                'path': (self.db_names['wechat'], self.db_names['wechat.message_send']),
                 'fields': [
                     {
                         'name': 'create_time',
@@ -373,7 +371,7 @@ class WeChatDatabase(BaseWeChat):
                         'name': 'send_id',
                         'type': 'int unsigned',
                         'constraint': 'NOT NULL AUTO_INCREMENT',
-                        'comment': 'Send self increase ID.'
+                        'comment': 'Send ID.'
                     },
                     {
                         'name': 'status',
@@ -448,13 +446,13 @@ class WeChatDatabase(BaseWeChat):
 
             ### 'stats'.
             {
-                'path': (self.path_names['wechat'], self.path_names['wechat.stats']),
+                'path': (self.db_names['wechat'], self.db_names['wechat.stats']),
                 'items': [
                     {
                         'name': 'count_receive',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.path_names['wechat']}`.`{self.path_names['wechat.message_receive']}`'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_receive']}`'
                         ),
                         'comment': 'Message receive count.'
                     },
@@ -462,7 +460,7 @@ class WeChatDatabase(BaseWeChat):
                         'name': 'count_send',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.path_names['wechat']}`.`{self.path_names['wechat.message_send']}`\n'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_send']}`\n'
                             'WHERE `status` = 2'
                         ),
                         'comment': 'Message send count.'
@@ -471,7 +469,7 @@ class WeChatDatabase(BaseWeChat):
                         'name': 'count_user',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.path_names['wechat']}`.`{self.path_names['wechat.contact_user']}`'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_user']}`'
                         ),
                         'comment': 'Contact user count.'
                     },
@@ -479,7 +477,7 @@ class WeChatDatabase(BaseWeChat):
                         'name': 'count_room',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.path_names['wechat']}`.`{self.path_names['wechat.contact_room']}`'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room']}`'
                         ),
                         'comment': 'Contact room count.'
                     },
@@ -487,7 +485,7 @@ class WeChatDatabase(BaseWeChat):
                         'name': 'count_room_user',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.path_names['wechat']}`.`{self.path_names['wechat.contact_room_user']}`'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room_user']}`'
                         ),
                         'comment': 'Contact room user count.'
                     },
@@ -495,7 +493,7 @@ class WeChatDatabase(BaseWeChat):
                         'name': 'last_time_receive',
                         'select': (
                             'SELECT MAX(`message_time`)\n'
-                            f'FROM `{self.path_names['wechat']}`.`{self.path_names['wechat.message_receive']}`'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_receive']}`'
                         ),
                         'comment': 'Message last receive time.'
                     },
@@ -503,7 +501,7 @@ class WeChatDatabase(BaseWeChat):
                         'name': 'last_time_send',
                         'select': (
                             'SELECT MAX(`status_time`)\n'
-                            f'FROM `{self.path_names['wechat']}`.`{self.path_names['wechat.message_send']}`\n'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_send']}`\n'
                             'WHERE `status` = 2'
                         ),
                         'comment': 'Message last send time.'
@@ -554,7 +552,7 @@ class WeChatDatabase(BaseWeChat):
         ## Insert.
         if contact_table != []:
             conn.execute_insert(
-                (self.path_names['wechat'], self.path_names['wechat.contact_user']),
+                (self.db_names['wechat'], self.db_names['wechat.contact_user']),
                 user_data,
                 'update'
             )
@@ -562,12 +560,12 @@ class WeChatDatabase(BaseWeChat):
         ## Update.
         if user_ids == []:
             sql = (
-                f'UPDATE `{self.path_names['wechat']}`.`{self.path_names['wechat.contact_user']}`\n'
+                f'UPDATE `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_user']}`\n'
                 'SET `contact` = 0'
             )
         else:
             sql = (
-                f'UPDATE `{self.path_names['wechat']}`.`{self.path_names['wechat.contact_user']}`\n'
+                f'UPDATE `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_user']}`\n'
                 'SET `contact` = 0\n'
                 'WHERE `user_id` NOT IN :user_ids'
             )
@@ -610,7 +608,7 @@ class WeChatDatabase(BaseWeChat):
         ## Insert.
         if contact_table != []:
             conn.execute_insert(
-                (self.path_names['wechat'], self.path_names['wechat.contact_room']),
+                (self.db_names['wechat'], self.db_names['wechat.contact_room']),
                 room_data,
                 'update'
             )
@@ -618,12 +616,12 @@ class WeChatDatabase(BaseWeChat):
         ## Update.
         if room_ids == []:
             sql = (
-                f'UPDATE `{self.path_names['wechat']}`.`{self.path_names['wechat.contact_room']}`\n'
+                f'UPDATE `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room']}`\n'
                 'SET `contact` = 0'
             )
         else:
             sql = (
-                f'UPDATE `{self.path_names['wechat']}`.`{self.path_names['wechat.contact_room']}`\n'
+                f'UPDATE `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room']}`\n'
                 'SET `contact` = 0\n'
                 'WHERE `room_id` NOT IN :room_ids'
             )
@@ -688,7 +686,7 @@ class WeChatDatabase(BaseWeChat):
         ## Insert.
         if room_user_data != []:
             conn.execute_insert(
-                (self.path_names['wechat'], self.path_names['wechat.contact_room_user']),
+                (self.db_names['wechat'], self.db_names['wechat.contact_room_user']),
                 room_user_data,
                 'update'
             )
@@ -696,18 +694,18 @@ class WeChatDatabase(BaseWeChat):
         ## Update.
         if room_user_ids == []:
             sql = (
-                f'UPDATE `{self.path_names['wechat']}`.`{self.path_names['wechat.contact_room_user']}`\n'
+                f'UPDATE `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room_user']}`\n'
                 'SET `contact` = 0'
             )
         elif room_id is None:
             sql = (
-                f'UPDATE `{self.path_names['wechat']}`.`{self.path_names['wechat.contact_room_user']}`\n'
+                f'UPDATE `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room_user']}`\n'
                 'SET `contact` = 0\n'
                 "WHERE CONCAT(`room_id`, ',', `user_id`) NOT IN :room_user_ids"
             )
         else:
             sql = (
-                f'UPDATE `{self.path_names['wechat']}`.`{self.path_names['wechat.contact_room_user']}`\n'
+                f'UPDATE `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room_user']}`\n'
                 'SET `contact` = 0\n'
                 'WHERE (\n'
                 '    `room_id` = :room_id\n'
@@ -756,7 +754,7 @@ class WeChatDatabase(BaseWeChat):
 
                 ## Insert.
                 self.database_wechat.execute_insert(
-                    (self.path_names['wechat'], self.path_names['wechat.contact_user']),
+                    (self.db_names['wechat'], self.db_names['wechat.contact_user']),
                     data,
                     'update'
                 )
@@ -797,7 +795,7 @@ class WeChatDatabase(BaseWeChat):
 
                 ### 'contact_room'.
                 self.database_wechat.execute_insert(
-                    (self.path_names['wechat'], self.path_names['wechat.contact_room']),
+                    (self.db_names['wechat'], self.db_names['wechat.contact_room']),
                     data,
                     'update'
                 )
@@ -819,7 +817,7 @@ class WeChatDatabase(BaseWeChat):
 
                 ## Update.
                 self.database_wechat.execute_update(
-                    (self.path_names['wechat'], self.path_names['wechat.contact_room']),
+                    (self.db_names['wechat'], self.db_names['wechat.contact_room']),
                     data
                 )
 
@@ -841,7 +839,7 @@ class WeChatDatabase(BaseWeChat):
 
                 ## Update.
                 self.database_wechat.execute_update(
-                    (self.path_names['wechat'], self.path_names['wechat.contact_room']),
+                    (self.db_names['wechat'], self.db_names['wechat.contact_room']),
                     data
                 )
 
@@ -921,7 +919,7 @@ class WeChatDatabase(BaseWeChat):
 
             # Insert.
             self.database_wechat.execute_insert(
-                (self.path_names['wechat'], self.path_names['wechat.message_receive']),
+                (self.db_names['wechat'], self.db_names['wechat.message_receive']),
                 data,
                 'ignore'
             )
@@ -960,7 +958,7 @@ class WeChatDatabase(BaseWeChat):
 
             # Update.
             self.database_wechat.execute_update(
-                (self.path_names['wechat'], self.path_names['wechat.message_send']),
+                (self.db_names['wechat'], self.db_names['wechat.message_send']),
                 data
             )
 
@@ -1028,7 +1026,7 @@ class WeChatDatabase(BaseWeChat):
                 ')'
             )
             result = conn.execute_select(
-                (self.path_names['wechat'], self.path_names['wechat.message_send']),
+                (self.db_names['wechat'], self.db_names['wechat.message_send']),
                 ['send_id', 'type', 'receive_id', 'parameter', 'file_id'],
                 where,
                 order='`plan_time` DESC, `send_id`'
@@ -1045,7 +1043,7 @@ class WeChatDatabase(BaseWeChat):
                 for row in table
             ]
             sql = (
-                f'UPDATE `{self.path_names['wechat']}`.`{self.path_names['wechat.message_send']}`\n'
+                f'UPDATE `{self.db_names['wechat']}`.`{self.db_names['wechat.message_send']}`\n'
                 'SET `status` = 1\n'
                 'WHERE `send_id` IN :send_ids'
             )
@@ -1112,7 +1110,7 @@ class WeChatDatabase(BaseWeChat):
         ## User.
         if message.room is None:
             result = message.receiver.wechat.database.database_wechat.execute_select(
-                (self.path_names['wechat'], self.path_names['wechat.contact_user']),
+                (self.db_names['wechat'], self.db_names['wechat.contact_user']),
                 ['valid'],
                 '`user_id` = :user_id',
                 limit=1,
@@ -1124,13 +1122,13 @@ class WeChatDatabase(BaseWeChat):
             sql = (
             'SELECT (\n'
             '    SELECT `valid`\n'
-            f'    FROM `{self.path_names['wechat']}`.`{self.path_names['wechat.contact_room_user']}`\n'
+            f'    FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room_user']}`\n'
             '    WHERE `room_id` = :room_id AND `user_id` = :user_id\n'
             '    LIMIT 1\n'
             ') AS `valid`\n'
             'FROM (\n'
             '    SELECT `valid`\n'
-            f'    FROM `{self.path_names['wechat']}`.`{self.path_names['wechat.contact_room']}`\n'
+            f'    FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room']}`\n'
             '    WHERE `room_id` = :room_id\n'
             '    LIMIT 1\n'
             ') AS `a`\n'
@@ -1264,6 +1262,6 @@ class WeChatDatabase(BaseWeChat):
 
         # Insert.
         self.database_wechat.execute_insert(
-            (self.path_names['wechat'], self.path_names['wechat.message_send']),
+            (self.db_names['wechat'], self.db_names['wechat.message_send']),
             data
         )

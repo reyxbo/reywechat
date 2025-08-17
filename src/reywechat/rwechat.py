@@ -110,6 +110,7 @@ class WeChat(BaseWeChat):
 
         ## Database.
         self.send = self.sender.send = self.database.send
+        self.database_build = self.database.build
 
         ## Schedule.
         self.schedule_add_task = self.schedule.add_task
