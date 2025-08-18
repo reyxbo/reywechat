@@ -280,13 +280,11 @@ class WeChatDatabase(BaseWeChat):
                     {
                         'name': 'room_id',
                         'type': 'varchar(31)',
-                        'constraint': 'DEFAULT NULL',
                         'comment': 'Message chat room ID, null for private chat.'
                     },
                     {
                         'name': 'user_id',
                         'type': 'varchar(24)',
-                        'constraint': 'DEFAULT NULL',
                         'comment': 'Message sender user ID, null for system message.'
                     },
                     {
@@ -317,7 +315,6 @@ class WeChatDatabase(BaseWeChat):
                     {
                         'name': 'file_id',
                         'type': 'mediumint unsigned',
-                        'constraint': 'DEFAULT NULL',
                         'comment': 'Message file ID, from the file database.'
                     }
                 ],
@@ -364,7 +361,6 @@ class WeChatDatabase(BaseWeChat):
                     {
                         'name': 'plan_time',
                         'type': 'datetime',
-                        'constraint': 'DEFAULT NULL',
                         'comment': 'Send plan time.'
                     },
                     {
@@ -417,7 +413,6 @@ class WeChatDatabase(BaseWeChat):
                     {
                         'name': 'file_id',
                         'type': 'mediumint unsigned',
-                        'constraint': 'DEFAULT NULL',
                         'comment': 'Send file ID, from the file database.'
                     }
                 ],
