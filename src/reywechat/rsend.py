@@ -449,7 +449,7 @@ class WeChatSender(BaseWeChat):
         # Handle parameter.
         send_param = WeChatSendParameter(
             self,
-            WeChatSendTypeEnum[send_type],
+            send_type,
             receive_id,
             **params
         )

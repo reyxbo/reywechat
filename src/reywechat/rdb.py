@@ -941,8 +941,8 @@ class WeChatDatabase(BaseWeChat):
             """
 
             # Check.
-            if send_param.status == send_param.StatusEnum.SENT:
-                throw(TypeError, send_param.send_id)
+            if send_param.status != send_param.StatusEnum.SENT:
+                return
 
             # Handle parameter.
             if send_param.exc_reports == []:
@@ -1054,7 +1054,7 @@ class WeChatDatabase(BaseWeChat):
             # Send.
             for row in table:
                 send_id, type_, receive_id, parameter, file_id = row.values()
-                send_type = WeChatSendTypeEnum[type_]
+                send_type = WeChatSendTypeEnum(type_)
                 parameter: dict = json_loads(parameter)
 
                 ## File.
@@ -1118,6 +1118,16 @@ class WeChatDatabase(BaseWeChat):
             )
 
         ## Room.
+        elif message.user is None:
+            result = message.receiver.wechat.database.database_wechat.execute_select(
+                (self.db_names['wechat'], self.db_names['wechat.contact_room']),
+                ['valid'],
+                '`room_id` = :room_id',
+                limit=1,
+                room_id=message.room
+            )
+
+        ## Room user.
         else:
             sql = (
             'SELECT (\n'
