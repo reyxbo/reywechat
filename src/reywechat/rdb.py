@@ -19,7 +19,7 @@ from reykit.rwrap import wrap_thread
 
 from .rbase import BaseWeChat
 from .rreceive import WeChatMessage
-from .rsend import WeChatSendEnum, WeChatSendParameter
+from .rsend import WeChatSendTypeEnum, WeChatSendParameter
 from .rwechat import WeChat
 
 
@@ -931,22 +931,26 @@ class WeChatDatabase(BaseWeChat):
 
 
         # Define.
-        def sender_handler_update_send_status(sendparam: WeChatSendParameter) -> None:
+        def sender_handler_update_send_status(send_param: WeChatSendParameter) -> None:
             """
             Update field `status` of table `message_send`.
 
             Parameters
             ----------
-            sendparam : `WeChatSendParameter` instance.
+            send_param : `WeChatSendParameter` instance.
             """
 
+            # Check.
+            if send_param.status == send_param.StatusEnum.AFTER:
+                throw(TypeError, send_param.send_id)
+
             # Handle parameter.
-            if sendparam.exc_reports == []:
+            if send_param.exc_reports == []:
                 status = 2
             else:
                 status = 3
             data = {
-                'send_id': sendparam.send_id,
+                'send_id': send_param.send_id,
                 'status': status,
                 'limit': 1
             }
@@ -1050,7 +1054,7 @@ class WeChatDatabase(BaseWeChat):
             # Send.
             for row in table:
                 send_id, type_, receive_id, parameter, file_id = row.values()
-                send_type = WeChatSendEnum(type_)
+                send_type = WeChatSendTypeEnum[type_]
                 parameter: dict = json_loads(parameter)
 
                 ## File.
@@ -1059,14 +1063,14 @@ class WeChatDatabase(BaseWeChat):
                     parameter['file_path'] = file_path
                     parameter['file_name'] = file_name
 
-                sendparam = WeChatSendParameter(
+                send_param = WeChatSendParameter(
                     self.wechat.sender,
                     send_type,
                     receive_id,
                     send_id,
                     **parameter
                 )
-                self.wechat.sender.queue.put(sendparam)
+                self.wechat.sender.queue.put(send_param)
 
             # Commit.
             conn.commit()
@@ -1141,96 +1145,21 @@ class WeChatDatabase(BaseWeChat):
         return judge
 
 
-    @overload
-    def send(
-        self,
-        send_type: Literal[WeChatSendEnum.SEND_TEXT],
-        receive_id: str,
-        *,
-        text: str
-    ) -> None: ...
-
-    @overload
-    def send(
-        self,
-        send_type: Literal[WeChatSendEnum.SEND_TEXT_AT],
-        receive_id: str,
-        *,
-        user_id: str | list[str] | Literal['notify@all'],
-        text: str
-    ) -> None: ...
-
-    @overload
-    def send(
-        self,
-        send_type: Literal[WeChatSendEnum.SEND_FILE, WeChatSendEnum.SEND_IMAGE, WeChatSendEnum.SEND_EMOTION],
-        receive_id: str,
-        *,
-        file_path: str,
-        file_name: str | None = None
-    ) -> None: ...
-
-    @overload
-    def send(
-        self,
-        send_type: Literal[WeChatSendEnum.SEND_PAT],
-        receive_id: str,
-        *,
-        user_id: str
-    ) -> None: ...
-
-    @overload
-    def send(
-        self,
-        send_type: Literal[WeChatSendEnum.SEND_PUBLIC],
-        receive_id: str,
-        *,
-        page_url: str,
-        title: str,
-        text: str | None = None,
-        image_url: str | None = None,
-        public_name: str | None = None,
-        public_id: str | None = None
-    ) -> None: ...
-
-    @overload
-    def send(
-        self,
-        send_type: Literal[WeChatSendEnum.SEND_FORWARD],
-        receive_id: str,
-        *,
-        message_id: str
-    ) -> None: ...
-
-    def send(
-        self,
-        send_type: WeChatSendEnum,
-        receive_id: str | None = None,
-        **params: Any
-    ) -> None:
+    def insert_send(self, send_param: WeChatSendParameter) -> None:
         """
         Insert into `wechat.message_send` table of database, wait send.
 
         Parameters
         ----------
-        send_type : Send type.
-            - `Literal[WeChatSendEnum.SEND_TEXT]`: Send text message, use `WeChatClient.send_text`: method.
-            - `Literal[WeChatSendEnum.SEND_TEXT_AT]`: Send text message with `@`, use `WeChatClient.send_text_at`: method.
-            - `Literal[WeChatSendEnum.SEND_FILE]`: Send file message, use `WeChatClient.send_file`: method.
-            - `Literal[WeChatSendEnum.SEND_IMAGE]`: Send image message, use `WeChatClient.send_image`: method.
-            - `Literal[WeChatSendEnum.SEND_EMOTION]`: Send emotion message, use `WeChatClient.send_emotion`: method.
-            - `Literal[WeChatSendEnum.SEND_PAT]`: Send pat message, use `WeChatClient.send_pat`: method.
-            - `Literal[WeChatSendEnum.SEND_PUBLIC]`: Send public account message, use `WeChatClient.send_public`: method.
-            - `Literal[WeChatSendEnum.SEND_FORWARD]`: Forward message, use `WeChatClient.send_forward`: method.
-        receive_id : User ID or chat room ID of receive message.
-        params : Send parameters.
+        send_param : `WeChatSendParameter` instance.
         """
 
         # Handle parameter.
+        params = send_param.params.copy()
         data = {
             'status': 0,
-            'type': send_type,
-            'receive_id': receive_id,
+            'type': send_param.send_type,
+            'receive_id': send_param.receive_id,
             'parameter': params
         }
 

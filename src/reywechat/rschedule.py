@@ -15,7 +15,7 @@ from collections.abc import Callable
 from reykit.rschedule import Schedule
 
 from .rbase import BaseWeChat
-from .rsend import WeChatSendEnum
+from .rsend import WeChatSendTypeEnum
 from .rwechat import WeChat
 
 
@@ -24,7 +24,7 @@ class WeChatSchedule(BaseWeChat):
     WeChat schedule type.
     """
 
-    SendEnum = WeChatSendEnum
+    TypeEnum = WeChatSendTypeEnum
 
 
     def __init__(

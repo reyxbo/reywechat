@@ -185,27 +185,27 @@ class WeChatLog(BaseWeChat):
 
     def log_send(
         self,
-        sendparam: WeChatSendParameter
+        send_param: WeChatSendParameter
     ) -> None:
         """
         Log send message.
 
         Parameters
         ----------
-        sendparam : `WeChatSendParameter` instance.
+        send_param : `WeChatSendParameter` instance.
         """
 
         # Generate record.
-        content_print = 'SEND    | %-20s' % sendparam.receive_id
+        content_print = 'SEND    | %-20s' % send_param.receive_id
         content_file = 'SEND    | %s' % {
-            'receive_id': sendparam.receive_id,
-            **sendparam.params
+            'receive_id': send_param.receive_id,
+            **send_param.params
         }
-        if sendparam.exc_reports == []:
+        if send_param.exc_reports == []:
             level = self.rrlog.INFO
         else:
             level = self.rrlog.ERROR
-            exc_report = '\n'.join(sendparam.exc_reports)
+            exc_report = '\n'.join(send_param.exc_reports)
             content_print = '%s\n%s' % (content_print, exc_report)
             content_file = '%s\n%s' % (content_file, exc_report)
 
