@@ -65,14 +65,14 @@ class WeChatSendStatusEnum(BaseWeChat, IntEnum):
 
     Attributes
     ----------
-    INIT : The moment initializing before insert database queue.
-    BEFORE : The moment before send.
-    AFTER : The moment after send.
+    INIT : After initialization, before inserting into database queue.
+    WAIT : After get from database queue, before sending.
+    SENT : After sending.
     """
 
     INIT = 0
-    BEFORE = 1
-    AFTER = 2
+    WAIT = 1
+    SENT = 2
 
 
 class WeChatSendParameter(BaseWeChat):
@@ -193,28 +193,7 @@ class WeChatSendParameter(BaseWeChat):
         self.send_id = send_id
         self.params = params
         self.exc_reports: list[str] = []
-        self.sent: bool = False
-
-
-    @property
-    def status(self) -> WeChatSendStatusEnum:
-        """
-        WeChat send status.
-
-        Returns
-        -------
-        WeChat send parameters status enumeration.
-        """
-
-        # Get.
-        if self.send_id is None:
-            status = WeChatSendStatusEnum.INIT
-        elif self.sent:
-            status = WeChatSendStatusEnum.AFTER
-        else:
-            status = WeChatSendStatusEnum.BEFORE
-
-        return status
+        self.status: WeChatSendStatusEnum
 
 
 class WeChatSender(BaseWeChat):
@@ -289,7 +268,7 @@ class WeChatSender(BaseWeChat):
                 # Save.
                 send_param.exc_reports.append(exc_report)
 
-            send_param.sent = True
+            send_param.status = send_param.StatusEnum.SENT
 
             ## Handler.
             for handler in self.handlers:
@@ -474,6 +453,7 @@ class WeChatSender(BaseWeChat):
             receive_id,
             **params
         )
+        send_param.status = send_param.StatusEnum.INIT
         handle_handler_exception = lambda exc_report, *_: send_param.exc_reports.append(exc_report)
 
         # Handler.
@@ -482,7 +462,7 @@ class WeChatSender(BaseWeChat):
             handler(send_param)
 
         # Insert.
-        self.wechat.database.insert_send(send_param)
+        self.wechat.database._insert_send(send_param)
 
 
     def add_handler(
@@ -491,9 +471,9 @@ class WeChatSender(BaseWeChat):
     ) -> None:
         """
         Add send handler function.
-        Call at the moment initializing before insert database queue.
-        Call at the moment before sending.
-        Call at the moment after sending.
+        Call at the after initialization, before inserting into database queue.
+        Call at the after get from database queue, before sending.
+        Call at the after sending.
         Can be use `WeChatSendParameter.status` judge status.
 
         Parameters

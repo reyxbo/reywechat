@@ -103,13 +103,12 @@ class WeChat(BaseWeChat):
 
         ## Send.
         self.send_add_handler = self.sender.add_handler
-        self.send = self.database.insert_send
+        self.send = self.sender.send
         self.send_start = self.sender.start
         self.send_stop = self.sender.stop
         self.wrap_try_send = self.sender.wrap_try_send
 
         ## Database.
-        self.send = self.sender.send = self.database.insert_send
         self.database_build = self.database.build
 
         ## Schedule.

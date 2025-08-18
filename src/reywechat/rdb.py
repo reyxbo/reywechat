@@ -941,7 +941,7 @@ class WeChatDatabase(BaseWeChat):
             """
 
             # Check.
-            if send_param.status == send_param.StatusEnum.AFTER:
+            if send_param.status == send_param.StatusEnum.SENT:
                 throw(TypeError, send_param.send_id)
 
             # Handle parameter.
@@ -1070,6 +1070,7 @@ class WeChatDatabase(BaseWeChat):
                     send_id,
                     **parameter
                 )
+                send_param.status = send_param.StatusEnum.WAIT
                 self.wechat.sender.queue.put(send_param)
 
             # Commit.
@@ -1145,7 +1146,7 @@ class WeChatDatabase(BaseWeChat):
         return judge
 
 
-    def insert_send(self, send_param: WeChatSendParameter) -> None:
+    def _insert_send(self, send_param: WeChatSendParameter) -> None:
         """
         Insert into `wechat.message_send` table of database, wait send.
 
