@@ -17,7 +17,6 @@ from functools import wraps as functools_wraps
 from queue import Queue
 from re import escape as re_escape
 from reykit.rbase import throw, catch_exc
-from reykit.ros import File
 from reykit.rre import sub
 from reykit.rtime import sleep
 from reykit.rwrap import wrap_thread, wrap_exc
