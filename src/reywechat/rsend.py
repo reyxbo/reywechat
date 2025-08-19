@@ -18,7 +18,7 @@ from queue import Queue
 from re import escape as re_escape
 from reykit.rbase import throw, catch_exc
 from reykit.rre import sub
-from reykit.rtime import sleep
+from reykit.rtime import now, sleep
 from reykit.rwrap import wrap_thread, wrap_exc
 
 from .rbase import BaseWeChat, WeChatTriggerContinueExit, WeChatTriggerBreakExit
@@ -289,6 +289,16 @@ class WeChatSender(BaseWeChat):
         ----------
         send_param : `WeChatSendParameter` instance.
         """
+
+        # Test.
+        if (
+            send_param.params.get('is_test')
+            and send_param.send_type in (WeChatSendTypeEnum.TEXT, WeChatSendTypeEnum.TEXT_AT)
+        ):
+            text: str = send_param.params['text']
+            now_time = now('time_str')
+            modify_text = text.replace(':time:', now_time, 1)
+            send_param.params['text'] = modify_text
 
         # Send.
         match send_param.send_type:

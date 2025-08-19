@@ -23,7 +23,7 @@ from reykit.rnet import listen_socket
 from reykit.ros import File, os_exists
 from reykit.rre import search, search_batch, findall
 from reykit.rtask import ThreadPool
-from reykit.rtime import sleep, wait
+from reykit.rtime import now, sleep, wait, to_time, time_to
 from reykit.rwrap import wrap_thread, wrap_exc
 
 from .rbase import BaseWeChat, WeChatTriggerError
@@ -94,6 +94,10 @@ class WeChatMessage(BaseWeChat):
         display : Message description text.
         data : Message source data.
         window : Message sende window ID.
+
+        Attributes
+        ----------
+        is_test : Whether add test text to before reply text.
         """
 
         # Import.
@@ -114,6 +118,7 @@ class WeChatMessage(BaseWeChat):
         self.trigger_break = self.receiver.trigger.break_
         self.replied: bool = False
         self.exc_reports: list[str] = []
+        self.is_test: bool = False
 
         ## Room and user.
         if self.window.endswith('chatroom'):
@@ -127,7 +132,6 @@ class WeChatMessage(BaseWeChat):
             self.user = self.window
 
         ## Cache.
-        self._window: str | None = None
         self._user_name: str | None = None
         self._room_name: str | None = None
         self._window_name: str | None = None
@@ -1060,10 +1064,25 @@ class WeChatMessage(BaseWeChat):
             text = 'can only be used by reply trigger'
             throw(WeChatTriggerError, self.trigger_rule, text=text)
 
+        # Test.
+        if (
+            self.is_test
+            and send_type in (WeChatSendTypeEnum.TEXT, WeChatSendTypeEnum.TEXT_AT)
+        ):
+            message_time = time_to(to_time(self.time).time())
+            receive_time = now('time_str')
+            send_time = ':time:'
+            test_text = f'{message_time} M\n{receive_time} R\n{send_time} S'
+            if params['text'] == '':
+                params['text'] = test_text
+            else:
+                params['text'] = f'{test_text}\n\n{params['text']}'
+            params['is_test'] = True
+
         # Status.
         self.replied = True
 
-        # Swend.
+        # Send.
         self.receiver.wechat.sender.send(
             send_type,
             receive_id=self.window,
