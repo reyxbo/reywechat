@@ -18,6 +18,7 @@ from bs4 import BeautifulSoup as BSBeautifulSoup
 from bs4.element import Tag as BSTag
 from reykit.rbase import throw
 from reykit.rimage import decode_qrcode
+from reykit.rlog import Mark
 from reykit.rnet import listen_socket
 from reykit.ros import File, os_exists
 from reykit.rre import search, search_batch, findall
@@ -499,7 +500,7 @@ class WeChatMessage(BaseWeChat):
         result: str | None = search(pattern, text)
         if result is not None:
             is_call_name = True
-            text = result
+            text = result or None
         else:
             is_call_name = False
 
@@ -521,9 +522,28 @@ class WeChatMessage(BaseWeChat):
         ):
             is_call = True
             call_text = text
+
+        ## Call next.
+        elif (
+            self.room is not None
+            and (value := f'{self.room}_{self.user}') in self.receiver.call_next_mark
+        ):
+            self.receiver.call_next_mark.remove(value)
+            is_call = True
+            call_text = text
+
         else:
             is_call = False
             call_text = None
+
+        # Call next.
+        if (
+            is_call
+            and call_text is None
+            and self.room is not None
+        ):
+            value = f'{self.room}_{self.user}'
+            self.receiver.call_next_mark(value)
 
         self._is_call = is_call
         self._call_text = call_text
@@ -1064,6 +1084,7 @@ class WechatReceiver(BaseWeChat):
         self.queue: Queue[WeChatMessage] = Queue()
         self.handlers: list[Callable[[WeChatMessage], Any]] = []
         self.started: bool | None = False
+        self.call_next_mark = Mark()
         self.trigger = WeChatTrigger(self)
 
         # Start.
