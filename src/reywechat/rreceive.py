@@ -79,9 +79,7 @@ class WeChatMessage(BaseWeChat):
         type_: int,
         display: str,
         data: str,
-        user: str | None = None,
-        room: str | None = None,
-        file: MessageParameterFile | None = None
+        window: str
     ) -> None:
         """
         Build instance attributes.
@@ -95,19 +93,7 @@ class WeChatMessage(BaseWeChat):
         type : Message type.
         display : Message description text.
         data : Message source data.
-        user : Message sender user ID.
-            - `None`: System message.
-            - `str`: User messages.
-        room : Message chat room ID.
-            - `None`: Private chat.
-            - `str`: Chat room chat.
-        file : Message file information.
-            - `None`: Non file message.
-            - `dict`: File message.
-                `Key 'path'`: File path.
-                `Key 'name'`: File name.
-                `Key 'md5'`: File MD5.
-                `Key 'size'`: File byte size.
+        window : Message sende window ID.
         """
 
         # Import.
@@ -121,9 +107,26 @@ class WeChatMessage(BaseWeChat):
         self.type = type_
         self.display = display
         self.data = data
-        self.user = user
-        self.room = room
-        self.file = file
+        self.window = window
+        self.file: MessageParameterFile | None = None
+        self.trigger_rule: TriggerRule | None = None
+        self.trigger_continue = self.receiver.trigger.continue_
+        self.trigger_break = self.receiver.trigger.break_
+        self.replied: bool = False
+        self.exc_reports: list[str] = []
+
+        ## Room and user.
+        if self.window.endswith('chatroom'):
+            self.room = self.window
+            if ':\n' in self.data:
+                self.user, self.data = self.data.split(':\n', 1)
+            else:
+                self.user = None
+        else:
+            self.room = None
+            self.user = self.window
+
+        ## Cache.
         self._window: str | None = None
         self._user_name: str | None = None
         self._room_name: str | None = None
@@ -136,6 +139,8 @@ class WeChatMessage(BaseWeChat):
         self._is_at_self: bool | None = None
         self._is_call: bool | None = None
         self._call_text: str | None = None
+        self._is_call_next: bool | None = None
+        self._is_last_call: bool | None = None
         self._is_new_user: bool | None = None
         self._is_new_room: bool | None = None
         self._is_new_room_user: bool | None = None
@@ -150,11 +155,9 @@ class WeChatMessage(BaseWeChat):
         self._is_app: bool | None = None
         self._app_params: dict | None = None
         self._valid: bool | None = None
-        self.trigger_rule: TriggerRule | None = None
-        self.trigger_continue = self.receiver.trigger.continue_
-        self.trigger_break = self.receiver.trigger.break_
-        self.replied: bool = False
-        self.exc_reports: list[str] = []
+
+        ## Update call.
+        self.is_call
 
 
     @property
@@ -196,29 +199,6 @@ class WeChatMessage(BaseWeChat):
         params_str = str(self.params)
 
         return params_str
-
-
-    @property
-    def window(self) -> str:
-        """
-        Message sender window ID.
-
-        Returns
-        -------
-        Window ID.
-        """
-
-        # Cache.
-        if self._window is not None:
-            return self._window
-
-        # Set.
-        if self.room is None:
-            self._window = self.user
-        else:
-            self._window = self.room
-
-        return self._window
 
 
     @property
@@ -507,8 +487,11 @@ class WeChatMessage(BaseWeChat):
         # Judge.
         if (
 
+            ## Last call.
+            self.is_last_call
+
             ## Private chat.
-            self.room is None
+            or self.room is None
 
             ## At self.
             or is_at_self
@@ -522,31 +505,25 @@ class WeChatMessage(BaseWeChat):
         ):
             is_call = True
             call_text = text
-
-        ## Call next.
-        elif (
-            self.room is not None
-            and (value := f'{self.room}_{self.user}') in self.receiver.call_next_mark
-        ):
-            self.receiver.call_next_mark.remove(value)
-            is_call = True
-            call_text = text
-
         else:
             is_call = False
             call_text = None
 
-        # Call next.
-        if (
-            is_call
+        ## Call next.
+        is_call_next = (
+            self.room is not None
+            and is_call
             and call_text is None
-            and self.room is not None
-        ):
-            value = f'{self.room}_{self.user}'
-            self.receiver.call_next_mark(value)
+        )
+
+        ### Mark.
+        if is_call_next:
+            call_next_mark_value = f'{self.user}_{self.room}'
+            self.receiver.call_next_mark(call_next_mark_value)
 
         self._is_call = is_call
         self._call_text = call_text
+        self._is_call_next = is_call_next
 
         return self._is_call
 
@@ -570,6 +547,52 @@ class WeChatMessage(BaseWeChat):
             throw(AssertionError, self.is_call)
 
         return self._call_text
+
+
+    @property
+    def is_call_next(self) -> str:
+        """
+        Whether if is message of call next message.
+
+        Returns
+        -------
+        Judge result.
+        """
+
+        # Cache.
+        if self._is_call_next is not None:
+            return self._is_call_next
+
+        # Judge.
+        self.is_call
+
+        return self._is_call_next
+
+
+    @property
+    def is_last_call(self) -> str:
+        """
+        Whether if is message of last message call this time.
+
+        Returns
+        -------
+        Judge result.
+        """
+
+        # Cache.
+        if self._is_last_call is not None:
+            return self._is_last_call
+
+        # Judge.
+        call_next_mark_value = f'{self.user}_{self.room}'
+        self._is_last_call = call_next_mark_value in self.receiver.call_next_mark
+
+        # Mark.
+        if self._is_last_call:
+            call_next_mark_value = f'{self.user}_{self.room}'
+            self.receiver.call_next_mark.remove(call_next_mark_value)
+
+        return self.is_last_call
 
 
     @property
@@ -1171,7 +1194,6 @@ class WechatReceiver(BaseWeChat):
 
             # Set parameter.
             handlers = [
-                self.__receiver_handler_room,
                 self.__receiver_handler_file,
                 *self.handlers
             ]
@@ -1239,31 +1261,6 @@ class WechatReceiver(BaseWeChat):
 
         # Add.
         self.handlers.append(handler)
-
-
-    def __receiver_handler_room(
-        self,
-        message: WeChatMessage
-    ) -> None:
-        """
-        Handle room message.
-        """
-
-        # Break.
-        if (
-            type(message.user) != str
-            or not message.user.endswith('chatroom')
-        ):
-            return
-
-        # Set attribute.
-        message.room = message.user
-        if ':\n' in message.data:
-            user, data = message.data.split(':\n', 1)
-            message.user = user
-            message.data = data
-        else:
-            message.user = None
 
 
     def __receiver_handler_file(
