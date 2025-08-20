@@ -13,7 +13,7 @@ from reykit.rbase import Base, Error, Exit
 
 
 __all__ = (
-    'BaseWeChat',
+    'WeChatBase',
     'WeChatError',
     'WeChatClientErorr',
     'WeChatTriggerError',
@@ -22,19 +22,19 @@ __all__ = (
 )
 
 
-class BaseWeChat(Base):
+class WeChatBase(Base):
     """
     WeChat Base type.
     """
 
 
-class WeChatError(BaseWeChat, Error):
+class WeChatError(WeChatBase, Error):
     """
     WeChat error type.
     """
 
 
-class WeChatExit(BaseWeChat, Exit):
+class WeChatExit(WeChatBase, Exit):
     """
     WeChat exit type.
     """

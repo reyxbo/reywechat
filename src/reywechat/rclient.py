@@ -17,7 +17,7 @@ from reykit.ros import find_relpath
 from reykit.rsys import run_cmd, search_process, memory_read, memory_write, popup_select
 from reykit.rtime import wait
 
-from .rbase import BaseWeChat, WeChatClientErorr
+from .rbase import WeChatBase, WeChatClientErorr
 from .rwechat import WeChat
 
 
@@ -42,7 +42,7 @@ CLIENT_VERSION_MEMORY_OFFSETS = (
 )
 
 
-class WeChatClient(BaseWeChat):
+class WeChatClient(WeChatBase):
     """
     WeChat client type.
     """
@@ -348,7 +348,7 @@ class WeChatClient(BaseWeChat):
             - `Key 'head_image'`: Head image URL.
             - `Key 'account_data_path'`: Current account data save path.
             - `Key 'wechat_data_path'`: WeChat data save path.
-            - `Key 'decrypt_key'`: WeChatDatabase decrypt key.
+            - `Key 'decrypt_key'`: Database decrypt key.
         """
 
         # Handle parameter.

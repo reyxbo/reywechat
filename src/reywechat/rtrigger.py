@@ -13,7 +13,7 @@ from typing import Any, TypedDict, NoReturn
 from collections.abc import Callable
 from reykit.rbase import catch_exc
 
-from .rbase import BaseWeChat, WeChatTriggerContinueExit, WeChatTriggerBreakExit
+from .rbase import WeChatBase, WeChatTriggerContinueExit, WeChatTriggerBreakExit
 from .rreceive import WeChatMessage, WechatReceiver
 
 
@@ -25,7 +25,7 @@ __all__ = (
 TriggerRule = TypedDict('TriggerRule', {'level': float, 'execute': Callable[[WeChatMessage], None], 'is_reply': bool})
 
 
-class WeChatTrigger(BaseWeChat):
+class WeChatTrigger(WeChatBase):
     """
     WeChat trigger type.
     """
@@ -98,13 +98,13 @@ class WeChatTrigger(BaseWeChat):
                     break
 
                 # Exception.
-                except:
+                except BaseException:
 
                     ## Catch exception.
-                    exc_report, *_ = catch_exc()
+                    exc_text, *_ = catch_exc()
 
                     ## Save.
-                    message.exc_reports.append(exc_report)
+                    message.exc_reports.append(exc_text)
 
                 finally:
                     message.trigger_rule = None

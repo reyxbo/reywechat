@@ -26,7 +26,7 @@ from reykit.rtask import ThreadPool
 from reykit.rtime import now, sleep, wait, to_time, time_to
 from reykit.rwrap import wrap_thread, wrap_exc
 
-from .rbase import BaseWeChat, WeChatTriggerError
+from .rbase import WeChatBase, WeChatTriggerError
 from .rsend import WeChatSendTypeEnum
 from .rwechat import WeChat
 
@@ -62,7 +62,7 @@ MessageParameter = TypedDict(
     )
 
 
-class WeChatMessage(BaseWeChat):
+class WeChatMessage(WeChatBase):
     """
     WeChat message type.
     """
@@ -1090,7 +1090,7 @@ class WeChatMessage(BaseWeChat):
         )
 
 
-class WechatReceiver(BaseWeChat):
+class WechatReceiver(WeChatBase):
     """
     WeChat receiver type.
     """
@@ -1220,17 +1220,17 @@ class WechatReceiver(BaseWeChat):
             # Handle.
 
             ## Define.
-            def handle_handler_exception(exc_report, *_) -> None:
+            def handle_handler_exception(exc_text, *_) -> None:
                 """
                 Handle Handler exception.
 
                 Parameters
                 ----------
-                exc_report : Exception report text.
+                exc_text : Exception report text.
                 """
 
                 # Save.
-                message.exc_reports.append(exc_report)
+                message.exc_reports.append(exc_text)
 
 
             ## Loop.

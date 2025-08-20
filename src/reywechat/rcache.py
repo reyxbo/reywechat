@@ -11,7 +11,7 @@
 
 from reykit.ros import FileCache, join_path
 
-from .rbase import BaseWeChat
+from .rbase import WeChatBase
 from .rwechat import WeChat
 
 
@@ -20,7 +20,7 @@ __all__ = (
 )
 
 
-class WeChatCache(BaseWeChat, FileCache):
+class WeChatCache(WeChatBase, FileCache):
     """
     WeChat file cache type.
     """

@@ -14,7 +14,7 @@ from os import getcwd as os_getcwd
 from reydb.rdb import Database
 from reykit.rbase import block
 
-from .rbase import BaseWeChat
+from .rbase import WeChatBase
 
 
 __all__ = (
@@ -22,7 +22,7 @@ __all__ = (
 )
 
 
-class WeChat(BaseWeChat):
+class WeChat(WeChatBase):
     """
     WeChat type.
 
@@ -109,7 +109,7 @@ class WeChat(BaseWeChat):
         self.wrap_try_send = self.sender.wrap_try_send
 
         ## Database.
-        self.database_build = self.database.build
+        self.database_build = self.database.build_db
 
         ## Schedule.
         self.schedule_add_task = self.schedule.add_task

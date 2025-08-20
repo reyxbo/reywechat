@@ -5,11 +5,11 @@
 @Time    : 2023-10-23 20:55:58
 @Author  : Rey
 @Contact : reyxbo@163.com
-@Explain : WeChatDatabase methods.
+@Explain : Database methods.
 """
 
 
-from typing import Any, Literal, overload
+from typing import Literal
 from json import loads as json_loads
 from reydb.rdb import Database
 from reykit.rbase import throw
@@ -17,7 +17,7 @@ from reykit.ros import File
 from reykit.rtime import to_time, time_to, sleep
 from reykit.rwrap import wrap_thread
 
-from .rbase import BaseWeChat
+from .rbase import WeChatBase
 from .rreceive import WeChatMessage
 from .rsend import WeChatSendTypeEnum, WeChatSendParameter
 from .rwechat import WeChat
@@ -28,7 +28,7 @@ __all__ = (
 )
 
 
-class WeChatDatabase(BaseWeChat):
+class WeChatDatabase(WeChatBase):
     """
     WeChat database type.
     Can create database used `self.build` method.
@@ -96,14 +96,14 @@ class WeChatDatabase(BaseWeChat):
         self.__start_from_message_send()
 
 
-    def build(self) -> None:
+    def build_db(self) -> None:
         """
         Check and build all standard databases and tables, by `self.db_names`.
         """
 
         # Set parameter.
 
-        ## WeChatDatabase.
+        ## Database.
         databases = [
             {
                 'name': self.db_names['wechat']
@@ -444,7 +444,7 @@ class WeChatDatabase(BaseWeChat):
                 'path': (self.db_names['wechat'], self.db_names['wechat.stats']),
                 'items': [
                     {
-                        'name': 'count_receive',
+                        'name': 'receive_count',
                         'select': (
                             'SELECT COUNT(1)\n'
                             f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_receive']}`'
@@ -452,7 +452,7 @@ class WeChatDatabase(BaseWeChat):
                         'comment': 'Message receive count.'
                     },
                     {
-                        'name': 'count_send',
+                        'name': 'send_count',
                         'select': (
                             'SELECT COUNT(1)\n'
                             f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_send']}`\n'
@@ -461,7 +461,7 @@ class WeChatDatabase(BaseWeChat):
                         'comment': 'Message send count.'
                     },
                     {
-                        'name': 'count_user',
+                        'name': 'user_count',
                         'select': (
                             'SELECT COUNT(1)\n'
                             f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_user']}`'
@@ -469,7 +469,7 @@ class WeChatDatabase(BaseWeChat):
                         'comment': 'Contact user count.'
                     },
                     {
-                        'name': 'count_room',
+                        'name': 'room_count',
                         'select': (
                             'SELECT COUNT(1)\n'
                             f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room']}`'
@@ -477,7 +477,7 @@ class WeChatDatabase(BaseWeChat):
                         'comment': 'Contact room count.'
                     },
                     {
-                        'name': 'count_room_user',
+                        'name': 'room_user_count',
                         'select': (
                             'SELECT COUNT(1)\n'
                             f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room_user']}`'
@@ -485,7 +485,142 @@ class WeChatDatabase(BaseWeChat):
                         'comment': 'Contact room user count.'
                     },
                     {
-                        'name': 'last_time_receive',
+                        'name': 'past_day_receive_count',
+                        'select': (
+                            'SELECT COUNT(1)\n'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_receive']}`'
+                            'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) = 0'
+                        ),
+                        'comment': 'Message receive count in the past day.'
+                    },
+                    {
+                        'name': 'past_day_send_count',
+                        'select': (
+                            'SELECT COUNT(1)\n'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_send']}`'
+                            'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) = 0'
+                        ),
+                        'comment': 'Message send count in the past day.'
+                    },
+                    {
+                        'name': 'past_day_user_count',
+                        'select': (
+                            'SELECT COUNT(1)\n'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_user']}`'
+                            'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) = 0'
+                        ),
+                        'comment': 'Contact user count in the past day.'
+                    },
+                    {
+                        'name': 'past_day_room_count',
+                        'select': (
+                            'SELECT COUNT(1)\n'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room']}`'
+                            'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) = 0'
+                        ),
+                        'comment': 'Contact room count in the past day.'
+                    },
+                    {
+                        'name': 'past_day_room_user_count',
+                        'select': (
+                            'SELECT COUNT(1)\n'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room_user']}`'
+                            'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) = 0'
+                        ),
+                        'comment': 'Contact room user count in the past day.'
+                    },
+                    {
+                        'name': 'past_week_receive_count',
+                        'select': (
+                            'SELECT COUNT(1)\n'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_receive']}`'
+                            'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 6'
+                        ),
+                        'comment': 'Message receive count in the past week.'
+                    },
+                    {
+                        'name': 'past_week_send_count',
+                        'select': (
+                            'SELECT COUNT(1)\n'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_send']}`'
+                            'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 6'
+                        ),
+                        'comment': 'Message send count in the past week.'
+                    },
+                    {
+                        'name': 'past_week_user_count',
+                        'select': (
+                            'SELECT COUNT(1)\n'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_user']}`'
+                            'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 6'
+                        ),
+                        'comment': 'Contact user count in the past week.'
+                    },
+                    {
+                        'name': 'past_week_room_count',
+                        'select': (
+                            'SELECT COUNT(1)\n'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room']}`'
+                            'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 6'
+                        ),
+                        'comment': 'Contact room count in the past week.'
+                    },
+                    {
+                        'name': 'past_week_room_user_count',
+                        'select': (
+                            'SELECT COUNT(1)\n'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room_user']}`'
+                            'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 6'
+                        ),
+                        'comment': 'Contact room user count in the past week.'
+                    },
+                    {
+                        'name': 'past_month_receive_count',
+                        'select': (
+                            'SELECT COUNT(1)\n'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_receive']}`'
+                            'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 29'
+                        ),
+                        'comment': 'Message receive count in the past month.'
+                    },
+                    {
+                        'name': 'past_month_send_count',
+                        'select': (
+                            'SELECT COUNT(1)\n'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_send']}`'
+                            'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 29'
+                        ),
+                        'comment': 'Message send count in the past month.'
+                    },
+                    {
+                        'name': 'past_month_user_count',
+                        'select': (
+                            'SELECT COUNT(1)\n'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_user']}`'
+                            'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 29'
+                        ),
+                        'comment': 'Contact user count in the past month.'
+                    },
+                    {
+                        'name': 'past_month_room_count',
+                        'select': (
+                            'SELECT COUNT(1)\n'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room']}`'
+                            'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 29'
+                        ),
+                        'comment': 'Contact room count in the past month.'
+                    },
+                    {
+                        'name': 'past_month_room_user_count',
+                        'select': (
+                            'SELECT COUNT(1)\n'
+                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room_user']}`'
+                            'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 29'
+                        ),
+                        'comment': 'Contact room user count in the past month.'
+                    },
+                    {
+                        'name': 'receive_last_time',
                         'select': (
                             'SELECT MAX(`message_time`)\n'
                             f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_receive']}`'
@@ -493,7 +628,7 @@ class WeChatDatabase(BaseWeChat):
                         'comment': 'Message last receive time.'
                     },
                     {
-                        'name': 'last_time_send',
+                        'name': 'send_last_time',
                         'select': (
                             'SELECT MAX(`status_time`)\n'
                             f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_send']}`\n'
@@ -502,6 +637,7 @@ class WeChatDatabase(BaseWeChat):
                         'comment': 'Message last send time.'
                     }
                 ]
+
             }
 
         ]
@@ -512,7 +648,7 @@ class WeChatDatabase(BaseWeChat):
         self.database_wechat.build.build(databases, tables, views_stats=views_stats)
 
         ## File.
-        self.database_file.file.build()
+        self.database_file.file.build_db()
 
         # Update.
         self.update_contact_user()

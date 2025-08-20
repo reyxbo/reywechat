@@ -12,7 +12,7 @@
 from reykit.rlog import Log
 from reykit.ros import Folder, join_path
 
-from .rbase import BaseWeChat
+from .rbase import WeChatBase
 from .rreceive import WeChatMessage
 from .rsend import WeChatSendParameter
 from .rwechat import WeChat
@@ -23,7 +23,7 @@ __all__ = (
 )
 
 
-class WeChatLog(BaseWeChat):
+class WeChatLog(WeChatBase):
     """
     WeChat log type.
     """
@@ -163,9 +163,9 @@ class WeChatLog(BaseWeChat):
             level = self.rrlog.INFO
         else:
             level = self.rrlog.ERROR
-            exc_report = '\n'.join(message.exc_reports)
-            content_print = '%s\n%s' % (content_print, exc_report)
-            content_file = '%s\n%s' % (content_file, exc_report)
+            exc_text = '\n'.join(message.exc_reports)
+            content_print = '%s\n%s' % (content_print, exc_text)
+            content_file = '%s\n%s' % (content_file, exc_text)
 
         ## Add color.
         if self.rrlog.print_colour:
@@ -205,9 +205,9 @@ class WeChatLog(BaseWeChat):
             level = self.rrlog.INFO
         else:
             level = self.rrlog.ERROR
-            exc_report = '\n'.join(send_param.exc_reports)
-            content_print = '%s\n%s' % (content_print, exc_report)
-            content_file = '%s\n%s' % (content_file, exc_report)
+            exc_text = '\n'.join(send_param.exc_reports)
+            content_print = '%s\n%s' % (content_print, exc_text)
+            content_file = '%s\n%s' % (content_file, exc_text)
 
         ## Add color.
         if self.rrlog.print_colour:

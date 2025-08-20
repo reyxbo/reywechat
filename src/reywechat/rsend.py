@@ -21,7 +21,7 @@ from reykit.rre import sub
 from reykit.rtime import now, sleep
 from reykit.rwrap import wrap_thread, wrap_exc
 
-from .rbase import BaseWeChat, WeChatTriggerContinueExit, WeChatTriggerBreakExit
+from .rbase import WeChatBase, WeChatTriggerContinueExit, WeChatTriggerBreakExit
 from .rwechat import WeChat
 
 
@@ -32,7 +32,7 @@ __all__ = (
 )
 
 
-class WeChatSendTypeEnum(BaseWeChat, IntEnum):
+class WeChatSendTypeEnum(WeChatBase, IntEnum):
     """
     WeChat send type enumeration type.
 
@@ -58,13 +58,13 @@ class WeChatSendTypeEnum(BaseWeChat, IntEnum):
     FORWARD = 7
 
 
-class WeChatSendStatusEnum(BaseWeChat, IntEnum):
+class WeChatSendStatusEnum(WeChatBase, IntEnum):
     """
     WeChat send status enumeration type.
 
     Attributes
     ----------
-    INIT : After initialization, before inserting into database queue.
+    INIT : After initialization, before inserting into the database queue.
     WAIT : After get from database queue, before sending.
     SENT : After sending.
     """
@@ -74,7 +74,7 @@ class WeChatSendStatusEnum(BaseWeChat, IntEnum):
     SENT = 2
 
 
-class WeChatSendParameter(BaseWeChat):
+class WeChatSendParameter(WeChatBase):
     """
     WeChat send parameters type.
     """
@@ -181,7 +181,7 @@ class WeChatSendParameter(BaseWeChat):
             - `Literal[WeChatSendTypeEnum.FORWARD]`: Forward message, use `WeChatClient.send_forward`: method.
         receive_id : User ID or chat room ID of receive message.
         send_id : Send ID of database.
-            - `None`: Not inserted into database.
+            - `None`: Not inserted into the database.
         params : Send parameters.
         """
 
@@ -195,7 +195,7 @@ class WeChatSendParameter(BaseWeChat):
         self.status: WeChatSendStatusEnum
 
 
-class WeChatSender(BaseWeChat):
+class WeChatSender(WeChatBase):
     """
     WeChat sender type.
 
@@ -247,7 +247,7 @@ class WeChatSender(BaseWeChat):
                     break
 
             send_param = self.queue.get()
-            handle_handler_exception = lambda exc_report, *_: send_param.exc_reports.append(exc_report)
+            handle_handler_exception = lambda exc_text, *_: send_param.exc_reports.append(exc_text)
 
             ## Handler.
             for handler in self.handlers:
@@ -259,13 +259,13 @@ class WeChatSender(BaseWeChat):
                 self.__send(send_param)
 
             ## Exception.
-            except:
+            except BaseException:
 
                 # Catch exception.
-                exc_report, *_ = catch_exc()
+                exc_text, *_ = catch_exc()
 
                 # Save.
-                send_param.exc_reports.append(exc_report)
+                send_param.exc_reports.append(exc_text)
 
             send_param.status = send_param.StatusEnum.SENT
 
@@ -463,7 +463,7 @@ class WeChatSender(BaseWeChat):
             **params
         )
         send_param.status = send_param.StatusEnum.INIT
-        handle_handler_exception = lambda exc_report, *_: send_param.exc_reports.append(exc_report)
+        handle_handler_exception = lambda exc_text, *_: send_param.exc_reports.append(exc_text)
 
         # Handler.
         for handler in self.handlers:
@@ -480,7 +480,7 @@ class WeChatSender(BaseWeChat):
     ) -> None:
         """
         Add send handler function.
-        Call at the after initialization, before inserting into database queue.
+        Call at the after initialization, before inserting into the database queue.
         Call at the after get from database queue, before sending.
         Call at the after sending.
         Can be use `WeChatSendParameter.status` judge status.
@@ -582,18 +582,18 @@ class WeChatSender(BaseWeChat):
                     *arg,
                     **kwargs
                 )
-            except:
-                *_, exc_instance, _ = catch_exc()
+            except BaseException:
+                *_, exc, _ = catch_exc()
 
                 # Report.
                 if not isinstance(
-                    exc_instance,
+                    exc,
                     (WeChatTriggerContinueExit, WeChatTriggerBreakExit)
                 ):
                     text = '\n'.join(
                         [
                             str(arg)
-                            for arg in exc_instance.args
+                            for arg in exc.args
                         ]
                     )
                     for receive_id in receive_ids:
