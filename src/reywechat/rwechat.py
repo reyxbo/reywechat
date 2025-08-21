@@ -69,7 +69,6 @@ class WeChat(WeChatBase):
         from .rdb import WeChatDatabase
         from .rlog import WeChatLog
         from .rreceive import WechatReceiver
-        from .rschedule import WeChatSchedule
         from .rsend import WeChatSender
 
         # Set attribute.
@@ -83,7 +82,6 @@ class WeChat(WeChatBase):
         self.trigger = self.receiver.trigger
         self.sender = WeChatSender(self)
         self.database = WeChatDatabase(self, database)
-        self.schedule = WeChatSchedule(self)
 
         ## Client.
         self.client_version = self.client.client_version
@@ -110,11 +108,6 @@ class WeChat(WeChatBase):
 
         ## Database.
         self.database_build = self.database.build_db
-
-        ## Schedule.
-        self.schedule_add_task = self.schedule.add_task
-        self.schedule_pause = self.schedule.pause
-        self.schedule_resume = self.schedule.resume
 
 
     def start(self) -> None:

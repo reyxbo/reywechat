@@ -15,7 +15,6 @@ from .rclient import *
 from .rdb import *
 from .rlog import *
 from .rreceive import *
-from .rschedule import *
 from .rsend import *
 from .rtrigger import *
 from .rwechat import *

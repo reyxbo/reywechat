@@ -20,7 +20,6 @@ rdb : Database methods.
 rcache : Cache methods.
 rlog : Log methods.
 rreceive : Receive methods.
-rschedule : Schedule methods.
 rsend : Send methods.
 rtrigger : Trigger methods.
 rwechat : WeChat methods.
