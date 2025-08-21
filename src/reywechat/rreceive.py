@@ -524,7 +524,7 @@ class WeChatMessage(WeChatBase):
         ### Mark.
         if is_call_next:
             call_next_mark_value = f'{self.user}_{self.room}'
-            self.receiver.call_next_mark(call_next_mark_value)
+            self.receiver.mark(call_next_mark_value, 'is_call_next')
 
         self._is_call = is_call
         self._call_text = call_text
@@ -590,12 +590,12 @@ class WeChatMessage(WeChatBase):
 
         # Judge.
         call_next_mark_value = f'{self.user}_{self.room}'
-        self._is_last_call = call_next_mark_value in self.receiver.call_next_mark
+        self._is_last_call = self.receiver.mark.is_marked(call_next_mark_value, 'is_call_next')
 
         # Mark.
         if self._is_last_call:
             call_next_mark_value = f'{self.user}_{self.room}'
-            self.receiver.call_next_mark.remove(call_next_mark_value)
+            self.receiver.mark.remove(call_next_mark_value, 'is_call_next')
 
         return self.is_last_call
 
@@ -1125,7 +1125,7 @@ class WechatReceiver(WeChatBase):
         self.queue: Queue[WeChatMessage] = Queue()
         self.handlers: list[Callable[[WeChatMessage], Any]] = []
         self.started: bool | None = False
-        self.call_next_mark = Mark()
+        self.mark = Mark()
         self.trigger = WeChatTrigger(self)
 
         # Start.
