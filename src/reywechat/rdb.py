@@ -19,7 +19,7 @@ from reykit.rwrap import wrap_thread
 
 from .rbase import WeChatBase
 from .rreceive import WeChatMessage
-from .rsend import WeChatSendTypeEnum, WeChatSendParameter
+from .rsend import WeChatSendTypeEnum, WeChatSendStatusEnum, WeChatSendParameter
 from .rwechat import WeChat
 
 
@@ -1077,7 +1077,7 @@ class WeChatDatabase(WeChatBase):
             """
 
             # Check.
-            if send_param.status != send_param.StatusEnum.SENT:
+            if send_param.status != WeChatSendStatusEnum.SENT:
                 return
 
             # Handle parameter.
@@ -1206,7 +1206,7 @@ class WeChatDatabase(WeChatBase):
                     send_id,
                     **parameter
                 )
-                send_param.status = send_param.StatusEnum.WAIT
+                send_param.status = WeChatSendStatusEnum.WAIT
                 self.wechat.sender.queue.put(send_param)
 
             # Commit.

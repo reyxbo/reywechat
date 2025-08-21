@@ -69,7 +69,7 @@ class WeChat(WeChatBase):
         from .rdb import WeChatDatabase
         from .rlog import WeChatLog
         from .rreceive import WechatReceiver
-        from .rsend import WeChatSender
+        from .rsend import WeChatSendTypeEnum, WeChatSendStatusEnum, WeChatSender
 
         # Set attribute.
         self.project_dir = project_dir or os_getcwd()
@@ -100,6 +100,8 @@ class WeChat(WeChatBase):
         self.trigger_add_rule = self.trigger.add_rule
 
         ## Send.
+        self.SendTypeEnum = WeChatSendTypeEnum
+        self.SendstatusEnum = WeChatSendStatusEnum
         self.send_add_handler = self.sender.add_handler
         self.send = self.sender.send
         self.send_start = self.sender.start

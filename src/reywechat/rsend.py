@@ -79,8 +79,8 @@ class WeChatSendParameter(WeChatBase):
     WeChat send parameters type.
     """
 
-    TypeEnum = WeChatSendTypeEnum
-    StatusEnum = WeChatSendStatusEnum
+    SendTypeEnum = WeChatSendTypeEnum
+    SendStatusEnum = WeChatSendStatusEnum
 
 
     @overload
@@ -204,7 +204,8 @@ class WeChatSender(WeChatBase):
     WeChatSendTypeEnum : Send type enumeration.
     """
 
-    TypeEnum = WeChatSendTypeEnum
+    SendTypeEnum = WeChatSendTypeEnum
+    SendStatusEnum = WeChatSendStatusEnum
 
 
     def __init__(self, wechat: WeChat) -> None:
@@ -267,7 +268,7 @@ class WeChatSender(WeChatBase):
                 # Save.
                 send_param.exc_reports.append(exc_text)
 
-            send_param.status = send_param.StatusEnum.SENT
+            send_param.status = WeChatSendStatusEnum.SENT
 
             ## Handler.
             for handler in self.handlers:
@@ -462,7 +463,7 @@ class WeChatSender(WeChatBase):
             receive_id,
             **params
         )
-        send_param.status = send_param.StatusEnum.INIT
+        send_param.status = WeChatSendStatusEnum.INIT
         handle_handler_exception = lambda exc_text, *_: send_param.exc_reports.append(exc_text)
 
         # Handler.

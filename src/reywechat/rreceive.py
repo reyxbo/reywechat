@@ -27,7 +27,7 @@ from reykit.rtime import now, sleep, wait, to_time, time_to
 from reykit.rwrap import wrap_thread, wrap_exc
 
 from .rbase import WeChatBase, WeChatTriggerError
-from .rsend import WeChatSendTypeEnum
+from .rsend import WeChatSendTypeEnum, WeChatSendStatusEnum
 from .rwechat import WeChat
 
 
@@ -67,7 +67,8 @@ class WeChatMessage(WeChatBase):
     WeChat message type.
     """
 
-    TypeEnum = WeChatSendTypeEnum
+    SendTypeEnum = WeChatSendTypeEnum
+    SendStatusEnum = WeChatSendStatusEnum
 
 
     def __init__(
@@ -1094,8 +1095,6 @@ class WechatReceiver(WeChatBase):
     """
     WeChat receiver type.
     """
-
-    TypeEnum = WeChatSendTypeEnum
 
 
     def __init__(
