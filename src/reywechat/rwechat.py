@@ -77,7 +77,7 @@ class WeChat(WeChatBase):
         ## Instance.
         self.client = WeChatClient(self)
         self.cache = WeChatCache(self)
-        self.log = WeChatLog(self)
+        self.error = WeChatLog(self)
         self.receiver = WechatReceiver(self, max_receiver, call_name)
         self.trigger = self.receiver.trigger
         self.sender = WeChatSender(self)
@@ -145,7 +145,7 @@ class WeChat(WeChatBase):
         """
 
         # Handle parameter.
-        result = self.log.rrlog.print_colour
+        result = self.error.rrlog.print_colour
 
         return result
 
@@ -161,6 +161,6 @@ class WeChat(WeChatBase):
         """
 
         # Set.
-        self.log.rrlog.print_colour = value
-        self.log.rrlog_print.print_colour = value
-        self.log.rrlog_file.print_colour = value
+        self.error.rrlog.print_colour = value
+        self.error.rrlog_print.print_colour = value
+        self.error.rrlog_file.print_colour = value

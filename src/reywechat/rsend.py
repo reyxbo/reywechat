@@ -276,7 +276,7 @@ class WeChatSender(WeChatBase):
                 handler(send_param)
 
             ## Log.
-            self.wechat.log.log_send(send_param)
+            self.wechat.error.log_send(send_param)
 
 
     def __send(

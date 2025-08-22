@@ -1238,7 +1238,7 @@ class WechatReceiver(WeChatBase):
                 handler(message)
 
             # Log.
-            self.wechat.log.log_receive(message)
+            self.wechat.error.log_receive(message)
 
 
         # Thread pool.
