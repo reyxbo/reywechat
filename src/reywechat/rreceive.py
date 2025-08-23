@@ -185,7 +185,8 @@ class WeChatMessage(WeChatBase):
         self._is_call_next: bool | None = None
         self._is_last_call: bool | None = None
         self._is_pat: bool | None = None
-        self.pat_text: str | None = None
+        self._is_pat_me: bool | None = None
+        self._pat_text: str | None = None
         self._is_recall: bool | None = None
         self._is_new_user: bool | None = None
         self._is_new_room: bool | None = None
@@ -461,19 +462,16 @@ class WeChatMessage(WeChatBase):
                 self._text = '[实时地图位置分享中]'
 
             ## System.
-            case 1000:
+            case 10000:
                 self._text = '[系统信息]'
 
+            ## Pat.
+            case 10002 if self.is_pat:
+                self._text = f'[{self.pat_text}]'
+
             ## Recall.
-            case 1002:
-
-                ### Pat.
-                if self.is_pat:
-                    self._text = f'[{self.pat_text}]'
-
-                ### Recall.
-                elif self.is_recall:
-                    self._text = '[撤回了一条消息]'
+            case 10002 if self.is_recall:
+                self._text = '[撤回了一条消息]'
 
             case _:
                 self._text = '[消息]'
@@ -992,7 +990,7 @@ class WeChatMessage(WeChatBase):
             return self._is_call
 
         # Text.
-        if self.type in (1, 3, 34, 42, 43, 47, 48, 49, 50, 56, 1002):
+        if self.type in (1, 3, 34, 42, 43, 47, 48, 49, 50, 56, 10002):
             text = self.text
             text = text.strip()
         else:
@@ -1026,6 +1024,9 @@ class WeChatMessage(WeChatBase):
 
             ## Private chat.
             or self.room is None
+
+            ## Pat me.
+            or self.is_pat_me
 
             ## At self.
             or is_at_me
@@ -1153,6 +1154,30 @@ class WeChatMessage(WeChatBase):
 
 
     @property
+    def is_pat_me(self) -> bool:
+        """
+        Whether if is message of pat me.
+
+        Returns
+        -------
+        Judge result.
+        """
+
+        # Cache.
+        if self._is_pat_me is not None:
+            return self._is_pat_me
+
+        # Judge.
+        pattern = r'<template><!\[CDATA\["\$\{[\da-z_]+\}" 拍了拍我\]\]></template>'
+        self._is_pat_me = (
+            self.is_pat
+            and search(pattern, self.data) is not None
+        )
+
+        return self._is_pat_me
+
+
+    @property
     def pat_text(self) -> str:
         """
         Text of pat message.
@@ -1177,7 +1202,7 @@ class WeChatMessage(WeChatBase):
         text: str = search(pattern, self.data)
 
         ## User name.
-        pattern = r'"\$\{([a-z_\d]+)\}"'
+        pattern = r'"\$\{([\da-z_]+)\}"'
         users_id: list[str] = findall(pattern, text)
         for user_id in users_id:
             user_name = self.receiver.wechat.client.get_contact_name(user_id)
