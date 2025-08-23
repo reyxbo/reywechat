@@ -319,7 +319,7 @@ class WeChatDatabase(WeChatBase):
                             '51 is system synchronize data message, '
                             '56 is real time position data message, '
                             '1000 is system message, '
-                            '1002 is recall message, '
+                            '1002 is pat or recall message, '
                             'other omit.'
                         )
                     },

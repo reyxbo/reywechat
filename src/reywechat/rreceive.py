@@ -145,6 +145,8 @@ class WeChatMessage(WeChatBase):
             self.room = self.window
             if ':\n' in self.data:
                 self.user, self.data = self.data.split(':\n', 1)
+                if self.user == self.room:
+                    self.user = None
             else:
                 self.user = None
         else:
@@ -164,6 +166,7 @@ class WeChatMessage(WeChatBase):
         self._share_type: int | None = None
         self._share_params: MessageShareParameter | None = None
         self._is_file_uploading: bool | None = None
+        self._file_name_uploading: str | None = None
         self._is_file_uploaded: bool | None = None
         self._is_forward: bool | None = None
         self._is_mini_program: bool | None = None
@@ -181,6 +184,9 @@ class WeChatMessage(WeChatBase):
         self._call_text: str | None = None
         self._is_call_next: bool | None = None
         self._is_last_call: bool | None = None
+        self._is_pat: bool | None = None
+        self.pat_text: str | None = None
+        self._is_recall: bool | None = None
         self._is_new_user: bool | None = None
         self._is_new_room: bool | None = None
         self._is_new_room_user: bool | None = None
@@ -414,8 +420,7 @@ class WeChatMessage(WeChatBase):
 
                 ### File uploading.
                 elif self.is_file_uploading:
-                    file_name: str = search('<title><![CDATA[([^<>]+)]]></title>', self.data)
-                    self._text = f'[文件"{file_name}"开始上传]'
+                    self._text = f'[文件"{self.file_name_uploading}"开始上传]'
 
                 ### Transfer money.
                 elif self.is_money:
@@ -461,7 +466,14 @@ class WeChatMessage(WeChatBase):
 
             ## Recall.
             case 1002:
-                self._text = '[撤回了一条消息]'
+
+                ### Pat.
+                if self.is_pat:
+                    self._text = f'[{self.pat_text}]'
+
+                ### Recall.
+                elif self.is_recall:
+                    self._text = '[撤回了一条消息]'
 
             case _:
                 self._text = '[消息]'
@@ -632,6 +644,30 @@ class WeChatMessage(WeChatBase):
         )
 
         return self._is_file_uploading
+
+
+    @property
+    def file_name_uploading(self) -> str:
+        """
+        Name of file uploading.
+
+        Returns
+        -------
+        Text
+        """
+
+        # Cache.
+        if self._file_name_uploading is not None:
+            return self._file_name_uploading
+
+        # Check.
+        if not self.is_file_uploading:
+            throw(AssertionError, self._is_file_uploading)
+
+        # Get.
+        self._file_name_uploading: str = search(r'<title><!\[CDATA\[([^<>]+)\]\]></title>', self.data)
+
+        return self._file_name_uploading
 
 
     @property
@@ -847,7 +883,7 @@ class WeChatMessage(WeChatBase):
             throw(AssertionError, self._is_money)
 
         # Judge.
-        amount_str: str = search(r'<feedesc><![CDATA[￥([\d.,]+)]]></feedesc>', self.data)
+        amount_str: str = search(r'<feedesc><!\[CDATA\[￥([\d.,]+)\]\]></feedesc>', self.data)
         self._money_amount = float(amount_str)
 
         return self._money_amount
@@ -1091,6 +1127,89 @@ class WeChatMessage(WeChatBase):
             self.receiver.mark.remove(call_next_mark_value, 'is_call_next')
 
         return self.is_last_call
+
+
+    @property
+    def is_pat(self) -> bool:
+        """
+        Whether if is message of pat.
+
+        Returns
+        -------
+        Judge result.
+        """
+
+        # Cache.
+        if self._is_pat is not None:
+            return self._is_pat
+
+        # Judge.
+        self._is_pat = (
+            self.type == 10002
+            and self.data.startswith('<sysmsg type="pat">')
+        )
+
+        return self._is_pat
+
+
+    @property
+    def pat_text(self) -> str:
+        """
+        Text of pat message.
+
+        Returns
+        -------
+        Text
+        """
+
+        # Cache.
+        if self._pat_text is not None:
+            return self._pat_text
+
+        # Check.
+        if not self.is_pat:
+            throw(AssertionError, self._is_pat)
+
+        # Get.
+
+        ## Text.
+        pattern = r'<template><!\[CDATA\[([^<>]+)\]\]></template>'
+        text: str = search(pattern, self.data)
+
+        ## User name.
+        pattern = r'"\$\{([a-z_\d]+)\}"'
+        users_id: list[str] = findall(pattern, text)
+        for user_id in users_id:
+            user_name = self.receiver.wechat.client.get_contact_name(user_id)
+            old_text = '${%s}' % user_id
+            text = text.replace(old_text, user_name)
+
+        self._pat_text = text
+
+        return self._pat_text
+
+
+    @property
+    def is_recall(self) -> bool:
+        """
+        Whether if is message of recall.
+
+        Returns
+        -------
+        Judge result.
+        """
+
+        # Cache.
+        if self._is_recall is not None:
+            return self._is_recall
+
+        # Judge.
+        self._is_recall = (
+            self.type == 10002
+            and self.data.startswith('<sysmsg type="revokemsg">')
+        )
+
+        return self._is_recall
 
 
     @property
