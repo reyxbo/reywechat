@@ -14,8 +14,6 @@ from typing import Any, TypedDict, Literal, overload
 from collections.abc import Callable
 from queue import Queue
 from json import loads as json_loads
-from bs4 import BeautifulSoup as BSBeautifulSoup
-from bs4.element import Tag as BSTag
 from reykit.rbase import throw
 from reykit.rimage import decode_qrcode
 from reykit.rlog import Mark
@@ -47,19 +45,40 @@ MessageParameterFile = TypedDict(
     }
 )
 MessageParameter = TypedDict(
-        'MessageParameter',
-        {
-            'time': int,
-            'id': int,
-            'number': int,
-            'room': str | None,
-            'user': str | None,
-            'type': int,
-            'display': str,
-            'data': str,
-            'file': MessageParameterFile
-        }
-    )
+    'MessageParameter',
+    {
+        'time': int,
+        'id': int,
+        'number': int,
+        'room': str | None,
+        'user': str | None,
+        'type': int,
+        'display': str,
+        'data': str,
+        'file': MessageParameterFile
+    }
+)
+MessageShareParameter = TypedDict(
+    'MessageShareParameter',
+    {
+        'name': str | None,
+        'title': str | None,
+        'des': str | None,
+        'url': str | None
+    }
+)
+MessageQuoteParameter = TypedDict(
+    'MessageQuoteParameter',
+    {
+        'text': str,
+        'quote_id': int,
+        'quote_time': int,
+        'quote_type': int,
+        'quote_user': str,
+        'quote_user_name': str,
+        'quote_data': str
+    }
+)
 
 
 class WeChatMessage(WeChatBase):
@@ -136,12 +155,28 @@ class WeChatMessage(WeChatBase):
         self._user_name: str | None = None
         self._room_name: str | None = None
         self._window_name: str | None = None
+        self._text: str | None = None
+        self._voice_len: float | None = None
+        self._video_len: int | None = None
+        self._business_card_name: str | None = None
+
+        ### Share.
+        self._share_type: int | None = None
+        self._share_params: MessageShareParameter | None = None
+        self._is_file_uploading: bool | None = None
+        self._is_file_uploaded: bool | None = None
+        self._is_forward: bool | None = None
+        self._is_mini_program: bool | None = None
         self._is_quote: bool | None = None
-        self._is_quote_self: bool | None = None
+        self._is_quote_me: bool | None = None
         self._quote_params: dict[Literal['text', 'quote_id', 'quote_type', 'quote_user', 'quote_user_name', 'quote_data'], str] | None = None
+        self._is_money: bool | None = None
+        self._money_amount: float | None = None
+        self._is_app: bool | None = None
+
         self._at_names: list[str] = None
         self._is_at: bool | None = None
-        self._is_at_self: bool | None = None
+        self._is_at_me: bool | None = None
         self._is_call: bool | None = None
         self._call_text: str | None = None
         self._is_call_next: bool | None = None
@@ -154,11 +189,9 @@ class WeChatMessage(WeChatBase):
         self._change_room_name: str | None = None
         self._is_kick_out_room: bool | None = None
         self._is_dissolve_room: bool | None = None
-        self._is_image: bool | None = None
         self._image_qrcodes: list[str] | None = None
+        self._is_html: bool | None = None
         self._is_xml: bool | None = None
-        self._is_app: bool | None = None
-        self._app_params: dict | None = None
         self._valid: bool | None = None
 
         ## Update call.
@@ -278,9 +311,402 @@ class WeChatMessage(WeChatBase):
 
 
     @property
+    def text(self) -> str:
+        """
+        Text description of message content.
+
+        Returns
+        -------
+        Text.
+        """
+
+        # Cache.
+        if self._text is not None:
+            return self._text
+
+        # Get.
+        match self.type:
+
+            ## Text.
+            case 1:
+                self._text = self.data
+
+            ## Image.
+            case 3:
+                self._text = '[图片]'
+
+            ## Voice.
+            case 34:
+                voice_len = round(self.voice_len, 1)
+                self._text = f'[{voice_len}秒的语音]'
+
+            ## New firend invitation.
+            case 37:
+                self._text = '[新好友邀请]'
+
+            ## Business card.
+            case 42:
+                self._text = f'[分享名片"{self.business_card_name}"]'
+
+            ## Video.
+            case 43:
+                self._text = f'[{self.video_len}秒的视频]'
+
+            ## Emoticon.
+            case 47:
+                self._text = f'[动画表情]'
+
+            ## Position.
+            case 48:
+                self._text = '[地图位置分享]'
+
+            ## Share.
+            case 49:
+
+                ### Pure URL text.
+                if self.share_type == 1:
+                    self._text = '[网址]'
+                    if self.share_params['title'] is not None:
+                        self._text += f' {self.share_params['title']}'
+
+                ### File uploaded.
+                elif self.is_file_uploaded:
+                    self._text = f'[文件"{self.file['name']}"完成上传]'
+
+                ### Initiate real time location.
+                elif self.share_type == 17:
+                    self._text = '[开始实时地图位置分享]'
+
+                ### Forword messages.
+                elif self.is_forword:
+                    if self.share_params['title'] is None:
+                        self._text = '[转发聊天记录]'
+                    else:
+                        self._text = f'[转发"{self.share_params['title']}"]'
+                    if self.share_params['des'] is not None:
+                        self._text += f' {self.share_params['des']}'
+
+                ### Mini program.
+                elif self.is_mini_program:
+                    if self.share_params['name'] is None:
+                        self._text = '[小程序分享]'
+                    else:
+                        self._text = f'[小程序"{self.share_params['name']}"分享]'
+                    if self.share_params['title'] is not None:
+                        self._text += f' {self.share_params['title']}'
+
+                ### Video channel.
+                elif self.share_type == 51:
+                    if self.share_params['name'] is None:
+                        self._text = '[视频号分享]'
+                    else:
+                        self._text = f'[视频号"{self.share_params['name']}"分享]'
+                    if self.share_params['title'] is not None:
+                        self._text += f' {self.share_params['title']}'
+
+                ### Quote.
+                elif self.is_quote:
+                    self._text = f'[引用了"{self.quote_params['quote_user_name']}"的消息并发言] {self.quote_params['text']}'
+
+                ### Quote me.
+                elif self.is_quote_me:
+                    self._text = f'[引用了你的消息并发言] {self.quote_params['text']}'
+
+                ### File uploading.
+                elif self.is_file_uploading:
+                    file_name: str = search('<title><![CDATA[([^<>]+)]]></title>', self.data)
+                    self._text = f'[文件"{file_name}"开始上传]'
+
+                ### Transfer money.
+                elif self.is_money:
+                    self._text = f'[转账{self.money_amount}￥]'
+
+                ### App.
+                elif self.is_app:
+                    if self.share_params['name'] is None:
+                        self._text = '[APP分享]'
+                    else:
+                        self._text = f'[APP"{self.share_params['name']}"分享]'
+                    if self.share_params["title"] is not None:
+                        self._text += f' {self.share_params["title"]}'
+                    if self.share_params["des"] is not None:
+                        self._text += f' {self.share_params["des"]}'
+
+                ### Other.
+                else:
+                    if self.share_params['name'] is None:
+                        self._text = '[分享]'
+                    else:
+                        self._text = f'["{self.share_params['name']}"分享]'
+                    if self.share_params["title"] is not None:
+                        self._text += f' {self.share_params["title"]}'
+                    if self.share_params["des"] is not None:
+                        self._text += f' {self.share_params["des"]}'
+
+            ## Voice call or video call.
+            case 50:
+                self._text = '[视频或语音通话]'
+
+            ## System sync.
+            case 51:
+                self._text = '[系统同步]'
+
+            ## Real time position.
+            case 56:
+                self._text = '[实时地图位置分享中]'
+
+            ## System.
+            case 1000:
+                self._text = '[系统信息]'
+
+            ## Recall.
+            case 1002:
+                self._text = '[撤回了一条消息]'
+
+            case _:
+                self._text = '[消息]'
+
+        return self._text
+
+
+    @property
+    def voice_len(self) -> float:
+        """
+        Voice message length, unit is seconds.
+
+        Returns
+        -------
+        Voice message length.
+        """
+
+        # Cache.
+        if self._voice_len is not None:
+            return self._voice_len
+
+        # Check.
+        if self.type != 34:
+            throw(AssertionError, self.type)
+
+        # Get.
+        pattern = r'voicelength="(\d+)"'
+        voice_len_us_str = search(pattern, self.data)
+        self._voice_len = int(voice_len_us_str) / 1000
+
+        return self._voice_len
+
+
+    @property
+    def video_len(self) -> int:
+        """
+        Video message length, unit is seconds.
+
+        Returns
+        -------
+        Video message length.
+        """
+
+        # Cache.
+        if self._video_len is not None:
+            return self._video_len
+
+        # Check.
+        if self.type != 43:
+            throw(AssertionError, self.type)
+
+        # Get.
+        pattern = r'playlength="(\d+)"'
+        video_len_s_str = search(pattern, self.data)
+        self._video_len = int(video_len_s_str)
+
+        return self._video_len
+
+
+    @property
+    def business_card_name(self) -> str:
+        """
+        Nickname of business card message.
+
+        Returns
+        -------
+        Voice message length.
+        """
+
+        # Cache.
+        if self._business_card_name is not None:
+            return self._business_card_name
+
+        # Check.
+        if self.type != 42:
+            throw(AssertionError, self.type)
+
+        # Get.
+        pattern = r'nickname="([^"]+)"'
+        self._business_card_name = search(pattern, self.data)
+
+        return self._business_card_name
+
+
+    @property
+    def share_type(self) -> int:
+        """
+        Type number of share message.
+
+        Returns
+        -------
+        Type number.
+        """
+
+        # Cache.
+        if self._share_type is not None:
+            return self._share_type
+
+        # Check.
+        if self.type != 49:
+            throw(AssertionError, self.type)
+
+        # Get.
+        pattern = r'<type>(\d+)</type>'
+        share_type_str: str = search(pattern, self.data)
+        self._share_type = int(share_type_str)
+
+        return self._share_type
+
+
+    @property
+    def share_params(self) -> MessageShareParameter:
+        """
+        Share message parameters.
+
+        Returns
+        -------
+        Parameters.
+        """
+
+        # Cache.
+        if self._share_params is not None:
+            return self._share_params
+
+        # Check.
+        if self.type != 49:
+            throw(AssertionError, self.type)
+
+        # Extract.
+        name: str | None = search('.*<appname>([^<>]+)</appname>', self.data)
+        if name is None:
+            name: str | None = search('.*<sourcedisplayname>([^<>]+)</sourcedisplayname>', self.data)
+        if name is None:
+            name: str | None = search('.*<nickname>([^<>]+)</nickname>', self.data)
+        title: str | None = search('<title>([^<>]+)</title>', self.data)
+        des: str | None = search('.*<des>([^<>]+)</des>', self.data)
+        if des is None:
+            des: str | None = search('.*<desc>([^<>]+)</desc>', self.data)
+        url: str | None = search('.*<url>([^<>]+)</url>', self.data)
+        self._share_params: MessageShareParameter = {
+            'name': name,
+            'title': title,
+            'des': des,
+            'url': url
+        }
+
+        return self._share_params
+
+
+    @property
+    def is_file_uploading(self) -> bool:
+        """
+        Whether if is share message of other side file uploading.
+
+        Returns
+        -------
+        Judge result.
+        """
+
+        # Cache.
+        if self._is_file_uploading is not None:
+            return self._is_file_uploading
+
+        # Judge.
+        self._is_file_uploading = (
+            self.type == 49
+            and self.share_type == 74
+        )
+
+        return self._is_file_uploading
+
+
+    @property
+    def is_file_uploaded(self) -> bool:
+        """
+        Whether if is share message of other side file uploaded.
+
+        Returns
+        -------
+        Judge result.
+        """
+
+        # Cache.
+        if self._is_file_uploaded is not None:
+            return self._is_file_uploaded
+
+        # Judge.
+        self._is_file_uploading = (
+            self.type == 49
+            and self.share_type == 6
+        )
+
+        return self._is_file_uploaded
+
+
+    @property
+    def is_forword(self) -> bool:
+        """
+        Whether if is share message of forward messages.
+
+        Returns
+        -------
+        Judge result.
+        """
+
+        # Cache.
+        if self._is_forward is not None:
+            return self._is_forward
+
+        # Judge.
+        self._is_forward = (
+            self.type == 49
+            and self.share_type in (19, 40)
+        )
+
+        return self._is_forward
+
+
+    @property
+    def is_mini_program(self) -> bool:
+        """
+        Whether if is share message of mini program.
+
+        Returns
+        -------
+        Judge result.
+        """
+
+        # Cache.
+        if self._is_mini_program is not None:
+            return self._is_mini_program
+
+        # Judge.
+        self._is_mini_program = (
+            self.type == 49
+            and self.type == 33
+        )
+
+        return self._is_mini_program
+
+
+    @property
     def is_quote(self) -> bool:
         """
-        Whether if is message of quote message.
+        Whether if is share message of quote.
 
         Returns
         -------
@@ -294,16 +720,16 @@ class WeChatMessage(WeChatBase):
         # Judge.
         self._is_quote = (
             self.type == 49
-            and '<type>57</type>' in self.data
+            and self.share_type == 57
         )
 
         return self._is_quote
 
 
     @property
-    def is_quote_self(self) -> bool:
+    def is_quote_me(self) -> bool:
         """
-        Whether if is message of quote self.
+        Whether if is share message of quote me.
 
         Returns
         -------
@@ -311,25 +737,22 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_quote_self is not None:
-            return self._is_quote_self
+        if self._is_quote_me is not None:
+            return self._is_quote_me
 
         # Judge.
-        self._is_quote_self = (
+        self._is_quote_me = (
             self.is_quote
             and '<chatusr>%s</chatusr>' % self.receiver.wechat.client.login_info['id'] in self.data
         )
 
-        return self._is_quote_self
+        return self._is_quote_me
 
 
     @property
-    def quote_params(self) -> dict[
-        Literal['text', 'quote_id', 'quote_time', 'quote_type', 'quote_user', 'quote_user_name', 'quote_data'],
-        str | None
-    ]:
+    def quote_params(self) -> MessageQuoteParameter:
         """
-        Return quote parameters of message.
+        Quote message parameters.
 
         Returns
         -------
@@ -343,13 +766,13 @@ class WeChatMessage(WeChatBase):
             - `Key 'quote_data'`: Quote message data.
         """
 
-        # Extracted.
+        # Cache.
         if self._quote_params is not None:
             return self._quote_params
 
         # Check.
         if not self.is_quote:
-            throw(AssertionError, self.is_quote)
+            throw(AssertionError, self._is_quote)
 
         # Extract.
         pattern = '<title>(.+?)</title>'
@@ -369,7 +792,7 @@ class WeChatMessage(WeChatBase):
         quote_user_name: str = search(pattern, self.data)
         pattern = '<content>(.+?)</content>'
         quote_data: str = search(pattern, self.data)
-        self._quote_params = {
+        self._quote_params: MessageQuoteParameter = {
             'text': text,
             'quote_id': quote_id,
             'quote_time': quote_time,
@@ -380,6 +803,77 @@ class WeChatMessage(WeChatBase):
         }
 
         return self._quote_params
+
+
+    @property
+    def is_money(self) -> bool:
+        """
+        Whether if is message of transfer money.
+
+        Returns
+        -------
+        Judge result.
+        """
+
+        # Cache.
+        if self._is_money is not None:
+            return self._is_money
+
+        # Judge.
+        self._is_money = (
+            self.type == 49
+            and self.share_type == 2000
+        )
+
+        return self._is_money
+
+
+    @property
+    def money_amount(self) -> float:
+        """
+        Transfer money amount.
+
+        Returns
+        -------
+        Amount.
+        """
+
+        # Cache.
+        if self._money_amount is not None:
+            return self._money_amount
+
+        # Check.
+        if not self.is_money:
+            throw(AssertionError, self._is_money)
+
+        # Judge.
+        amount_str: str = search(r'<feedesc><![CDATA[￥([\d.,]+)]]></feedesc>', self.data)
+        self._money_amount = float(amount_str)
+
+        return self._money_amount
+
+
+    @property
+    def is_app(self) -> bool:
+        """
+        Whether if is application share.
+
+        Returns
+        -------
+        Judge result.
+        """
+
+        # Cache.
+        if self._is_app is not None:
+            return self._is_app
+
+        # Judge.
+        self._is_app = (
+            self.type == 49
+            and search('<appname>[^<>]+</appname>', self.data) is not None
+        )
+
+        return self._is_app
 
 
     @property
@@ -428,9 +922,9 @@ class WeChatMessage(WeChatBase):
 
 
     @property
-    def is_at_self(self) -> bool:
+    def is_at_me(self) -> bool:
         """
-        Whether if is message of `@` self.
+        Whether if is message of `@` me.
 
         Returns
         -------
@@ -438,13 +932,13 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_at_self is not None:
-            return self._is_at_self
+        if self._is_at_me is not None:
+            return self._is_at_me
 
         # Judge.
-        self._is_at_self = self.receiver.wechat.client.login_info['name'] in self.at_names
+        self._is_at_me = self.receiver.wechat.client.login_info['name'] in self.at_names
 
-        return self._is_at_self
+        return self._is_at_me
 
 
     @property
@@ -472,15 +966,15 @@ class WeChatMessage(WeChatBase):
             return self._is_call
         text = text.strip()
 
-        ## At self.
-        at_self_keyword = '@%s\u2005' % self.receiver.wechat.client.login_info['name']
-        if at_self_keyword in text:
-            is_at_self = True
-            text = text.replace(at_self_keyword, '')
+        ## At me.
+        at_me_keyword = '@%s\u2005' % self.receiver.wechat.client.login_info['name']
+        if at_me_keyword in text:
+            is_at_me = True
+            text = text.replace(at_me_keyword, '')
         else:
-            is_at_self = False
+            is_at_me = False
 
-        ## Call self.
+        ## Call me.
         pattern = fr'^{self.receiver.call_name}[\s,，]*(.*)$'
         result: str | None = search(pattern, text)
         if result is not None:
@@ -499,13 +993,13 @@ class WeChatMessage(WeChatBase):
             or self.room is None
 
             ## At self.
-            or is_at_self
+            or is_at_me
 
             ## Call self.
             or is_call_name
 
-            ## Quote self.
-            or self.is_quote_self
+            ## Quote me.
+            or self.is_quote_me
 
         ):
             is_call = True
@@ -549,13 +1043,13 @@ class WeChatMessage(WeChatBase):
 
         # Check.
         if not self.is_call:
-            throw(AssertionError, self.is_call)
+            throw(AssertionError, self._is_call)
 
         return self._call_text
 
 
     @property
-    def is_call_next(self) -> str:
+    def is_call_next(self) -> bool:
         """
         Whether if is message of call next message.
 
@@ -575,7 +1069,7 @@ class WeChatMessage(WeChatBase):
 
 
     @property
-    def is_last_call(self) -> str:
+    def is_last_call(self) -> bool:
         """
         Whether if is message of last message call this time.
 
@@ -692,7 +1186,7 @@ class WeChatMessage(WeChatBase):
 
         # Extract.
         pattern = '邀请"(.+?)"加入了群聊'
-        result = search(pattern, self.data)
+        result: str = search(pattern, self.data)
         self._new_room_user_name = result
 
         return result
@@ -737,7 +1231,7 @@ class WeChatMessage(WeChatBase):
 
         # Extract.
         pattern = '修改群名为“(.+?)”'
-        result = search(pattern, self.data)
+        result: str = search(pattern, self.data)
         self._change_room_name = result
 
         return self._change_room_name
@@ -792,26 +1286,6 @@ class WeChatMessage(WeChatBase):
 
 
     @property
-    def is_image(self) -> bool:
-        """
-        Whether if is image.
-
-        Returns
-        -------
-        Judge result.
-        """
-
-        # Cache.
-        if self._is_image is not None:
-            return self._is_image
-
-        # Judge.
-        self._is_image = self.type == 3
-
-        return self._is_image
-
-
-    @property
     def image_qrcodes(self) -> list[str]:
         """
         Return image QR code texts.
@@ -821,18 +1295,41 @@ class WeChatMessage(WeChatBase):
         Image QR code texts.
         """
 
-        # Extracted.
+        # Cache.
         if self._image_qrcodes is not None:
             return self._image_qrcodes
 
         # Check.
-        if not self.is_image:
-            throw(AssertionError, self.is_image)
+        if self.type != 3:
+            throw(AssertionError, self.type)
 
         # Extract.
         self._image_qrcodes = decode_qrcode(self.file['path'])
 
         return self._image_qrcodes
+
+
+    @property
+    def is_html(self) -> bool:
+        """
+        Whether if is HTML format.
+
+        Returns
+        -------
+        Judge result.
+        """
+
+        # Cache.
+        if self._is_html is not None:
+            return self._is_html
+
+        # Judge.
+        self._is_html = (
+            self.type != 1
+            and search(r'^<(\S+)[ >].*</\1>\s*', self.data) is not None
+        )
+
+        return self._is_html
 
 
     @property
@@ -853,66 +1350,10 @@ class WeChatMessage(WeChatBase):
         self._is_xml = (
             self.type != 1
             and self.data.startswith('<?xml ')
+            and self.data.rstrip().endswith('</msg>')
         )
 
         return self._is_xml
-
-
-    @property
-    def is_app(self) -> bool:
-        """
-        Whether if is application share.
-
-        Returns
-        -------
-        Judge result.
-        """
-
-        # Cache.
-        if self._is_app is not None:
-            return self._is_app
-
-        # Judge.
-        self.is_app = (
-            self.type == 49
-            and self.is_xml
-            and '<appmsg ' in self.data[:50]
-        )
-
-        return self.is_app
-
-
-    @property
-    def app_params(self) -> dict:
-        """
-        Return application share parameters.
-
-        Returns
-        -------
-        Application share parameters.
-        """
-
-        # Extracted.
-        if self._app_params is not None:
-            return self._app_params
-
-        # Check.
-        if not self.is_app:
-            throw(AssertionError, self.is_app)
-
-        # Extract.
-        bs_document = BSBeautifulSoup(
-            self.data,
-            'xml'
-        )
-        bs_appmsg = bs_document.find('appmsg')
-        self._app_params = {
-            bs_element.name: bs_element.text
-            for bs_element in bs_appmsg.contents
-            if type(bs_element) == BSTag
-        }
-
-        return self._app_params
 
 
     @property
@@ -1336,17 +1777,7 @@ class WechatReceiver(WeChatBase):
                     )
 
             ## Other.
-            case 49:
-
-                ### Check.
-                pattern = r'^.+? : \[文件\](.+)$'
-                file_name: str | None = search(pattern, message.display)
-                if (
-                    file_name is None
-                    or '<type>6</type>' not in message.data
-                ):
-                    return
-
+            case 49 if message.is_file_uploaded:
                 pattern = r'<md5>([\da-f]{32})</md5>'
                 file_md5: str = search(pattern, message.data)
                 cache_path = self.wechat.cache.index(file_md5, file_name, copy=True)
