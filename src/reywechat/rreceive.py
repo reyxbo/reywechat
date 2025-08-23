@@ -956,10 +956,9 @@ class WeChatMessage(WeChatBase):
             return self._is_call
 
         # Text.
-        if self.type == 1:
-            text = self.data
-        elif self.is_quote:
-            text = self.quote_params['text']
+        if self.type in (1, 3, 34, 42, 43, 47, 48, 49, 50, 56, 1002):
+            text = self.text
+            text = text.strip()
         else:
             self._is_call = False
             self._call_text = None
