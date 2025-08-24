@@ -194,6 +194,72 @@ class WeChatSendParameter(WeChatBase):
         self.exc_reports: list[str] = []
         self.status: WeChatSendStatusEnum
 
+        ## Cache.
+        self._text: str | None = None
+
+
+    @property
+    def text(self) -> str:
+        """
+        Text description of parameter content.
+
+        Returns
+        -------
+        Text.
+        """
+
+        # Cache.
+        if self._text is not None:
+            return self._text
+
+        # Get.
+        match self.send_type:
+
+            ## Text.
+            case WeChatSendTypeEnum.TEXT:
+                self._text = self.params['text']
+
+            ## Text with '@'.
+            case WeChatSendTypeEnum.TEXT_AT:
+                self._text = self.params['text']
+
+            ## File.
+            case WeChatSendTypeEnum.FILE:
+                self._text = f'[文件"{self.params['file_name']}"发送]'
+
+            ## Image.
+            case WeChatSendTypeEnum.IMAGE:
+                self._text = f'[图片"{self.params['file_name']}"发送]'
+
+            ## Emotion.
+            case WeChatSendTypeEnum.EMOTION:
+                self._text = f'[动画表情"{self.params['file_name']}"发送]'
+
+            ## Pat.
+            case WeChatSendTypeEnum.PAT:
+                user_name = self.sender.wechat.client.get_contact_name(self.params['user_id'])
+                self._text = f'[我拍了拍"{user_name}"]'
+
+            ## Public account.
+            case WeChatSendTypeEnum.PUBLIC:
+                self._text = f'[公众号"{self.params['title']}"分享]'
+                public_name = self.params.get('public_name')
+                text = self.params.get('public_name')
+                if public_name is not None:
+                    self._text += f' {public_name}'
+                if text is not None:
+                    self._text += f' {text}'
+
+            ## Forward.
+            case WeChatSendTypeEnum.FORWARD:
+                self._text = '[转发了一条消息]'
+
+            ## Throw exception.
+            case send_type:
+                throw(ValueError, send_type)
+
+        return self._text
+
 
 class WeChatSender(WeChatBase):
     """

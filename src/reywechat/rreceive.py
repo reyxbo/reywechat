@@ -378,7 +378,7 @@ class WeChatMessage(WeChatBase):
 
                 ### File uploaded.
                 elif self.is_file_uploaded:
-                    self._text = f'[文件"{self.file['name']}"完成上传]'
+                    self._text = f'[文件"{self.file['name']}"发送完成]'
 
                 ### Initiate real time location.
                 elif self.share_type == 17:
@@ -421,7 +421,7 @@ class WeChatMessage(WeChatBase):
 
                 ### File uploading.
                 elif self.is_file_uploading:
-                    self._text = f'[文件"{self.file_name_uploading}"开始上传]'
+                    self._text = f'[文件"{self.file_name_uploading}"发送中]'
 
                 ### Transfer money.
                 elif self.is_money:
