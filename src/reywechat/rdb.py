@@ -318,8 +318,14 @@ class WeChatDatabase(WeChatBase):
                             '50 is voice call or video call invitation message, '
                             '51 is system synchronize data message, '
                             '56 is real time position data message, '
-                            '10000 is system message, '
-                            '10002 is pat or recall message, '
+                            '10000 is text system message, '
+                            '10002 is system message ('
+                                'date type, '
+                                '"pat" is pat, '
+                                '"revokemsg" is recall, '
+                                '"paymsg" is transfer money tip, '
+                                'other omit'
+                            '), '
                             'other omit.'
                         )
                     },

@@ -990,7 +990,11 @@ class WeChatMessage(WeChatBase):
             return self._is_call
 
         # Text.
-        if self.type in (1, 3, 34, 42, 43, 47, 48, 49, 50, 56, 10002):
+        if (
+            self.type in (1, 3, 34, 42, 43, 47, 48, 49, 50, 56)
+            or self.is_pat
+            or self.is_recall
+        ):
             text = self.text
             text = text.strip()
         else:
@@ -1023,7 +1027,10 @@ class WeChatMessage(WeChatBase):
             self.is_last_call
 
             ## Private chat.
-            or self.room is None
+            or (
+                self.room is None
+                and self.user is not None
+            )
 
             ## Pat me.
             or self.is_pat_me
@@ -1257,6 +1264,7 @@ class WeChatMessage(WeChatBase):
             and (
                 self.data == '以上是打招呼的内容'
                 or self.data.startswith('你已添加了')
+                or self.data.endswith('，现在可以开始聊天了。')
             )
         )
 
