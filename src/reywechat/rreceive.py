@@ -1051,7 +1051,7 @@ class WeChatMessage(WeChatBase):
         if result is not None:
             text = result
 
-        text = text.strip()
+        self._call_text = text.strip()
 
         return self._call_text
 
