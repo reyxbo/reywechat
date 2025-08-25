@@ -809,22 +809,22 @@ class WeChatMessage(WeChatBase):
             throw(AssertionError, self._is_quote)
 
         # Extract.
-        pattern = '<title>(.+?)</title>'
+        pattern = '<title>([^<>]+)</title>'
         text: str = search(pattern, self.data)
-        pattern = r'<svrid>(\w+?)</svrid>'
+        pattern = r'<svrid>([^<>]+)</svrid>'
         quote_id = search(pattern, self.data)
         quote_id = int(quote_id)
-        pattern = r'<createtime>(\d{10})</createtime>'
+        pattern = r'<createtime>([^<>]+)</createtime>'
         quote_time = search(pattern, self.data)
         quote_time = int(quote_time)
-        pattern = r'<refermsg>\s*<type>(\d+?)</type>'
+        pattern = r'<refermsg>.*?<type>([^<>]+)</type>'
         quote_type = search(pattern, self.data)
         quote_type = int(quote_type)
-        pattern = r'<chatusr>(\w+?)</chatusr>'
+        pattern = r'<chatusr>([^<>]+)</chatusr>'
         quote_user: str = search(pattern, self.data)
-        pattern = '<displayname>(.+?)</displayname>'
+        pattern = '<displayname>([^<>]+)</displayname>'
         quote_user_name: str = search(pattern, self.data)
-        pattern = '<content>(.+?)</content>'
+        pattern = '<content>([^<>]+)</content>'
         quote_data: str = search(pattern, self.data)
         self._quote_params: MessageQuoteParameter = {
             'text': text,
