@@ -201,8 +201,8 @@ class WeChatMessage(WeChatBase):
         self._is_xml: bool | None = None
         self._valid: bool | None = None
 
-        ## Update call.
-        self.is_call
+        ## Update call next.
+        self.is_call_next
 
 
     @property
@@ -989,39 +989,8 @@ class WeChatMessage(WeChatBase):
         if self._is_call is not None:
             return self._is_call
 
-        # Text.
-        if (
-            self.type in (1, 3, 34, 42, 43, 47, 48, 49, 50, 56)
-            or self.is_pat
-            or self.is_recall
-        ):
-            text = self.text
-            text = text.strip()
-        else:
-            self._is_call = False
-            self._call_text = None
-            return self._is_call
-        text = text.strip()
-
-        ## At me.
-        at_me_keyword = '@%s\u2005' % self.receiver.wechat.client.login_info['name']
-        if at_me_keyword in text:
-            is_at_me = True
-            text = text.replace(at_me_keyword, '')
-        else:
-            is_at_me = False
-
-        ## Call me.
-        pattern = fr'^{self.receiver.call_name}[\s,，]*(.*)$'
-        result: str | None = search(pattern, text)
-        if result is not None:
-            is_call_name = True
-            text = result or None
-        else:
-            is_call_name = False
-
         # Judge.
-        if (
+        self._is_call = (
 
             ## Last call.
             self.is_last_call
@@ -1036,36 +1005,15 @@ class WeChatMessage(WeChatBase):
             or self.is_pat_me
 
             ## At self.
-            or is_at_me
+            or '@%s\u2005' % self.receiver.wechat.client.login_info['name'] in self.data
 
             ## Call self.
-            or is_call_name
+            or self.data.lstrip().startswith(self.receiver.call_name)
 
             ## Quote me.
             or self.is_quote_me
 
-        ):
-            is_call = True
-            call_text = text
-        else:
-            is_call = False
-            call_text = None
-
-        ## Call next.
-        is_call_next = (
-            self.room is not None
-            and is_call
-            and call_text is None
         )
-
-        ### Mark.
-        if is_call_next:
-            call_next_mark_value = f'{self.user}_{self.room}'
-            self.receiver.mark(call_next_mark_value, 'is_call_next')
-
-        self._is_call = is_call
-        self._call_text = call_text
-        self._is_call_next = is_call_next
 
         return self._is_call
 
@@ -1088,6 +1036,23 @@ class WeChatMessage(WeChatBase):
         if not self.is_call:
             throw(AssertionError, self._is_call)
 
+        # Get.
+        text = self.text
+
+        ## Replace.
+
+        ### At.
+        at_me_keyword = '@%s\u2005' % self.receiver.wechat.client.login_info['name']
+        text = text.replace(at_me_keyword, '')
+
+        ### Call.
+        pattern = fr'^\s*{self.receiver.call_name}[\s,，]*(.*)$'
+        result: str | None = search(pattern, text)
+        if result is not None:
+            text = result
+
+        text = text.strip()
+
         return self._call_text
 
 
@@ -1106,7 +1071,16 @@ class WeChatMessage(WeChatBase):
             return self._is_call_next
 
         # Judge.
-        self.is_call
+        self._is_call_next = (
+            self.room is not None
+            and self.is_call
+            and self.call_text == ''
+        )
+
+        ### Mark.
+        if self._is_call_next:
+            call_next_mark_value = f'{self.user}_{self.room}'
+            self.receiver.mark(call_next_mark_value, 'is_call_next')
 
         return self._is_call_next
 
