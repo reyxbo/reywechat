@@ -101,6 +101,10 @@ class WeChatDatabase(WeChatBase):
         Check and build all standard databases and tables, by `self.db_names`.
         """
 
+        # Check.
+        if self.database_wechat is None:
+            throw(ValueError, self.database_wechat)
+
         # Set parameter.
 
         ## Database.
