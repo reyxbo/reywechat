@@ -14,7 +14,7 @@ from reykit.ros import Folder, join_path
 
 from .rbase import WeChatBase
 from .rreceive import WeChatMessage
-from .rsend import WeChatSendParameter
+from .rsend import WeChatSendParameters
 from .rwechat import WeChat
 
 
@@ -185,27 +185,27 @@ class WeChatLog(WeChatBase):
 
     def log_send(
         self,
-        send_param: WeChatSendParameter
+        send_params: WeChatSendParameters
     ) -> None:
         """
         Log send message.
 
         Parameters
         ----------
-        send_param : `WeChatSendParameter` instance.
+        send_params : `WeChatSendParameters` instance.
         """
 
         # Generate record.
-        content_print = 'SEND    | %-20s' % send_param.receive_id
+        content_print = 'SEND    | %-20s' % send_params.receive_id
         content_file = 'SEND    | %s' % {
-            'receive_id': send_param.receive_id,
-            **send_param.params
+            'receive_id': send_params.receive_id,
+            **send_params.params
         }
-        if send_param.exc_reports == []:
+        if send_params.exc_reports == []:
             level = self.rrlog.INFO
         else:
             level = self.rrlog.ERROR
-            exc_text = '\n'.join(send_param.exc_reports)
+            exc_text = '\n'.join(send_params.exc_reports)
             content_print = '%s\n%s' % (content_print, exc_text)
             content_file = '%s\n%s' % (content_file, exc_text)
 

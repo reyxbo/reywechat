@@ -35,8 +35,8 @@ __all__ = (
 )
 
 
-MessageParameterFile = TypedDict(
-    'MessageParameterFile',
+MessageParametersFile = TypedDict(
+    'MessageParametersFile',
     {
         'path': str,
         'name': str,
@@ -44,8 +44,8 @@ MessageParameterFile = TypedDict(
         'size': int
     }
 )
-MessageParameter = TypedDict(
-    'MessageParameter',
+MessageParameters = TypedDict(
+    'MessageParameters',
     {
         'time': int,
         'id': int,
@@ -55,20 +55,20 @@ MessageParameter = TypedDict(
         'type': int,
         'display': str,
         'data': str,
-        'file': MessageParameterFile
+        'file': MessageParametersFile
     }
 )
-MessageShareParameter = TypedDict(
-    'MessageShareParameter',
+MessageShareParameters = TypedDict(
+    'MessageShareParameters',
     {
         'name': str | None,
         'title': str | None,
-        'des': str | None,
+        'desc': str | None,
         'url': str | None
     }
 )
-MessageQuoteParameter = TypedDict(
-    'MessageQuoteParameter',
+MessageQuoteParameters = TypedDict(
+    'MessageQuoteParameters',
     {
         'text': str,
         'quote_id': int,
@@ -132,7 +132,7 @@ class WeChatMessage(WeChatBase):
         self.display = display
         self.data = data
         self.window = window
-        self.file: MessageParameterFile | None = None
+        self.file: MessageParametersFile | None = None
         self.trigger_rule: TriggerRule | None = None
         self.trigger_continue = self.receiver.trigger.continue_
         self.trigger_break = self.receiver.trigger.break_
@@ -164,7 +164,7 @@ class WeChatMessage(WeChatBase):
 
         ### Share.
         self._share_type: int | None = None
-        self._share_params: MessageShareParameter | None = None
+        self._share_params: MessageShareParameters | None = None
         self._is_file_uploading: bool | None = None
         self._file_name_uploading: str | None = None
         self._is_file_uploaded: bool | None = None
@@ -206,7 +206,7 @@ class WeChatMessage(WeChatBase):
 
 
     @property
-    def params(self) -> MessageParameter:
+    def params(self) -> MessageParameters:
         """
         Return parameters dictionary.
 
@@ -216,7 +216,7 @@ class WeChatMessage(WeChatBase):
         """
 
         # Handle parameter.
-        params: MessageParameter = {
+        params: MessageParameters = {
             'time': self.time,
             'id': self.id,
             'number': self.number,
@@ -390,8 +390,8 @@ class WeChatMessage(WeChatBase):
                         self._text = '[转发聊天记录]'
                     else:
                         self._text = f'[转发"{self.share_params['title']}"]'
-                    if self.share_params['des'] is not None:
-                        self._text += f' {self.share_params['des']}'
+                    if self.share_params['desc'] is not None:
+                        self._text += f' {self.share_params['desc']}'
 
                 ### Mini program.
                 elif self.is_mini_program:
@@ -435,8 +435,8 @@ class WeChatMessage(WeChatBase):
                         self._text = f'[APP"{self.share_params['name']}"分享]'
                     if self.share_params["title"] is not None:
                         self._text += f' {self.share_params["title"]}'
-                    if self.share_params["des"] is not None:
-                        self._text += f' {self.share_params["des"]}'
+                    if self.share_params["desc"] is not None:
+                        self._text += f' {self.share_params["desc"]}'
 
                 ### Other.
                 else:
@@ -446,8 +446,8 @@ class WeChatMessage(WeChatBase):
                         self._text = f'["{self.share_params['name']}"分享]'
                     if self.share_params["title"] is not None:
                         self._text += f' {self.share_params["title"]}'
-                    if self.share_params["des"] is not None:
-                        self._text += f' {self.share_params["des"]}'
+                    if self.share_params["desc"] is not None:
+                        self._text += f' {self.share_params["desc"]}'
 
             ## Voice call or video call.
             case 50:
@@ -583,7 +583,7 @@ class WeChatMessage(WeChatBase):
 
 
     @property
-    def share_params(self) -> MessageShareParameter:
+    def share_params(self) -> MessageShareParameters:
         """
         Share message parameters.
 
@@ -607,14 +607,14 @@ class WeChatMessage(WeChatBase):
         if name is None:
             name: str | None = search('.*<nickname>([^<>]+)</nickname>', self.data)
         title: str | None = search('<title>([^<>]+)</title>', self.data)
-        des: str | None = search('.*<des>([^<>]+)</des>', self.data)
-        if des is None:
-            des: str | None = search('.*<desc>([^<>]+)</desc>', self.data)
+        desc: str | None = search('.*<des>([^<>]+)</des>', self.data)
+        if desc is None:
+            desc: str | None = search('.*<desc>([^<>]+)</desc>', self.data)
         url: str | None = search('.*<url>([^<>]+)</url>', self.data)
-        self._share_params: MessageShareParameter = {
+        self._share_params: MessageShareParameters = {
             'name': name,
             'title': title,
-            'des': des,
+            'desc': desc,
             'url': url
         }
 
@@ -784,7 +784,7 @@ class WeChatMessage(WeChatBase):
 
 
     @property
-    def quote_params(self) -> MessageQuoteParameter:
+    def quote_params(self) -> MessageQuoteParameters:
         """
         Quote message parameters.
 
@@ -826,7 +826,7 @@ class WeChatMessage(WeChatBase):
         quote_user_name: str = search(pattern, self.data)
         pattern = '<content>([^<>]+)</content>'
         quote_data: str = search(pattern, self.data)
-        self._quote_params: MessageQuoteParameter = {
+        self._quote_params: MessageQuoteParameters = {
             'text': text,
             'quote_id': quote_id,
             'quote_time': quote_time,
@@ -1938,7 +1938,7 @@ class WechatReceiver(WeChatBase):
 
         # Set parameter.
         cache_file = File(cache_path)
-        message_file: MessageParameterFile = {
+        message_file: MessageParametersFile = {
             'path': cache_path,
             'name': cache_file.name_suffix,
             'md5': cache_file.md5,

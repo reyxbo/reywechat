@@ -19,7 +19,7 @@ from reykit.rwrap import wrap_thread
 
 from .rbase import WeChatBase
 from .rreceive import WeChatMessage
-from .rsend import WeChatSendTypeEnum, WeChatSendStatusEnum, WeChatSendParameter
+from .rsend import WeChatSendTypeEnum, WeChatSendStatusEnum, WeChatSendParameters
 from .rwechat import WeChat
 
 
@@ -82,7 +82,7 @@ class WeChatDatabase(WeChatBase):
 
         # Check.
         if 'sqlite' in (self.database_wechat.backend, self.database_file.backend):
-            text='not suitable for SQLite databases'
+            text = 'not suitable for SQLite databases'
             throw(AssertionError, text=text)
 
         # Add handler.
@@ -1094,26 +1094,26 @@ class WeChatDatabase(WeChatBase):
 
 
         # Define.
-        def sender_handler_update_send_status(send_param: WeChatSendParameter) -> None:
+        def sender_handler_update_send_status(send_params: WeChatSendParameters) -> None:
             """
             Update field `status` of table `message_send`.
 
             Parameters
             ----------
-            send_param : `WeChatSendParameter` instance.
+            send_params : `WeChatSendParameters` instance.
             """
 
             # Check.
-            if send_param.status != WeChatSendStatusEnum.SENT:
+            if send_params.status != WeChatSendStatusEnum.SENT:
                 return
 
             # Handle parameter.
-            if send_param.exc_reports == []:
+            if send_params.exc_reports == []:
                 status = 2
             else:
                 status = 3
             data = {
-                'send_id': send_param.send_id,
+                'send_id': send_params.send_id,
                 'status': status,
                 'limit': 1
             }
@@ -1226,15 +1226,15 @@ class WeChatDatabase(WeChatBase):
                     parameter['file_path'] = file_path
                     parameter['file_name'] = file_name
 
-                send_param = WeChatSendParameter(
+                send_params = WeChatSendParameters(
                     self.wechat.sender,
                     send_type,
                     receive_id,
                     send_id,
                     **parameter
                 )
-                send_param.status = WeChatSendStatusEnum.WAIT
-                self.wechat.sender.queue.put(send_param)
+                send_params.status = WeChatSendStatusEnum.WAIT
+                self.wechat.sender.queue.put(send_params)
 
             # Commit.
             conn.commit()
@@ -1319,21 +1319,21 @@ class WeChatDatabase(WeChatBase):
         return judge
 
 
-    def _insert_send(self, send_param: WeChatSendParameter) -> None:
+    def _insert_send(self, send_params: WeChatSendParameters) -> None:
         """
         Insert into `wechat.message_send` table of database, wait send.
 
         Parameters
         ----------
-        send_param : `WeChatSendParameter` instance.
+        send_params : `WeChatSendParameters` instance.
         """
 
         # Handle parameter.
-        params = send_param.params.copy()
+        params = send_params.params.copy()
         data = {
             'status': 0,
-            'type': send_param.send_type,
-            'receive_id': send_param.receive_id,
+            'type': send_params.send_type,
+            'receive_id': send_params.receive_id,
             'parameter': params
         }
 

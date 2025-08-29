@@ -27,7 +27,7 @@ from .rwechat import WeChat
 
 __all__ = (
     'WeChatSendTypeEnum',
-    'WeChatSendParameter',
+    'WeChatSendParameters',
     'WeChatSender'
 )
 
@@ -74,7 +74,7 @@ class WeChatSendStatusEnum(WeChatBase, IntEnum):
     SENT = 2
 
 
-class WeChatSendParameter(WeChatBase):
+class WeChatSendParameters(WeChatBase):
     """
     WeChat send parameters type.
     """
@@ -285,8 +285,8 @@ class WeChatSender(WeChatBase):
 
         # Set attribute.
         self.wechat = wechat
-        self.queue: Queue[WeChatSendParameter] = Queue()
-        self.handlers: list[Callable[[WeChatSendParameter], Any]] = []
+        self.queue: Queue[WeChatSendParameters] = Queue()
+        self.handlers: list[Callable[[WeChatSendParameters], Any]] = []
         self.started: bool | None = False
 
         # Start.
@@ -313,17 +313,17 @@ class WeChatSender(WeChatBase):
                 case None:
                     break
 
-            send_param = self.queue.get()
-            handle_handler_exception = lambda exc_text, *_: send_param.exc_reports.append(exc_text)
+            send_params = self.queue.get()
+            handle_handler_exception = lambda exc_text, *_: send_params.exc_reports.append(exc_text)
 
             ## Handler.
             for handler in self.handlers:
                 handler = wrap_exc(handler, handler=handle_handler_exception)
-                handler(send_param)
+                handler(send_params)
 
             ## Send.
             try:
-                self.__send(send_param)
+                self.__send(send_params)
 
             ## Exception.
             except BaseException:
@@ -332,104 +332,104 @@ class WeChatSender(WeChatBase):
                 exc_text, *_ = catch_exc()
 
                 # Save.
-                send_param.exc_reports.append(exc_text)
+                send_params.exc_reports.append(exc_text)
 
-            send_param.status = WeChatSendStatusEnum.SENT
+            send_params.status = WeChatSendStatusEnum.SENT
 
             ## Handler.
             for handler in self.handlers:
                 handler = wrap_exc(handler, handler=handle_handler_exception)
-                handler(send_param)
+                handler(send_params)
 
             ## Log.
-            self.wechat.error.log_send(send_param)
+            self.wechat.error.log_send(send_params)
 
 
     def __send(
         self,
-        send_param: WeChatSendParameter
+        send_params: WeChatSendParameters
     ) -> None:
         """
         Send message.
 
         Parameters
         ----------
-        send_param : `WeChatSendParameter` instance.
+        send_params : `WeChatSendParameters` instance.
         """
 
         # Test.
         if (
-            send_param.params.get('is_test')
-            and send_param.send_type in (WeChatSendTypeEnum.TEXT, WeChatSendTypeEnum.TEXT_AT)
+            send_params.params.get('is_test')
+            and send_params.send_type in (WeChatSendTypeEnum.TEXT, WeChatSendTypeEnum.TEXT_AT)
         ):
-            text: str = send_param.params['text']
+            text: str = send_params.params['text']
             now_time = now('time_str')
             modify_text = text.replace(':time:', now_time, 1)
-            send_param.params['text'] = modify_text
+            send_params.params['text'] = modify_text
 
         # Send.
-        match send_param.send_type:
+        match send_params.send_type:
 
             ## Text.
             case WeChatSendTypeEnum.TEXT:
                 self.wechat.client.send_text(
-                    send_param.receive_id,
-                    send_param.params['text']
+                    send_params.receive_id,
+                    send_params.params['text']
                 )
 
             ## Text with '@'.
             case WeChatSendTypeEnum.TEXT_AT:
                 self.wechat.client.send_text_at(
-                    send_param.receive_id,
-                    send_param.params['user_id'],
-                    send_param.params['text']
+                    send_params.receive_id,
+                    send_params.params['user_id'],
+                    send_params.params['text']
                 )
 
             ## File.
             case WeChatSendTypeEnum.FILE:
                 self.wechat.client.send_file(
-                    send_param.receive_id,
-                    send_param.params['file_path']
+                    send_params.receive_id,
+                    send_params.params['file_path']
                 )
 
             ## Image.
             case WeChatSendTypeEnum.IMAGE:
                 self.wechat.client.send_image(
-                    send_param.receive_id,
-                    send_param.params['file_path']
+                    send_params.receive_id,
+                    send_params.params['file_path']
                 )
 
             ## Emotion.
             case WeChatSendTypeEnum.EMOTION:
                 self.wechat.client.send_emotion(
-                    send_param.receive_id,
-                    send_param.params['file_path']
+                    send_params.receive_id,
+                    send_params.params['file_path']
                 )
 
             ## Pat.
             case WeChatSendTypeEnum.PAT:
                 self.wechat.client.send_pat(
-                    send_param.receive_id,
-                    send_param.params['user_id']
+                    send_params.receive_id,
+                    send_params.params['user_id']
                 )
 
             ## Public account.
             case WeChatSendTypeEnum.PUBLIC:
                 self.wechat.client.send_public(
-                    send_param.receive_id,
-                    send_param.params['page_url'],
-                    send_param.params['title'],
-                    send_param.params['text'],
-                    send_param.params['image_url'],
-                    send_param.params['public_name'],
-                    send_param.params['public_id']
+                    send_params.receive_id,
+                    send_params.params['page_url'],
+                    send_params.params['title'],
+                    send_params.params['text'],
+                    send_params.params['image_url'],
+                    send_params.params['public_name'],
+                    send_params.params['public_id']
                 )
 
             ## Forward.
             case WeChatSendTypeEnum.FORWARD:
                 self.wechat.client.send_forward(
-                    send_param.receive_id,
-                    send_param.params['message_id']
+                    send_params.receive_id,
+                    send_params.params['message_id']
                 )
 
             ## Throw exception.
@@ -523,38 +523,38 @@ class WeChatSender(WeChatBase):
         """
 
         # Handle parameter.
-        send_param = WeChatSendParameter(
+        send_params = WeChatSendParameters(
             self,
             send_type,
             receive_id,
             **params
         )
-        send_param.status = WeChatSendStatusEnum.INIT
-        handle_handler_exception = lambda exc_text, *_: send_param.exc_reports.append(exc_text)
+        send_params.status = WeChatSendStatusEnum.INIT
+        handle_handler_exception = lambda exc_text, *_: send_params.exc_reports.append(exc_text)
 
         # Handler.
         for handler in self.handlers:
             handler = wrap_exc(handler, handler=handle_handler_exception)
-            handler(send_param)
+            handler(send_params)
 
         # Insert.
-        self.wechat.database._insert_send(send_param)
+        self.wechat.database._insert_send(send_params)
 
 
     def add_handler(
         self,
-        handler: Callable[[WeChatSendParameter], Any]
+        handler: Callable[[WeChatSendParameters], Any]
     ) -> None:
         """
         Add send handler function.
         Call at the after initialization, before inserting into the database queue.
         Call at the after get from database queue, before sending.
         Call at the after sending.
-        Can be use `WeChatSendParameter.status` judge status.
+        Can be use `WeChatSendParameters.status` judge status.
 
         Parameters
         ----------
-        handler : Handler method, input parameter is `WeChatSendParameter` instance.
+        handler : Handler method, input parameter is `WeChatSendParameters` instance.
         """
 
         # Add.
