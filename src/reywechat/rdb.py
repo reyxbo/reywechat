@@ -31,7 +31,7 @@ __all__ = (
 class WeChatDatabase(WeChatBase):
     """
     WeChat database type.
-    Can create database used `self.build` method.
+    Can create database used `self.build_db` method.
     """
 
 
@@ -159,6 +159,20 @@ class WeChatDatabase(WeChatBase):
                     }
                 ],
                 'primary': 'user_id',
+                'indexes': [
+                    {
+                        'name': 'n_create_time',
+                        'fields': 'create_time',
+                        'type': 'noraml',
+                        'comment': 'Record create time normal index.'
+                    },
+                    {
+                        'name': 'n_update_time',
+                        'fields': 'update_time',
+                        'type': 'noraml',
+                        'comment': 'Record update time normal index.'
+                    }
+                ],
                 'comment': 'User contact table.'
             },
 
@@ -204,6 +218,20 @@ class WeChatDatabase(WeChatBase):
                     }
                 ],
                 'primary': 'room_id',
+                'indexes': [
+                    {
+                        'name': 'n_create_time',
+                        'fields': 'create_time',
+                        'type': 'noraml',
+                        'comment': 'Record create time normal index.'
+                    },
+                    {
+                        'name': 'n_update_time',
+                        'fields': 'update_time',
+                        'type': 'noraml',
+                        'comment': 'Record update time normal index.'
+                    }
+                ],
                 'comment': 'Chat room contact table.'
             },
 
@@ -255,6 +283,20 @@ class WeChatDatabase(WeChatBase):
                     }
                 ],
                 'primary': ['room_id', 'user_id'],
+                'indexes': [
+                    {
+                        'name': 'n_create_time',
+                        'fields': 'create_time',
+                        'type': 'noraml',
+                        'comment': 'Record create time normal index.'
+                    },
+                    {
+                        'name': 'n_update_time',
+                        'fields': 'update_time',
+                        'type': 'noraml',
+                        'comment': 'Record update time normal index.'
+                    }
+                ],
                 'comment': 'Chat room user contact table.'
             },
 
@@ -348,6 +390,12 @@ class WeChatDatabase(WeChatBase):
                 'primary': 'message_id',
                 'indexes': [
                     {
+                        'name': 'n_create_time',
+                        'fields': 'create_time',
+                        'type': 'noraml',
+                        'comment': 'Record create time normal index.'
+                    },
+                    {
                         'name': 'n_message_time',
                         'fields': 'message_time',
                         'type': 'noraml',
@@ -380,10 +428,10 @@ class WeChatDatabase(WeChatBase):
                         'comment': 'Record create time.'
                     },
                     {
-                        'name': 'status_time',
+                        'name': 'update_time',
                         'type': 'datetime',
-                        'constraint': 'NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP',
-                        'comment': 'Send status time.'
+                        'constraint': 'DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP',
+                        'comment': 'Record update time.'
                     },
                     {
                         'name': 'plan_time',
@@ -446,16 +494,28 @@ class WeChatDatabase(WeChatBase):
                 'primary': 'send_id',
                 'indexes': [
                     {
-                        'name': 'n_status_time',
-                        'fields': 'status_time',
+                        'name': 'n_create_time',
+                        'fields': 'create_time',
                         'type': 'noraml',
-                        'comment': 'Send status time normal index.'
+                        'comment': 'Record create time normal index.'
+                    },
+                    {
+                        'name': 'n_update_time',
+                        'fields': 'update_time',
+                        'type': 'noraml',
+                        'comment': 'Record update time normal index.'
                     },
                     {
                         'name': 'n_receive_id',
                         'fields': 'receive_id',
                         'type': 'noraml',
                         'comment': 'Receive to user ID or chat room ID normal index.'
+                    },
+                    {
+                        'name': 'n_file_id',
+                        'fields': 'file_id',
+                        'type': 'noraml',
+                        'comment': 'Send file ID normal index.'
                     }
                 ],
                 'comment': 'Message send table.'
@@ -657,7 +717,7 @@ class WeChatDatabase(WeChatBase):
                     {
                         'name': 'send_last_time',
                         'select': (
-                            'SELECT MAX(`status_time`)\n'
+                            'SELECT MAX(`update_time`)\n'
                             f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_send']}`\n'
                             'WHERE `status` = 2'
                         ),
