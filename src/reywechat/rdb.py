@@ -510,12 +510,6 @@ class WeChatDatabase(WeChatBase):
                         'fields': 'receive_id',
                         'type': 'noraml',
                         'comment': 'Receive to user ID or chat room ID normal index.'
-                    },
-                    {
-                        'name': 'n_file_id',
-                        'fields': 'file_id',
-                        'type': 'noraml',
-                        'comment': 'Send file ID normal index.'
                     }
                 ],
                 'comment': 'Message send table.'
