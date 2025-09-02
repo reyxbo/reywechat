@@ -1568,7 +1568,7 @@ class WeChatMessage(WeChatBase):
         self,
         send_type: Literal[WeChatSendTypeEnum.FILE, WeChatSendTypeEnum.IMAGE, WeChatSendTypeEnum.EMOTION],
         *,
-        path: str,
+        file_path: str,
         file_name: str | None = None
     ) -> None: ...
 
