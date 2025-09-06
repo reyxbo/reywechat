@@ -154,52 +154,7 @@ class WeChatMessage(WeChatBase):
             self.user = self.window
 
         ## Cache.
-        self._user_name: str | None = None
-        self._room_name: str | None = None
-        self._window_name: str | None = None
-        self._text: str | None = None
-        self._voice_len: float | None = None
-        self._video_len: int | None = None
-        self._business_card_name: str | None = None
-
-        ### Share.
-        self._share_type: int | None = None
-        self._share_params: MessageShareParameters | None = None
-        self._is_file_uploading: bool | None = None
-        self._file_name_uploading: str | None = None
-        self._is_file_uploaded: bool | None = None
-        self._is_forward: bool | None = None
-        self._is_mini_program: bool | None = None
-        self._is_quote: bool | None = None
-        self._is_quote_me: bool | None = None
-        self._quote_params: dict[Literal['text', 'quote_id', 'quote_type', 'quote_user', 'quote_user_name', 'quote_data'], str] | None = None
-        self._is_money: bool | None = None
-        self._money_amount: float | None = None
-        self._is_app: bool | None = None
-
-        self._at_names: list[str] = None
-        self._is_at: bool | None = None
-        self._is_at_me: bool | None = None
-        self._is_call: bool | None = None
-        self._call_text: str | None = None
-        self._is_call_next: bool | None = None
-        self._is_last_call: bool | None = None
-        self._is_pat: bool | None = None
-        self._is_pat_me: bool | None = None
-        self._pat_text: str | None = None
-        self._is_recall: bool | None = None
-        self._is_new_user: bool | None = None
-        self._is_new_room: bool | None = None
-        self._is_new_room_user: bool | None = None
-        self._new_room_user_name: str | None = None
-        self._is_change_room_name: bool | None = None
-        self._change_room_name: str | None = None
-        self._is_kick_out_room: bool | None = None
-        self._is_dissolve_room: bool | None = None
-        self._image_qrcodes: list[str] | None = None
-        self._is_html: bool | None = None
-        self._is_xml: bool | None = None
-        self._valid: bool | None = None
+        self._cache: dict[str, Any] = {}
 
         ## Update call next.
         self.is_call_next
@@ -257,15 +212,15 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._user_name is not None:
-            return self._user_name
+        if self._cache['_user_name'] is not None:
+            return self._cache['_user_name']
 
         # Set.
-        self._user_name = self.receiver.wechat.client.get_contact_name(
+        self._cache['_user_name'] = self.receiver.wechat.client.get_contact_name(
             self.user
         )
 
-        return self._user_name
+        return self._cache['_user_name']
 
 
     @property
@@ -283,15 +238,15 @@ class WeChatMessage(WeChatBase):
             return
 
         # Cache.
-        if self._room_name is not None:
-            return self._room_name
+        if self._cache['_room_name'] is not None:
+            return self._cache['_room_name']
 
         # Set.
-        self._room_name = self.receiver.wechat.client.get_contact_name(
+        self._cache['_room_name'] = self.receiver.wechat.client.get_contact_name(
             self.room
         )
 
-        return self._room_name
+        return self._cache['_room_name']
 
 
     @property
@@ -305,16 +260,16 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._window_name is not None:
-            return self._window_name
+        if self._cache['_window_name'] is not None:
+            return self._cache['_window_name']
 
         # Set.
         if self.room is None:
-            self._window_name = self.user_name
+            self._cache['_window_name'] = self.user_name
         else:
-            self._window_name = self.room_name
+            self._cache['_window_name'] = self.room_name
 
-        return self._window_name
+        return self._cache['_window_name']
 
 
     @property
@@ -328,111 +283,111 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._text is not None:
-            return self._text
+        if self._cache['_text'] is not None:
+            return self._cache['_text']
 
         # Get.
         match self.type:
 
             ## Text.
             case 1:
-                self._text = self.data
+                self._cache['_text'] = self.data
 
             ## Image.
             case 3:
-                self._text = '[图片]'
+                self._cache['_text'] = '[图片]'
 
             ## Voice.
             case 34:
                 voice_len = round(self.voice_len, 1)
-                self._text = f'[{voice_len}秒的语音]'
+                self._cache['_text'] = f'[{voice_len}秒的语音]'
 
             ## New firend invitation.
             case 37:
-                self._text = '[新好友邀请]'
+                self._cache['_text'] = '[新好友邀请]'
 
             ## Business card.
             case 42:
-                self._text = f'[分享名片"{self.business_card_name}"]'
+                self._cache['_text'] = f'[分享名片"{self.business_card_name}"]'
 
             ## Video.
             case 43:
-                self._text = f'[{self.video_len}秒的视频]'
+                self._cache['_text'] = f'[{self.video_len}秒的视频]'
 
             ## Emoticon.
             case 47:
-                self._text = f'[动画表情]'
+                self._cache['_text'] = f'[动画表情]'
 
             ## Position.
             case 48:
-                self._text = '[地图位置分享]'
+                self._cache['_text'] = '[地图位置分享]'
 
             ## Share.
             case 49:
 
                 ### Pure URL text.
                 if self.share_type == 1:
-                    self._text = '[网址]'
+                    self._cache['_text'] = '[网址]'
                     if self.share_params['title'] is not None:
                         self._text += f' {self.share_params['title']}'
 
                 ### File uploaded.
                 elif self.is_file_uploaded:
-                    self._text = f'[文件"{self.file['name']}"发送完成]'
+                    self._cache['_text'] = f'[文件"{self.file['name']}"发送完成]'
 
                 ### Initiate real time location.
                 elif self.share_type == 17:
-                    self._text = '[开始实时地图位置分享]'
+                    self._cache['_text'] = '[开始实时地图位置分享]'
 
                 ### Forword messages.
                 elif self.is_forword:
                     if self.share_params['title'] is None:
-                        self._text = '[转发聊天记录]'
+                        self._cache['_text'] = '[转发聊天记录]'
                     else:
-                        self._text = f'[转发"{self.share_params['title']}"]'
+                        self._cache['_text'] = f'[转发"{self.share_params['title']}"]'
                     if self.share_params['desc'] is not None:
                         self._text += f' {self.share_params['desc']}'
 
                 ### Mini program.
                 elif self.is_mini_program:
                     if self.share_params['name'] is None:
-                        self._text = '[小程序分享]'
+                        self._cache['_text'] = '[小程序分享]'
                     else:
-                        self._text = f'[小程序"{self.share_params['name']}"分享]'
+                        self._cache['_text'] = f'[小程序"{self.share_params['name']}"分享]'
                     if self.share_params['title'] is not None:
                         self._text += f' {self.share_params['title']}'
 
                 ### Video channel.
                 elif self.share_type == 51:
                     if self.share_params['name'] is None:
-                        self._text = '[视频号分享]'
+                        self._cache['_text'] = '[视频号分享]'
                     else:
-                        self._text = f'[视频号"{self.share_params['name']}"分享]'
+                        self._cache['_text'] = f'[视频号"{self.share_params['name']}"分享]'
                     if self.share_params['title'] is not None:
                         self._text += f' {self.share_params['title']}'
 
                 ### Quote.
                 elif self.is_quote:
-                    self._text = f'[引用了"{self.quote_params['quote_user_name']}"的消息并发言] {self.quote_params['text']}'
+                    self._cache['_text'] = f'[引用了"{self.quote_params['quote_user_name']}"的消息并发言] {self.quote_params['text']}'
 
                 ### Quote me.
                 elif self.is_quote_me:
-                    self._text = f'[引用了你的消息并发言] {self.quote_params['text']}'
+                    self._cache['_text'] = f'[引用了你的消息并发言] {self.quote_params['text']}'
 
                 ### File uploading.
                 elif self.is_file_uploading:
-                    self._text = f'[文件"{self.file_name_uploading}"发送中]'
+                    self._cache['_text'] = f'[文件"{self.file_name_uploading}"发送中]'
 
                 ### Transfer money.
                 elif self.is_money:
-                    self._text = f'[转账{self.money_amount}￥]'
+                    self._cache['_text'] = f'[转账{self.money_amount}￥]'
 
                 ### App.
                 elif self.is_app:
                     if self.share_params['name'] is None:
-                        self._text = '[APP分享]'
+                        self._cache['_text'] = '[APP分享]'
                     else:
-                        self._text = f'[APP"{self.share_params['name']}"分享]'
+                        self._cache['_text'] = f'[APP"{self.share_params['name']}"分享]'
                     if self.share_params["title"] is not None:
                         self._text += f' {self.share_params["title"]}'
                     if self.share_params["desc"] is not None:
@@ -441,9 +396,9 @@ class WeChatMessage(WeChatBase):
                 ### Other.
                 else:
                     if self.share_params['name'] is None:
-                        self._text = '[分享]'
+                        self._cache['_text'] = '[分享]'
                     else:
-                        self._text = f'["{self.share_params['name']}"分享]'
+                        self._cache['_text'] = f'["{self.share_params['name']}"分享]'
                     if self.share_params["title"] is not None:
                         self._text += f' {self.share_params["title"]}'
                     if self.share_params["desc"] is not None:
@@ -451,32 +406,32 @@ class WeChatMessage(WeChatBase):
 
             ## Voice call or video call.
             case 50:
-                self._text = '[视频或语音通话]'
+                self._cache['_text'] = '[视频或语音通话]'
 
             ## System sync.
             case 51:
-                self._text = '[系统同步]'
+                self._cache['_text'] = '[系统同步]'
 
             ## Real time position.
             case 56:
-                self._text = '[实时地图位置分享中]'
+                self._cache['_text'] = '[实时地图位置分享中]'
 
             ## System.
             case 10000:
-                self._text = '[系统信息]'
+                self._cache['_text'] = '[系统信息]'
 
             ## Pat.
             case 10002 if self.is_pat:
-                self._text = f'[{self.pat_text}]'
+                self._cache['_text'] = f'[{self.pat_text}]'
 
             ## Recall.
             case 10002 if self.is_recall:
-                self._text = '[撤回了一条消息]'
+                self._cache['_text'] = '[撤回了一条消息]'
 
             case _:
-                self._text = '[消息]'
+                self._cache['_text'] = '[消息]'
 
-        return self._text
+        return self._cache['_text']
 
 
     @property
@@ -490,8 +445,8 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._voice_len is not None:
-            return self._voice_len
+        if self._cache['_voice_len'] is not None:
+            return self._cache['_voice_len']
 
         # Check.
         if self.type != 34:
@@ -500,9 +455,9 @@ class WeChatMessage(WeChatBase):
         # Get.
         pattern = r'voicelength="(\d+)"'
         voice_len_us_str = search(pattern, self.data)
-        self._voice_len = int(voice_len_us_str) / 1000
+        self._cache['_voice_len'] = int(voice_len_us_str) / 1000
 
-        return self._voice_len
+        return self._cache['_voice_len']
 
 
     @property
@@ -516,8 +471,8 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._video_len is not None:
-            return self._video_len
+        if self._cache['_video_len'] is not None:
+            return self._cache['_video_len']
 
         # Check.
         if self.type != 43:
@@ -526,9 +481,9 @@ class WeChatMessage(WeChatBase):
         # Get.
         pattern = r'playlength="(\d+)"'
         video_len_s_str = search(pattern, self.data)
-        self._video_len = int(video_len_s_str)
+        self._cache['_video_len'] = int(video_len_s_str)
 
-        return self._video_len
+        return self._cache['_video_len']
 
 
     @property
@@ -542,8 +497,8 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._business_card_name is not None:
-            return self._business_card_name
+        if self._cache['_business_card_name'] is not None:
+            return self._cache['_business_card_name']
 
         # Check.
         if self.type != 42:
@@ -551,9 +506,9 @@ class WeChatMessage(WeChatBase):
 
         # Get.
         pattern = r'nickname="([^"]+)"'
-        self._business_card_name = search(pattern, self.data)
+        self._cache['_business_card_name'] = search(pattern, self.data)
 
-        return self._business_card_name
+        return self._cache['_business_card_name']
 
 
     @property
@@ -567,8 +522,8 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._share_type is not None:
-            return self._share_type
+        if self._cache['_share_type'] is not None:
+            return self._cache['_share_type']
 
         # Check.
         if self.type != 49:
@@ -577,9 +532,9 @@ class WeChatMessage(WeChatBase):
         # Get.
         pattern = r'<type>(\d+)</type>'
         share_type_str: str = search(pattern, self.data)
-        self._share_type = int(share_type_str)
+        self._cache['_share_type'] = int(share_type_str)
 
-        return self._share_type
+        return self._cache['_share_type']
 
 
     @property
@@ -593,8 +548,8 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._share_params is not None:
-            return self._share_params
+        if self._cache['_share_params'] is not None:
+            return self._cache['_share_params']
 
         # Check.
         if self.type != 49:
@@ -618,7 +573,7 @@ class WeChatMessage(WeChatBase):
             'url': url
         }
 
-        return self._share_params
+        return self._cache['_share_params']
 
 
     @property
@@ -632,16 +587,16 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_file_uploading is not None:
-            return self._is_file_uploading
+        if self._cache['_is_file_uploading'] is not None:
+            return self._cache['_is_file_uploading']
 
         # Judge.
-        self._is_file_uploading = (
+        self._cache['_is_file_uploading'] = (
             self.type == 49
             and self.share_type == 74
         )
 
-        return self._is_file_uploading
+        return self._cache['_is_file_uploading']
 
 
     @property
@@ -655,8 +610,8 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._file_name_uploading is not None:
-            return self._file_name_uploading
+        if self._cache['_file_name_uploading'] is not None:
+            return self._cache['_file_name_uploading']
 
         # Check.
         if not self.is_file_uploading:
@@ -665,7 +620,7 @@ class WeChatMessage(WeChatBase):
         # Get.
         self._file_name_uploading: str = search(r'<title><!\[CDATA\[([^<>]+)\]\]></title>', self.data)
 
-        return self._file_name_uploading
+        return self._cache['_file_name_uploading']
 
 
     @property
@@ -679,16 +634,16 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_file_uploaded is not None:
-            return self._is_file_uploaded
+        if self._cache['_is_file_uploaded'] is not None:
+            return self._cache['_is_file_uploaded']
 
         # Judge.
-        self._is_file_uploading = (
+        self._cache['_is_file_uploading'] = (
             self.type == 49
             and self.share_type == 6
         )
 
-        return self._is_file_uploaded
+        return self._cache['_is_file_uploaded']
 
 
     @property
@@ -702,16 +657,16 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_forward is not None:
-            return self._is_forward
+        if self._cache['_is_forward'] is not None:
+            return self._cache['_is_forward']
 
         # Judge.
-        self._is_forward = (
+        self._cache['_is_forward'] = (
             self.type == 49
             and self.share_type in (19, 40)
         )
 
-        return self._is_forward
+        return self._cache['_is_forward']
 
 
     @property
@@ -725,16 +680,16 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_mini_program is not None:
-            return self._is_mini_program
+        if self._cache['_is_mini_program'] is not None:
+            return self._cache['_is_mini_program']
 
         # Judge.
-        self._is_mini_program = (
+        self._cache['_is_mini_program'] = (
             self.type == 49
             and self.type == 33
         )
 
-        return self._is_mini_program
+        return self._cache['_is_mini_program']
 
 
     @property
@@ -748,16 +703,16 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_quote is not None:
-            return self._is_quote
+        if self._cache['_is_quote'] is not None:
+            return self._cache['_is_quote']
 
         # Judge.
-        self._is_quote = (
+        self._cache['_is_quote'] = (
             self.type == 49
             and self.share_type == 57
         )
 
-        return self._is_quote
+        return self._cache['_is_quote']
 
 
     @property
@@ -771,16 +726,16 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_quote_me is not None:
-            return self._is_quote_me
+        if 'is_quote_me' in self._cache:
+            return self._cache['is_quote_me']
 
         # Judge.
-        self._is_quote_me = (
+        self._cache['is_quote_me'] = (
             self.is_quote
             and '<chatusr>%s</chatusr>' % self.receiver.wechat.client.login_info['id'] in self.data
         )
 
-        return self._is_quote_me
+        return self._cache['is_quote_me']
 
 
     @property
@@ -801,8 +756,8 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._quote_params is not None:
-            return self._quote_params
+        if self._cache['_quote_params'] is not None:
+            return self._cache['_quote_params']
 
         # Check.
         if not self.is_quote:
@@ -836,7 +791,7 @@ class WeChatMessage(WeChatBase):
             'quote_data': quote_data
         }
 
-        return self._quote_params
+        return self._cache['_quote_params']
 
 
     @property
@@ -850,16 +805,16 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_money is not None:
-            return self._is_money
+        if self._cache['_is_money'] is not None:
+            return self._cache['_is_money']
 
         # Judge.
-        self._is_money = (
+        self._cache['_is_money'] = (
             self.type == 49
             and self.share_type == 2000
         )
 
-        return self._is_money
+        return self._cache['_is_money']
 
 
     @property
@@ -873,8 +828,8 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._money_amount is not None:
-            return self._money_amount
+        if self._cache['_money_amount'] is not None:
+            return self._cache['_money_amount']
 
         # Check.
         if not self.is_money:
@@ -882,9 +837,9 @@ class WeChatMessage(WeChatBase):
 
         # Judge.
         amount_str: str = search(r'<feedesc><!\[CDATA\[￥([\d.,]+)\]\]></feedesc>', self.data)
-        self._money_amount = float(amount_str)
+        self._cache['_money_amount'] = float(amount_str)
 
-        return self._money_amount
+        return self._cache['_money_amount']
 
 
     @property
@@ -898,16 +853,16 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_app is not None:
-            return self._is_app
+        if self._cache['_is_app'] is not None:
+            return self._cache['_is_app']
 
         # Judge.
-        self._is_app = (
+        self._cache['_is_app'] = (
             self.type == 49
             and search('<appname>[^<>]+</appname>', self.data) is not None
         )
 
-        return self._is_app
+        return self._cache['_is_app']
 
 
     @property
@@ -921,8 +876,8 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._at_names is not None:
-            return self._at_names
+        if self._cache['_at_names'] is not None:
+            return self._cache['_at_names']
 
         # Get.
         if self.type == 1:
@@ -930,9 +885,9 @@ class WeChatMessage(WeChatBase):
         elif self.is_quote:
             text = self.quote_params['text']
         pattern = r'@(\w+)\u2005'
-        self._at_names = findall(pattern, text)
+        self._cache['_at_names'] = findall(pattern, text)
 
-        return self._at_names
+        return self._cache['_at_names']
 
 
     @property
@@ -946,13 +901,13 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_at is not None:
-            return self._is_at
+        if self._cache['_is_at'] is not None:
+            return self._cache['_is_at']
 
         # Judge.
-        self._is_at = self.at_names != []
+        self._cache['_is_at'] = self.at_names != []
 
-        return self._is_at
+        return self._cache['_is_at']
 
 
     @property
@@ -966,13 +921,13 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_at_me is not None:
-            return self._is_at_me
+        if self._cache['_is_at_me'] is not None:
+            return self._cache['_is_at_me']
 
         # Judge.
-        self._is_at_me = self.receiver.wechat.client.login_info['name'] in self.at_names
+        self._cache['_is_at_me'] = self.receiver.wechat.client.login_info['name'] in self.at_names
 
-        return self._is_at_me
+        return self._cache['_is_at_me']
 
 
     @property
@@ -986,11 +941,11 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_call is not None:
-            return self._is_call
+        if self._cache['_is_call'] is not None:
+            return self._cache['_is_call']
 
         # Judge.
-        self._is_call = (
+        self._cache['_is_call'] = (
 
             ## Last call.
             self.is_last_call
@@ -1015,7 +970,7 @@ class WeChatMessage(WeChatBase):
 
         )
 
-        return self._is_call
+        return self._cache['_is_call']
 
 
     @property
@@ -1029,8 +984,8 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._call_text is not None:
-            return self._call_text
+        if self._cache['_call_text'] is not None:
+            return self._cache['_call_text']
 
         # Check.
         if not self.is_call:
@@ -1051,9 +1006,9 @@ class WeChatMessage(WeChatBase):
         if result is not None:
             text = result
 
-        self._call_text = text.strip()
+        self._cache['_call_text'] = text.strip()
 
-        return self._call_text
+        return self._cache['_call_text']
 
 
     @property
@@ -1067,11 +1022,11 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_call_next is not None:
-            return self._is_call_next
+        if self._cache['_is_call_next'] is not None:
+            return self._cache['_is_call_next']
 
         # Judge.
-        self._is_call_next = (
+        self._cache['_is_call_next'] = (
             self.room is not None
             and self.is_call
             and self.call_text == ''
@@ -1082,7 +1037,7 @@ class WeChatMessage(WeChatBase):
             call_next_mark_value = f'{self.user}_{self.room}'
             self.receiver.mark(call_next_mark_value, 'is_call_next')
 
-        return self._is_call_next
+        return self._cache['_is_call_next']
 
 
     @property
@@ -1096,12 +1051,12 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_last_call is not None:
-            return self._is_last_call
+        if self._cache['_is_last_call'] is not None:
+            return self._cache['_is_last_call']
 
         # Judge.
         call_next_mark_value = f'{self.user}_{self.room}'
-        self._is_last_call = self.receiver.mark.is_marked(call_next_mark_value, 'is_call_next')
+        self._cache['_is_last_call'] = self.receiver.mark.is_marked(call_next_mark_value, 'is_call_next')
 
         # Mark.
         if self._is_last_call:
@@ -1122,16 +1077,16 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_pat is not None:
-            return self._is_pat
+        if self._cache['_is_pat'] is not None:
+            return self._cache['_is_pat']
 
         # Judge.
-        self._is_pat = (
+        self._cache['_is_pat'] = (
             self.type == 10002
             and self.data.startswith('<sysmsg type="pat">')
         )
 
-        return self._is_pat
+        return self._cache['_is_pat']
 
 
     @property
@@ -1145,17 +1100,17 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_pat_me is not None:
-            return self._is_pat_me
+        if self._cache['_is_pat_me'] is not None:
+            return self._cache['_is_pat_me']
 
         # Judge.
         pattern = r'<template><!\[CDATA\["\$\{[\da-z_]+\}" 拍了拍我\]\]></template>'
-        self._is_pat_me = (
+        self._cache['_is_pat_me'] = (
             self.is_pat
             and search(pattern, self.data) is not None
         )
 
-        return self._is_pat_me
+        return self._cache['_is_pat_me']
 
 
     @property
@@ -1169,8 +1124,8 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._pat_text is not None:
-            return self._pat_text
+        if self._cache['_pat_text'] is not None:
+            return self._cache['_pat_text']
 
         # Check.
         if not self.is_pat:
@@ -1190,9 +1145,9 @@ class WeChatMessage(WeChatBase):
             old_text = '${%s}' % user_id
             text = text.replace(old_text, user_name)
 
-        self._pat_text = text
+        self._cache['_pat_text'] = text
 
-        return self._pat_text
+        return self._cache['_pat_text']
 
 
     @property
@@ -1206,16 +1161,16 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_recall is not None:
-            return self._is_recall
+        if self._cache['_is_recall'] is not None:
+            return self._cache['_is_recall']
 
         # Judge.
-        self._is_recall = (
+        self._cache['_is_recall'] = (
             self.type == 10002
             and self.data.startswith('<sysmsg type="revokemsg">')
         )
 
-        return self._is_recall
+        return self._cache['_is_recall']
 
 
     @property
@@ -1229,11 +1184,11 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_new_user is not None:
-            return self._is_new_user
+        if self._cache['_is_new_user'] is not None:
+            return self._cache['_is_new_user']
 
         # Judge.
-        self._is_new_user = (
+        self._cache['_is_new_user'] = (
             self.type == 10000
             and (
                 self.data == '以上是打招呼的内容'
@@ -1242,7 +1197,7 @@ class WeChatMessage(WeChatBase):
             )
         )
 
-        return self._is_new_user
+        return self._cache['_is_new_user']
 
 
     @property
@@ -1256,11 +1211,11 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_new_room is not None:
-            return self._is_new_room
+        if self._cache['_is_new_room'] is not None:
+            return self._cache['_is_new_room']
 
         # Judge.
-        self._is_new_room = (
+        self._cache['_is_new_room'] = (
             self.type == 10000
             and (
                 '邀请你和' in self.data[:38]
@@ -1268,7 +1223,7 @@ class WeChatMessage(WeChatBase):
             )
         )
 
-        return self._is_new_room
+        return self._cache['_is_new_room']
 
 
     @property
@@ -1282,17 +1237,17 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_new_room_user is not None:
-            return self._is_new_room_user
+        if self._cache['_is_new_room_user'] is not None:
+            return self._cache['_is_new_room_user']
 
         # Judge.
-        self._is_new_room_user = (
+        self._cache['_is_new_room_user'] = (
             self.type == 10000
             and '邀请"' in self.data[:37]
             and self.data.endswith('"加入了群聊')
         )
 
-        return self._is_new_room_user
+        return self._cache['_is_new_room_user']
 
 
     @property
@@ -1306,13 +1261,13 @@ class WeChatMessage(WeChatBase):
         """
 
         # Extracted.
-        if self._new_room_user_name is not None:
-            return self._new_room_user_name
+        if self._cache['_new_room_user_name'] is not None:
+            return self._cache['_new_room_user_name']
 
         # Extract.
         pattern = '邀请"(.+?)"加入了群聊'
         result: str = search(pattern, self.data)
-        self._new_room_user_name = result
+        self._cache['_new_room_user_name'] = result
 
         return result
 
@@ -1328,16 +1283,16 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_change_room_name is not None:
-            return self._is_change_room_name
+        if self._cache['_is_change_room_name'] is not None:
+            return self._cache['_is_change_room_name']
 
         # Judge.
-        self._is_change_room_name = (
+        self._cache['_is_change_room_name'] = (
             self.type == 10000
             and '修改群名为“' in self.data[:40]
         )
 
-        return self._is_change_room_name
+        return self._cache['_is_change_room_name']
 
 
     @property
@@ -1351,15 +1306,15 @@ class WeChatMessage(WeChatBase):
         """
 
         # Extracted.
-        if self._change_room_name is not None:
-            return self._change_room_name
+        if self._cache['_change_room_name'] is not None:
+            return self._cache['_change_room_name']
 
         # Extract.
         pattern = '修改群名为“(.+?)”'
         result: str = search(pattern, self.data)
-        self._change_room_name = result
+        self._cache['_change_room_name'] = result
 
-        return self._change_room_name
+        return self._cache['_change_room_name']
 
 
     @property
@@ -1373,17 +1328,17 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_kick_out_room is not None:
-            return self._is_kick_out_room
+        if self._cache['_is_kick_out_room'] is not None:
+            return self._cache['_is_kick_out_room']
 
         # Judge.
-        self._is_kick_out_room = (
+        self._cache['_is_kick_out_room'] = (
             self.type == 10000
             and self.data.startswith('你被')
             and self.data.endswith('移出群聊')
         )
 
-        return self._is_kick_out_room
+        return self._cache['_is_kick_out_room']
 
 
     @property
@@ -1397,17 +1352,17 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_dissolve_room is not None:
-            return self._is_dissolve_room
+        if self._cache['_is_dissolve_room'] is not None:
+            return self._cache['_is_dissolve_room']
 
         # Judge.
-        self._is_dissolve_room = (
+        self._cache['_is_dissolve_room'] = (
             self.type == 10000
             and self.data.startswith('群主')
             and self.data.endswith('已解散该群聊')
         )
 
-        return self._is_dissolve_room
+        return self._cache['_is_dissolve_room']
 
 
     @property
@@ -1421,17 +1376,17 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._image_qrcodes is not None:
-            return self._image_qrcodes
+        if self._cache['_image_qrcodes'] is not None:
+            return self._cache['_image_qrcodes']
 
         # Check.
         if self.type != 3:
             throw(AssertionError, self.type)
 
         # Extract.
-        self._image_qrcodes = decode_qrcode(self.file['path'])
+        self._cache['_image_qrcodes'] = decode_qrcode(self.file['path'])
 
-        return self._image_qrcodes
+        return self._cache['_image_qrcodes']
 
 
     @property
@@ -1445,16 +1400,16 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_html is not None:
-            return self._is_html
+        if self._cache['_is_html'] is not None:
+            return self._cache['_is_html']
 
         # Judge.
-        self._is_html = (
+        self._cache['_is_html'] = (
             self.type != 1
             and search(r'^<(\S+)[ >].*</\1>\s*', self.data) is not None
         )
 
-        return self._is_html
+        return self._cache['_is_html']
 
 
     @property
@@ -1468,17 +1423,17 @@ class WeChatMessage(WeChatBase):
         """
 
         # Cache.
-        if self._is_xml is not None:
-            return self._is_xml
+        if self._cache['_is_xml'] is not None:
+            return self._cache['_is_xml']
 
         # Judge.
-        self._is_xml = (
+        self._cache['_is_xml'] = (
             self.type != 1
             and self.data.startswith('<?xml ')
             and self.data.rstrip().endswith('</msg>')
         )
 
-        return self._is_xml
+        return self._cache['_is_xml']
 
 
     @property
@@ -1494,13 +1449,13 @@ class WeChatMessage(WeChatBase):
         """
 
         # Extracted.
-        if self._valid is not None:
-            return self._valid
+        if self._cache['_valid'] is not None:
+            return self._cache['_valid']
 
         # Judge.
-        self._valid = self.receiver.wechat.database.is_valid(self)
+        self._cache['_valid'] = self.receiver.wechat.database.is_valid(self)
 
-        return self._valid
+        return self._cache['_valid']
 
 
     def check_call(self) -> None:
