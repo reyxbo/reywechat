@@ -133,10 +133,10 @@ class WeChatMessage(WeChatBase):
         self.data = data
         self.window = window
         self.file: MessageParametersFile | None = None
-        self.trigger_rule: TriggerRule | None = None
+        self.triggering_rule: TriggerRule | None = None
+        self.replied_rule: TriggerRule | None = None
         self.trigger_continue = self.receiver.trigger.continue_
         self.trigger_break = self.receiver.trigger.break_
-        self.replied: bool = False
         self.exc_reports: list[str] = []
         self.is_test: bool = False
 
@@ -1584,11 +1584,11 @@ class WeChatMessage(WeChatBase):
 
         # Check.
         if (
-            self.trigger_rule is None
-            or not self.trigger_rule['is_reply']
+            self.triggering_rule is None
+            or not self.triggering_rule['is_reply']
         ):
             text = 'can only be used by reply trigger'
-            throw(WeChatTriggerError, self.trigger_rule, text=text)
+            throw(WeChatTriggerError, self.triggering_rule, text=text)
 
         # Test.
         if (
@@ -1606,7 +1606,7 @@ class WeChatMessage(WeChatBase):
             params['is_test'] = True
 
         # Status.
-        self.replied = True
+        self.replied_rule = self.triggering_rule
 
         # Send.
         self.receiver.wechat.sender.send(

@@ -76,11 +76,11 @@ class WeChatTrigger(WeChatBase):
 
             # Loop.
             for rule in self.rules:
-                message.trigger_rule = rule
+                message.triggering_rule = rule
 
                 # Replied.
                 if (
-                    message.replied
+                    message.replied_rule is not None
                     and rule['is_reply']
                 ):
                     continue
@@ -107,7 +107,7 @@ class WeChatTrigger(WeChatBase):
                     message.exc_reports.append(exc_text)
 
                 finally:
-                    message.trigger_rule = None
+                    message.triggering_rule = None
 
 
         # Add handler.
