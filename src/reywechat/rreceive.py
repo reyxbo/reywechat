@@ -1108,7 +1108,7 @@ class WeChatMessage(WeChatBase):
             return self._cache['is_pat_me']
 
         # Judge.
-        pattern = r'<template><!\[CDATA\["\$\{[\da-z_]+\}" 拍了拍我\]\]></template>'
+        pattern = fr'<template><!\[CDATA\["\$\{{[\da-z_]+\}}" 拍了拍(?:我| "\$\{{{self.receiver.wechat.client.login_info['id']}\}}")\]\]></template>'
         self._cache['is_pat_me'] = (
             self.is_pat
             and search(pattern, self.data) is not None
