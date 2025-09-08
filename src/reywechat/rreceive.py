@@ -202,7 +202,7 @@ class WeChatMessage(WeChatBase):
 
 
     @property
-    def user_name(self) -> str:
+    def user_name(self) -> str | None:
         """
         Message sender user name.
 
@@ -210,6 +210,10 @@ class WeChatMessage(WeChatBase):
         -------
         User name.
         """
+
+        # Break.
+        if self.user is None:
+            return
 
         # Cache.
         if 'user_name' in self._cache:

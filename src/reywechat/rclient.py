@@ -11,6 +11,7 @@
 
 from typing import Any, TypedDict, Literal, Final
 from os.path import abspath as os_abspath
+from reykit.rbase import throw
 from reykit.rdll import inject_dll
 from reykit.rnet import request as reykit_request
 from reykit.ros import find_relpath
@@ -678,6 +679,10 @@ class WeChatClient(WeChatBase):
         text : Message text.
         """
 
+        # Check.
+        if text == '':
+            throw(ValueError, text)
+
         # Handle parameter.
         api = 'sendTextMsg'
         data = {
@@ -707,6 +712,10 @@ class WeChatClient(WeChatBase):
             - `Literal['notify@all']`: @ all users.
         text : Message text.
         """
+
+        # Check.
+        if text == '':
+            throw(ValueError, text)
 
         # Handle parameter.
         api = 'sendAtText'
