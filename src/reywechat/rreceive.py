@@ -642,7 +642,7 @@ class WeChatMessage(WeChatBase):
             return self._cache['is_file_uploaded']
 
         # Judge.
-        self._cache['is_file_uploading'] = (
+        self._cache['is_file_uploaded'] = (
             self.type == 49
             and self.share_type == 6
         )
