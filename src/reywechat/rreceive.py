@@ -422,7 +422,7 @@ class WeChatMessage(WeChatBase):
 
             ## System.
             case 10000:
-                self._cache['text'] = '[系统信息]'
+                self._cache['text'] = f'[系统消息] {self.data}'
 
             ## Pat.
             case 10002 if self.is_pat:
@@ -958,6 +958,11 @@ class WeChatMessage(WeChatBase):
             or (
                 self.room is None
                 and self.user is not None
+                and (
+                    self.type in (1, 3, 34, 42, 43, 47, 48, 49, 50, 56, 10000)
+                    or self.is_pat
+                    or self.is_recall
+                )
             )
 
             ## Pat me.
