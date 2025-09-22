@@ -80,11 +80,6 @@ class WeChatDatabase(WeChatBase):
             'wechat.stats': 'stats'
         }
 
-        # Check.
-        if 'sqlite' in (self.database_wechat.backend, self.database_file.backend):
-            text = 'not suitable for SQLite databases'
-            throw(AssertionError, text=text)
-
         # Add handler.
         self.__add_receiver_handler_to_contact_user()
         self.__add_receiver_handler_to_contact_room()
@@ -763,7 +758,7 @@ class WeChatDatabase(WeChatBase):
 
         ## Insert.
         if contact_table != []:
-            conn.execute_insert(
+            conn.execute.insert(
                 (self.db_names['wechat'], self.db_names['wechat.contact_user']),
                 user_data,
                 'update'
@@ -819,7 +814,7 @@ class WeChatDatabase(WeChatBase):
 
         ## Insert.
         if contact_table != []:
-            conn.execute_insert(
+            conn.execute.insert(
                 (self.db_names['wechat'], self.db_names['wechat.contact_room']),
                 room_data,
                 'update'
@@ -897,7 +892,7 @@ class WeChatDatabase(WeChatBase):
 
         ## Insert.
         if room_user_data != []:
-            conn.execute_insert(
+            conn.execute.insert(
                 (self.db_names['wechat'], self.db_names['wechat.contact_room_user']),
                 room_user_data,
                 'update'
@@ -965,7 +960,7 @@ class WeChatDatabase(WeChatBase):
                 }
 
                 ## Insert.
-                self.database_wechat.execute_insert(
+                self.database_wechat.execute.insert(
                     (self.db_names['wechat'], self.db_names['wechat.contact_user']),
                     data,
                     'update'
@@ -1006,7 +1001,7 @@ class WeChatDatabase(WeChatBase):
                 ## Insert.
 
                 ### 'contact_room'.
-                self.database_wechat.execute_insert(
+                self.database_wechat.execute.insert(
                     (self.db_names['wechat'], self.db_names['wechat.contact_room']),
                     data,
                     'update'
@@ -1028,7 +1023,7 @@ class WeChatDatabase(WeChatBase):
                 }
 
                 ## Update.
-                self.database_wechat.execute_update(
+                self.database_wechat.execute.update(
                     (self.db_names['wechat'], self.db_names['wechat.contact_room']),
                     data
                 )
@@ -1050,7 +1045,7 @@ class WeChatDatabase(WeChatBase):
                 }
 
                 ## Update.
-                self.database_wechat.execute_update(
+                self.database_wechat.execute.update(
                     (self.db_names['wechat'], self.db_names['wechat.contact_room']),
                     data
                 )
@@ -1130,7 +1125,7 @@ class WeChatDatabase(WeChatBase):
             }
 
             # Insert.
-            self.database_wechat.execute_insert(
+            self.database_wechat.execute.insert(
                 (self.db_names['wechat'], self.db_names['wechat.message_receive']),
                 data,
                 'ignore'
@@ -1173,7 +1168,7 @@ class WeChatDatabase(WeChatBase):
             }
 
             # Update.
-            self.database_wechat.execute_update(
+            self.database_wechat.execute.update(
                 (self.db_names['wechat'], self.db_names['wechat.message_send']),
                 data
             )
@@ -1241,7 +1236,7 @@ class WeChatDatabase(WeChatBase):
                 '    )\n'
                 ')'
             )
-            result = conn.execute_select(
+            result = conn.execute.select(
                 (self.db_names['wechat'], self.db_names['wechat.message_send']),
                 ['send_id', 'type', 'receive_id', 'parameter', 'file_id'],
                 where,
@@ -1326,7 +1321,7 @@ class WeChatDatabase(WeChatBase):
 
         ## User.
         if message.room is None:
-            result = message.receiver.wechat.database.database_wechat.execute_select(
+            result = message.receiver.wechat.database.database_wechat.execute.select(
                 (self.db_names['wechat'], self.db_names['wechat.contact_user']),
                 ['valid'],
                 '`user_id` = :user_id',
@@ -1336,7 +1331,7 @@ class WeChatDatabase(WeChatBase):
 
         ## Room.
         elif message.user is None:
-            result = message.receiver.wechat.database.database_wechat.execute_select(
+            result = message.receiver.wechat.database.database_wechat.execute.select(
                 (self.db_names['wechat'], self.db_names['wechat.contact_room']),
                 ['valid'],
                 '`room_id` = :room_id',
@@ -1413,7 +1408,7 @@ class WeChatDatabase(WeChatBase):
         data['file_id'] = file_id
 
         # Insert.
-        self.database_wechat.execute_insert(
+        self.database_wechat.execute.insert(
             (self.db_names['wechat'], self.db_names['wechat.message_send']),
             data
         )
