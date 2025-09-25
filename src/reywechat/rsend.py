@@ -9,7 +9,6 @@
 """
 
 
-from __future__ import annotations
 from typing import Any, Literal, overload
 from collections.abc import Callable
 from enum import IntEnum
@@ -86,7 +85,7 @@ class WeChatSendParameters(WeChatBase):
     @overload
     def __init__(
         self,
-        sender: WeChatSender,
+        sender: 'WeChatSender',
         send_type: Literal[WeChatSendTypeEnum.TEXT],
         receive_id: str,
         send_id: int | None = None,
@@ -97,7 +96,7 @@ class WeChatSendParameters(WeChatBase):
     @overload
     def __init__(
         self,
-        sender: WeChatSender,
+        sender: 'WeChatSender',
         send_type: Literal[WeChatSendTypeEnum.TEXT_AT],
         receive_id: str,
         send_id: int | None = None,
@@ -109,7 +108,7 @@ class WeChatSendParameters(WeChatBase):
     @overload
     def __init__(
         self,
-        sender: WeChatSender,
+        sender: 'WeChatSender',
         send_type: Literal[WeChatSendTypeEnum.FILE, WeChatSendTypeEnum.IMAGE, WeChatSendTypeEnum.EMOTION],
         receive_id: str,
         send_id: int | None = None,
@@ -121,7 +120,7 @@ class WeChatSendParameters(WeChatBase):
     @overload
     def __init__(
         self,
-        sender: WeChatSender,
+        sender: 'WeChatSender',
         send_type: Literal[WeChatSendTypeEnum.PAT],
         receive_id: str,
         send_id: int | None = None,
@@ -132,7 +131,7 @@ class WeChatSendParameters(WeChatBase):
     @overload
     def __init__(
         self,
-        sender: WeChatSender,
+        sender: 'WeChatSender',
         send_type: Literal[WeChatSendTypeEnum.PUBLIC],
         receive_id: str,
         send_id: int | None = None,
@@ -148,7 +147,7 @@ class WeChatSendParameters(WeChatBase):
     @overload
     def __init__(
         self,
-        sender: WeChatSender,
+        sender: 'WeChatSender',
         send_type: Literal[WeChatSendTypeEnum.FORWARD],
         receive_id: str,
         send_id: int | None = None,
@@ -158,7 +157,7 @@ class WeChatSendParameters(WeChatBase):
 
     def __init__(
         self,
-        sender: WeChatSender,
+        sender: 'WeChatSender',
         send_type: WeChatSendTypeEnum,
         receive_id: str,
         send_id: int | None = None,

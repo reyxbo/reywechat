@@ -9,7 +9,6 @@
 """
 
 
-from __future__ import annotations
 from typing import Any, TypedDict, Literal, overload
 from collections.abc import Callable
 from queue import Queue
@@ -92,7 +91,7 @@ class WeChatMessage(WeChatBase):
 
     def __init__(
         self,
-        receiver: WechatReceiver,
+        receiver: 'WechatReceiver',
         time: int,
         id_: int,
         number: int,
