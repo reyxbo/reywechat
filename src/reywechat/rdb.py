@@ -11,8 +11,8 @@
 
 from typing import Literal
 from json import loads as json_loads
-from reydb.rdb import Database
 from reydb import rorm
+from reydb.rdb import Database
 from reykit.rbase import throw
 from reykit.ros import File
 from reykit.rtime import to_time, time_to, sleep
@@ -40,12 +40,12 @@ class DatabaseTableContactUser(rorm.Model, table=True):
     """
 
     __comment__ = 'User contact table.'
-    create_time: rorm.Datetime = rorm.Field(field_default='CURRENT_TIMESTAMP', not_null=True, index_n=True, comment='Record create time.')
-    update_time: rorm.Datetime = rorm.Field(field_default='ON UPDATE CURRENT_TIMESTAMP', index_n=True, comment='Record update time.')
-    user_id: str = rorm.Field(field_type=rorm.types.VARCHAR(24), key=True, comment='User ID.')
-    name: str = rorm.Field(field_type=rorm.types.VARCHAR(32), comment='User name.')
-    contact: int = rorm.Field(field_type=rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the contact, 0 is no contact, 1 is contact.')
-    valid: int = rorm.Field(field_type=rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid, 0 is invalid, 1 is valid.')
+    create_time: rorm.Datetime = rorm.Field(field_default=':create_time', not_null=True, index_n=True, comment='Record create time.')
+    update_time: rorm.Datetime = rorm.Field(field_default=':update_time', index_n=True, comment='Record update time.')
+    user_id: str = rorm.Field(rorm.types.VARCHAR(24), key=True, comment='User ID.')
+    name: str = rorm.Field(rorm.types.VARCHAR(32), comment='User name.')
+    contact: int = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the contact, 0 is no contact, 1 is contact.')
+    valid: int = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid, 0 is invalid, 1 is valid.')
 
 
 class DatabaseTableContactRoom(rorm.Model, table=True):
@@ -54,12 +54,12 @@ class DatabaseTableContactRoom(rorm.Model, table=True):
     """
 
     __comment__ = 'Chat room contact table.'
-    create_time: rorm.Datetime = rorm.Field(field_default='CURRENT_TIMESTAMP', not_null=True, index_n=True, comment='Record create time.')
-    update_time: rorm.Datetime = rorm.Field(field_default='ON UPDATE CURRENT_TIMESTAMP', index_n=True, comment='Record update time.')
-    room_id: str = rorm.Field(field_type=rorm.types.VARCHAR(31), key=True, comment='Chat room ID.')
-    name: str = rorm.Field(field_type=rorm.types.VARCHAR(32), comment='Chat room name.')
-    contact: int = rorm.Field(field_type=rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the contact, 0 is no contact, 1 is contact.')
-    valid: int = rorm.Field(field_type=rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid, 0 is invalid, 1 is valid.')
+    create_time: rorm.Datetime = rorm.Field(field_default=':create_time', not_null=True, index_n=True, comment='Record create time.')
+    update_time: rorm.Datetime = rorm.Field(field_default=':update_time', index_n=True, comment='Record update time.')
+    room_id: str = rorm.Field(rorm.types.VARCHAR(31), key=True, comment='Chat room ID.')
+    name: str = rorm.Field(rorm.types.VARCHAR(32), comment='Chat room name.')
+    contact: int = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the contact, 0 is no contact, 1 is contact.')
+    valid: int = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid, 0 is invalid, 1 is valid.')
 
 
 class DatabaseTableContactRoomUser(rorm.Model, table=True):
@@ -68,13 +68,13 @@ class DatabaseTableContactRoomUser(rorm.Model, table=True):
     """
 
     __comment__ = 'Chat room user contact table.'
-    create_time: rorm.Datetime = rorm.Field(field_default='CURRENT_TIMESTAMP', not_null=True, index_n=True, comment='Record create time.')
-    update_time: rorm.Datetime = rorm.Field(field_default='ON UPDATE CURRENT_TIMESTAMP', index_n=True, comment='Record update time.')
-    room_id: str = rorm.Field(field_type=rorm.types.VARCHAR(31), key=True, comment='Chat room ID.')
-    user_id: str = rorm.Field(field_type=rorm.types.VARCHAR(24), key=True, comment='Chat room user ID.')
-    name: str = rorm.Field(field_type=rorm.types.VARCHAR(32), comment='Chat room user name.')
-    contact: int = rorm.Field(field_type=rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the contact, 0 is no contact, 1 is contact.')
-    valid: int = rorm.Field(field_type=rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid, 0 is invalid, 1 is valid.')
+    create_time: rorm.Datetime = rorm.Field(field_default=':create_time', not_null=True, index_n=True, comment='Record create time.')
+    update_time: rorm.Datetime = rorm.Field(field_default=':update_time', index_n=True, comment='Record update time.')
+    room_id: str = rorm.Field(rorm.types.VARCHAR(31), key=True, comment='Chat room ID.')
+    user_id: str = rorm.Field(rorm.types.VARCHAR(24), key=True, comment='Chat room user ID.')
+    name: str = rorm.Field(rorm.types.VARCHAR(32), comment='Chat room user name.')
+    contact: int = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the contact, 0 is no contact, 1 is contact.')
+    valid: int = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid, 0 is invalid, 1 is valid.')
 
 
 class DatabaseTableMessageReceive(rorm.Model, table=True):
@@ -83,11 +83,11 @@ class DatabaseTableMessageReceive(rorm.Model, table=True):
     """
 
     __comment__ = 'Message receive table.'
-    create_time: rorm.Datetime = rorm.Field(field_default='CURRENT_TIMESTAMP', not_null=True, index_n=True, comment='Record create time.')
+    create_time: rorm.Datetime = rorm.Field(field_default=':create_time', not_null=True, index_n=True, comment='Record create time.')
     message_time: rorm.Datetime = rorm.Field(not_null=True, index_n=True, comment='Message time.')
-    message_id: int = rorm.Field(field_type=rorm.types_mysql.BIGINT(unsigned=True), key=True, comment='Message UUID.')
-    room_id: str = rorm.Field(field_type=rorm.types.VARCHAR(31), index_n=True, comment='Message chat room ID, null for private chat.')
-    user_id: str = rorm.Field(field_type=rorm.types.VARCHAR(24), index_n=True, comment='Message sender user ID, null for system message.')
+    message_id: int = rorm.Field(rorm.types_mysql.BIGINT(unsigned=True), key=True, comment='Message UUID.')
+    room_id: str = rorm.Field(rorm.types.VARCHAR(31), index_n=True, comment='Message chat room ID, null for private chat.')
+    user_id: str = rorm.Field(rorm.types.VARCHAR(24), index_n=True, comment='Message sender user ID, null for system message.')
     type: int = rorm.Field(
         field_type=rorm.types_mysql.INTEGER(unsigned=True),
         not_null=True,
@@ -129,8 +129,8 @@ class DatabaseTableMessageReceive(rorm.Model, table=True):
             'other omit.'
         )
     )
-    data: str = rorm.Field(field_type=rorm.types.TEXT, not_null=True, comment='Message data.')
-    file_id: int = rorm.Field(field_type=rorm.types_mysql.MEDIUMINT(unsigned=True), comment='Message file ID, from the file database.')
+    data: str = rorm.Field(rorm.types.TEXT, not_null=True, comment='Message data.')
+    file_id: int = rorm.Field(rorm.types_mysql.MEDIUMINT(unsigned=True), comment='Message file ID, from the file database.')
 
 
 class DatabaseTableMessageSend(rorm.Model, table=True):
@@ -139,9 +139,9 @@ class DatabaseTableMessageSend(rorm.Model, table=True):
     """
 
     __comment__ = 'Message send table.'
-    create_time: rorm.Datetime = rorm.Field(field_default='CURRENT_TIMESTAMP', not_null=True, index_n=True, comment='Record create time.')
-    update_time: rorm.Datetime = rorm.Field(field_default='ON UPDATE CURRENT_TIMESTAMP', index_n=True, comment='Record update time.')
-    send_id: int = rorm.Field(field_type=rorm.types_mysql.INTEGER(unsigned=True), key_auto=True, comment='Send ID.')
+    create_time: rorm.Datetime = rorm.Field(field_default=':create_time', not_null=True, index_n=True, comment='Record create time.')
+    update_time: rorm.Datetime = rorm.Field(field_default=':update_time', index_n=True, comment='Record update time.')
+    send_id: int = rorm.Field(rorm.types_mysql.INTEGER(unsigned=True), key_auto=True, comment='Send ID.')
     status: int = rorm.Field(
         field_type=rorm.types_mysql.TINYINT(unsigned=True),
         not_null=True,
@@ -169,9 +169,9 @@ class DatabaseTableMessageSend(rorm.Model, table=True):
             '7 is forward message.'
         )
     )
-    receive_id: str = rorm.Field(field_type=rorm.types.VARCHAR(31), not_null=True, index_n=True, comment='Receive to user ID or chat room ID.')
-    parameter: str = rorm.Field(field_type=rorm.types.JSON, not_null=True, comment='Send parameters.')
-    file_id: int = rorm.Field(field_type=rorm.types_mysql.MEDIUMINT(unsigned=True), comment='Message file ID, from the file database.')
+    receive_id: str = rorm.Field(rorm.types.VARCHAR(31), not_null=True, index_n=True, comment='Receive to user ID or chat room ID.')
+    parameter: str = rorm.Field(rorm.types.JSON, not_null=True, comment='Send parameters.')
+    file_id: int = rorm.Field(rorm.types_mysql.MEDIUMINT(unsigned=True), comment='Message file ID, from the file database.')
 
 
 class WeChatDatabase(WeChatBase):
