@@ -537,7 +537,7 @@ class WeChatSender(WeChatBase):
             handler(send_params)
 
         # Insert.
-        self.wechat.database._insert_send(send_params)
+        self.wechat.db._insert_send(send_params)
 
 
     def add_handler(

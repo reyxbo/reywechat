@@ -40,7 +40,7 @@ class WeChat(WeChatBase):
 
     def __init__(
         self,
-        database: Database | dict[Literal['wechat', 'file'], Database] | None,
+        db: Database | dict[Literal['wechat', 'file'], Database] | None,
         max_receiver: int = 2,
         call_name: str | None = None,
         project_dir: str | None = None
@@ -50,7 +50,7 @@ class WeChat(WeChatBase):
 
         Parameters
         ----------
-        database : `Database` instance of `reykit` package.
+        db : `Database` instance of `reykit` package.
             - `Database`, Set all `Database`: instances.
             - `dict`, Set each `Database`: instance, all item is required.
                 `Key 'wechat'`: `Database` instance used in WeChat methods.
@@ -81,7 +81,7 @@ class WeChat(WeChatBase):
         self.receiver = WechatReceiver(self, max_receiver, call_name)
         self.trigger = self.receiver.trigger
         self.sender = WeChatSender(self)
-        self.database = WeChatDatabase(self, database)
+        self.db = WeChatDatabase(self, db)
 
         ## Client.
         self.client_version = self.client.client_version
@@ -109,7 +109,7 @@ class WeChat(WeChatBase):
         self.wrap_try_send = self.sender.wrap_try_send
 
         ## Database.
-        self.database_build = self.database.build_db
+        self.database_build = self.db.build_db
 
 
     def start(self) -> None:

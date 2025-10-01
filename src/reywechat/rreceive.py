@@ -1461,7 +1461,7 @@ class WeChatMessage(WeChatBase):
             return self._cache['valid']
 
         # Judge.
-        self._cache['valid'] = self.receiver.wechat.database.is_valid(self)
+        self._cache['valid'] = self.receiver.wechat.db.is_valid(self)
 
         return self._cache['valid']
 

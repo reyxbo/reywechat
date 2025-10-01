@@ -12,6 +12,7 @@
 from typing import Literal
 from json import loads as json_loads
 from reydb.rdb import Database
+from reydb import rorm
 from reykit.rbase import throw
 from reykit.ros import File
 from reykit.rtime import to_time, time_to, sleep
@@ -24,21 +25,179 @@ from .rwechat import WeChat
 
 
 __all__ = (
-    'WeChatDatabase',
+    'DatabaseTableContactUser',
+    'DatabaseTableContactRoom',
+    'DatabaseTableContactRoomUser',
+    'DatabaseTableMessageReceive',
+    'DatabaseTableMessageSend',
+    'WeChatDatabase'
 )
+
+
+class DatabaseTableContactUser(rorm.Model, table=True):
+    """
+    Database `contact_user` table model.
+    """
+
+    __comment__ = 'User contact table.'
+    create_time: rorm.Datetime = rorm.Field(field_default='CURRENT_TIMESTAMP', not_null=True, index_n=True, comment='Record create time.')
+    update_time: rorm.Datetime = rorm.Field(field_default='ON UPDATE CURRENT_TIMESTAMP', index_n=True, comment='Record update time.')
+    user_id: str = rorm.Field(field_type=rorm.types.VARCHAR(24), key=True, comment='User ID.')
+    name: str = rorm.Field(field_type=rorm.types.VARCHAR(32), comment='User name.')
+    contact: int = rorm.Field(field_type=rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the contact, 0 is no contact, 1 is contact.')
+    valid: int = rorm.Field(field_type=rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid, 0 is invalid, 1 is valid.')
+
+
+class DatabaseTableContactRoom(rorm.Model, table=True):
+    """
+    Database `contact_room` table model.
+    """
+
+    __comment__ = 'Chat room contact table.'
+    create_time: rorm.Datetime = rorm.Field(field_default='CURRENT_TIMESTAMP', not_null=True, index_n=True, comment='Record create time.')
+    update_time: rorm.Datetime = rorm.Field(field_default='ON UPDATE CURRENT_TIMESTAMP', index_n=True, comment='Record update time.')
+    room_id: str = rorm.Field(field_type=rorm.types.VARCHAR(31), key=True, comment='Chat room ID.')
+    name: str = rorm.Field(field_type=rorm.types.VARCHAR(32), comment='Chat room name.')
+    contact: int = rorm.Field(field_type=rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the contact, 0 is no contact, 1 is contact.')
+    valid: int = rorm.Field(field_type=rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid, 0 is invalid, 1 is valid.')
+
+
+class DatabaseTableContactRoomUser(rorm.Model, table=True):
+    """
+    Database `contact_room_user` table model.
+    """
+
+    __comment__ = 'Chat room user contact table.'
+    create_time: rorm.Datetime = rorm.Field(field_default='CURRENT_TIMESTAMP', not_null=True, index_n=True, comment='Record create time.')
+    update_time: rorm.Datetime = rorm.Field(field_default='ON UPDATE CURRENT_TIMESTAMP', index_n=True, comment='Record update time.')
+    room_id: str = rorm.Field(field_type=rorm.types.VARCHAR(31), key=True, comment='Chat room ID.')
+    user_id: str = rorm.Field(field_type=rorm.types.VARCHAR(24), key=True, comment='Chat room user ID.')
+    name: str = rorm.Field(field_type=rorm.types.VARCHAR(32), comment='Chat room user name.')
+    contact: int = rorm.Field(field_type=rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the contact, 0 is no contact, 1 is contact.')
+    valid: int = rorm.Field(field_type=rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid, 0 is invalid, 1 is valid.')
+
+
+class DatabaseTableMessageReceive(rorm.Model, table=True):
+    """
+    Database `message_receive` table model.
+    """
+
+    __comment__ = 'Message receive table.'
+    create_time: rorm.Datetime = rorm.Field(field_default='CURRENT_TIMESTAMP', not_null=True, index_n=True, comment='Record create time.')
+    message_time: rorm.Datetime = rorm.Field(not_null=True, index_n=True, comment='Message time.')
+    message_id: int = rorm.Field(field_type=rorm.types_mysql.BIGINT(unsigned=True), key=True, comment='Message UUID.')
+    room_id: str = rorm.Field(field_type=rorm.types.VARCHAR(31), index_n=True, comment='Message chat room ID, null for private chat.')
+    user_id: str = rorm.Field(field_type=rorm.types.VARCHAR(24), index_n=True, comment='Message sender user ID, null for system message.')
+    type: int = rorm.Field(
+        field_type=rorm.types_mysql.INTEGER(unsigned=True),
+        not_null=True,
+        comment=(
+            'Message type, '
+            '1 is text message, '
+            '3 is image message, '
+            '34 is voice message, '
+            '37 is new friend invitation message, '
+            '42 is business card message, '
+            '43 is video message, '
+            '47 is emoticon message, '
+            '48 is position message, '
+            '49 is share message ('
+                'data type, '
+                '1 is pure link text, '
+                '6 is other side upload file completed, '
+                '17 is initiate real time location, '
+                '19 or 40 is forward, '
+                '33 is mini program, '
+                '51 is video channel, '
+                '57 is quote, '
+                '74 is other side start uploading file, '
+                '2000 is transfer money, '
+                'include "<appname>[^<>]+</appname>" is app, '
+                'other omit'
+            '), '
+            '50 is voice call or video call invitation message, '
+            '51 is system synchronize data message, '
+            '56 is real time position data message, '
+            '10000 is text system message, '
+            '10002 is system message ('
+                'date type, '
+                '"pat" is pat, '
+                '"revokemsg" is recall, '
+                '"paymsg" is transfer money tip, '
+                'other omit'
+            '), '
+            'other omit.'
+        )
+    )
+    data: str = rorm.Field(field_type=rorm.types.TEXT, not_null=True, comment='Message data.')
+    file_id: int = rorm.Field(field_type=rorm.types_mysql.MEDIUMINT(unsigned=True), comment='Message file ID, from the file database.')
+
+
+class DatabaseTableMessageSend(rorm.Model, table=True):
+    """
+    Database `message_send` table model.
+    """
+
+    __comment__ = 'Message send table.'
+    create_time: rorm.Datetime = rorm.Field(field_default='CURRENT_TIMESTAMP', not_null=True, index_n=True, comment='Record create time.')
+    update_time: rorm.Datetime = rorm.Field(field_default='ON UPDATE CURRENT_TIMESTAMP', index_n=True, comment='Record update time.')
+    send_id: int = rorm.Field(field_type=rorm.types_mysql.INTEGER(unsigned=True), key_auto=True, comment='Send ID.')
+    status: int = rorm.Field(
+        field_type=rorm.types_mysql.TINYINT(unsigned=True),
+        not_null=True,
+        comment=(
+            'Send status, '
+            '0 is not sent, '
+            '1 is handling, '
+            '2 is send success, '
+            '3 is send fail, '
+            '4 is send cancel.'
+        )
+    )
+    type: int = rorm.Field(
+        field_type=rorm.types_mysql.TINYINT(unsigned=True),
+        not_null=True,
+        comment=(
+            'Send type, '
+            '0 is text message, '
+            "1 is text message with \\'@\\', "
+            '2 is file message, '
+            '3 is image message, '
+            '4 is emoticon message, '
+            '5 is pat message, '
+            '6 is public account message, '
+            '7 is forward message.'
+        )
+    )
+    receive_id: str = rorm.Field(field_type=rorm.types.VARCHAR(31), not_null=True, index_n=True, comment='Receive to user ID or chat room ID.')
+    parameter: str = rorm.Field(field_type=rorm.types.JSON, not_null=True, comment='Send parameters.')
+    file_id: int = rorm.Field(field_type=rorm.types_mysql.MEDIUMINT(unsigned=True), comment='Message file ID, from the file database.')
 
 
 class WeChatDatabase(WeChatBase):
     """
     WeChat database type.
     Can create database used `self.build_db` method.
+
+    Attributes
+    ----------
+    db_names : Database table name mapping dictionary.
     """
+
+    db_names = {
+        'contact_user': 'contact_user',
+        'contact_room': 'contact_room',
+        'contact_room_user': 'contact_room_user',
+        'message_receive': 'message_receive',
+        'message_send': 'message_send',
+        'stats': 'stats'
+    }
 
 
     def __init__(
         self,
         wechat: WeChat,
-        database: Database | dict[Literal['wechat', 'file'], Database]
+        db: Database | dict[Literal['wechat', 'file'], Database]
     ) -> None:
         """
         Build instance attributes.
@@ -46,7 +205,7 @@ class WeChatDatabase(WeChatBase):
         Parameters
         ----------
         wechat : `WeChatClient` instance.
-        database : `Database` instance of `reykit` package.
+        db : `Database` instance of `reykit` package.
             - `Database`, Set all `Database`: instances.
             - `dict`, Set each `Database`: instance, all item is required.
                 `Key 'wechat'`: `Database` instance used in WeChat methods.
@@ -55,30 +214,14 @@ class WeChatDatabase(WeChatBase):
 
         # Set attribute.
         self.wechat = wechat
-        match database:
+        match db:
             case Database():
-                self.database_wechat = self.database_file = database
+                self.db_wechat = self.db_file = db
             case dict():
-                self.database_wechat: Database = database.get('wechat')
-                self.database_file: Database = database.get('file')
-                if (
-                    self.database_wechat is None
-                    or self.database_file is None
-                ):
-                    throw(ValueError, database)
+                self.db_wechat: Database = db.get('wechat')
+                self.db_file: Database = db.get('file')
             case _:
-                throw(TypeError, database)
-
-        ## Database path name.
-        self.db_names = {
-            'wechat': 'wechat',
-            'wechat.contact_user': 'contact_user',
-            'wechat.contact_room': 'contact_room',
-            'wechat.contact_room_user': 'contact_room_user',
-            'wechat.message_receive': 'message_receive',
-            'wechat.message_send': 'message_send',
-            'wechat.stats': 'stats'
-        }
+                throw(TypeError, db)
 
         # Add handler.
         self.__add_receiver_handler_to_contact_user()
@@ -97,433 +240,35 @@ class WeChatDatabase(WeChatBase):
         """
 
         # Check.
-        if self.database_wechat is None:
-            throw(ValueError, self.database_wechat)
+        if self.db_wechat is None:
+            throw(ValueError, self.db_wechat)
 
         # Set parameter.
 
-        ## Database.
-        databases = [
-            {
-                'name': self.db_names['wechat']
-            }
-        ]
-
         ## Table.
+        DatabaseTableContactUser._set_name(self.db_names['contact_user'])
+        DatabaseTableContactRoom._set_name(self.db_names['contact_room'])
+        DatabaseTableContactRoomUser._set_name(self.db_names['contact_room_user'])
+        DatabaseTableMessageReceive._set_name(self.db_names['message_receive'])
+        DatabaseTableMessageSend._set_name(self.db_names['message_send'])
         tables = [
-
-            ### 'contact_user'.
-            {
-                'path': (self.db_names['wechat'], self.db_names['wechat.contact_user']),
-                'fields': [
-                    {
-                        'name': 'create_time',
-                        'type': 'datetime',
-                        'constraint': 'NOT NULL DEFAULT CURRENT_TIMESTAMP',
-                        'comment': 'Record create time.'
-                    },
-                    {
-                        'name': 'update_time',
-                        'type': 'datetime',
-                        'constraint': 'DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP',
-                        'comment': 'Record update time.'
-                    },
-                    {
-                        'name': 'user_id',
-                        'type': 'varchar(24)',
-                        'constraint': 'NOT NULL',
-                        'comment': 'User ID.'
-                    },
-                    {
-                        'name': 'name',
-                        'type': 'varchar(32)',
-                        'constraint': 'CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL',
-                        'comment': 'User name.'
-                    },
-                    {
-                        'name': 'contact',
-                        'type': 'tinyint unsigned',
-                        'constraint': 'NOT NULL',
-                        'comment': 'Is the contact, 0 is contact, 1 is no contact.'
-                    },
-                    {
-                        'name': 'valid',
-                        'type': 'tinyint unsigned',
-                        'constraint': 'DEFAULT 1',
-                        'comment': 'Is the valid, 0 is invalid, 1 is valid.'
-                    }
-                ],
-                'primary': 'user_id',
-                'indexes': [
-                    {
-                        'name': 'n_create_time',
-                        'fields': 'create_time',
-                        'type': 'noraml',
-                        'comment': 'Record create time normal index.'
-                    },
-                    {
-                        'name': 'n_update_time',
-                        'fields': 'update_time',
-                        'type': 'noraml',
-                        'comment': 'Record update time normal index.'
-                    }
-                ],
-                'comment': 'User contact table.'
-            },
-
-            ### 'contact_room'.
-            {
-                'path': (self.db_names['wechat'], self.db_names['wechat.contact_room']),
-                'fields': [
-                    {
-                        'name': 'create_time',
-                        'type': 'datetime',
-                        'constraint': 'NOT NULL DEFAULT CURRENT_TIMESTAMP',
-                        'comment': 'Record create time.'
-                    },
-                    {
-                        'name': 'update_time',
-                        'type': 'datetime',
-                        'constraint': 'DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP',
-                        'comment': 'Record update time.'
-                    },
-                    {
-                        'name': 'room_id',
-                        'type': 'varchar(31)',
-                        'constraint': 'NOT NULL',
-                        'comment': 'Chat room ID.'
-                    },
-                    {
-                        'name': 'name',
-                        'type': 'varchar(32)',
-                        'constraint': 'CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL',
-                        'comment': 'Chat room name.'
-                    },
-                    {
-                        'name': 'contact',
-                        'type': 'tinyint unsigned',
-                        'constraint': 'NOT NULL',
-                        'comment': 'Is the contact, 0 is contact, 1 is no contact.'
-                    },
-                    {
-                        'name': 'valid',
-                        'type': 'tinyint unsigned',
-                        'constraint': 'DEFAULT 1',
-                        'comment': 'Is the valid, 0 is invalid, 1 is valid.'
-                    }
-                ],
-                'primary': 'room_id',
-                'indexes': [
-                    {
-                        'name': 'n_create_time',
-                        'fields': 'create_time',
-                        'type': 'noraml',
-                        'comment': 'Record create time normal index.'
-                    },
-                    {
-                        'name': 'n_update_time',
-                        'fields': 'update_time',
-                        'type': 'noraml',
-                        'comment': 'Record update time normal index.'
-                    }
-                ],
-                'comment': 'Chat room contact table.'
-            },
-
-            ### 'contact_room_user'.
-            {
-                'path': (self.db_names['wechat'], self.db_names['wechat.contact_room_user']),
-                'fields': [
-                    {
-                        'name': 'create_time',
-                        'type': 'datetime',
-                        'constraint': 'NOT NULL DEFAULT CURRENT_TIMESTAMP',
-                        'comment': 'Record create time.'
-                    },
-                    {
-                        'name': 'update_time',
-                        'type': 'datetime',
-                        'constraint': 'DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP',
-                        'comment': 'Record update time.'
-                    },
-                    {
-                        'name': 'room_id',
-                        'type': 'varchar(31)',
-                        'constraint': 'NOT NULL',
-                        'comment': 'Chat room ID.'
-                    },
-                    {
-                        'name': 'user_id',
-                        'type': 'varchar(24)',
-                        'constraint': 'NOT NULL',
-                        'comment': 'Chat room user ID.'
-                    },
-                    {
-                        'name': 'name',
-                        'type': 'varchar(32)',
-                        'constraint': 'CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL',
-                        'comment': 'Chat room user name.'
-                    },
-                    {
-                        'name': 'contact',
-                        'type': 'tinyint unsigned',
-                        'constraint': 'NOT NULL',
-                        'comment': 'Is the contact, 0 is contact, 1 is no contact.'
-                    },
-                    {
-                        'name': 'valid',
-                        'type': 'tinyint unsigned',
-                        'constraint': 'DEFAULT 1',
-                        'comment': 'Is the valid, 0 is invalid, 1 is valid.'
-                    }
-                ],
-                'primary': ['room_id', 'user_id'],
-                'indexes': [
-                    {
-                        'name': 'n_create_time',
-                        'fields': 'create_time',
-                        'type': 'noraml',
-                        'comment': 'Record create time normal index.'
-                    },
-                    {
-                        'name': 'n_update_time',
-                        'fields': 'update_time',
-                        'type': 'noraml',
-                        'comment': 'Record update time normal index.'
-                    }
-                ],
-                'comment': 'Chat room user contact table.'
-            },
-
-
-            ### 'message_receive'.
-            {
-                'path': (self.db_names['wechat'], self.db_names['wechat.message_receive']),
-                'fields': [
-                    {
-                        'name': 'create_time',
-                        'type': 'datetime',
-                        'constraint': 'NOT NULL DEFAULT CURRENT_TIMESTAMP',
-                        'comment': 'Record create time.'
-                    },
-                    {
-                        'name': 'message_time',
-                        'type': 'datetime',
-                        'constraint': 'NOT NULL',
-                        'comment': 'Message time.'
-                    },
-                    {
-                        'name': 'message_id',
-                        'type': 'bigint unsigned',
-                        'constraint': 'NOT NULL',
-                        'comment': 'Message UUID.'
-                    },
-                    {
-                        'name': 'room_id',
-                        'type': 'varchar(31)',
-                        'comment': 'Message chat room ID, null for private chat.'
-                    },
-                    {
-                        'name': 'user_id',
-                        'type': 'varchar(24)',
-                        'comment': 'Message sender user ID, null for system message.'
-                    },
-                    {
-                        'name': 'type',
-                        'type': 'int unsigned',
-                        'constraint': 'NOT NULL',
-                        'comment': (
-                            'Message type, '
-                            '1 is text message, '
-                            '3 is image message, '
-                            '34 is voice message, '
-                            '37 is new friend invitation message, '
-                            '42 is business card message, '
-                            '43 is video message, '
-                            '47 is emoticon message, '
-                            '48 is position message, '
-                            '49 is share message ('
-                                'data type, '
-                                '1 is pure link text, '
-                                '6 is other side upload file completed, '
-                                '17 is initiate real time location, '
-                                '19 or 40 is forward, '
-                                '33 is mini program, '
-                                '51 is video channel, '
-                                '57 is quote, '
-                                '74 is other side start uploading file, '
-                                '2000 is transfer money, '
-                                'include "<appname>[^<>]+</appname>" is app, '
-                                'other omit'
-                            '), '
-                            '50 is voice call or video call invitation message, '
-                            '51 is system synchronize data message, '
-                            '56 is real time position data message, '
-                            '10000 is text system message, '
-                            '10002 is system message ('
-                                'date type, '
-                                '"pat" is pat, '
-                                '"revokemsg" is recall, '
-                                '"paymsg" is transfer money tip, '
-                                'other omit'
-                            '), '
-                            'other omit.'
-                        )
-                    },
-                    {
-                        'name': 'data',
-                        'type': 'text',
-                        'constraint': 'CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL',
-                        'comment': 'Message data.'
-                    },
-                    {
-                        'name': 'file_id',
-                        'type': 'mediumint unsigned',
-                        'comment': 'Message file ID, from the file database.'
-                    }
-                ],
-                'primary': 'message_id',
-                'indexes': [
-                    {
-                        'name': 'n_create_time',
-                        'fields': 'create_time',
-                        'type': 'noraml',
-                        'comment': 'Record create time normal index.'
-                    },
-                    {
-                        'name': 'n_message_time',
-                        'fields': 'message_time',
-                        'type': 'noraml',
-                        'comment': 'Message time normal index.'
-                    },
-                    {
-                        'name': 'n_room_id',
-                        'fields': 'room_id',
-                        'type': 'noraml',
-                        'comment': 'Message chat room ID normal index.'
-                    },
-                    {
-                        'name': 'n_user_id',
-                        'fields': 'user_id',
-                        'type': 'noraml',
-                        'comment': 'Message sender user ID normal index.'
-                    }
-                ],
-                'comment': 'Message receive table.'
-            },
-
-            ### 'message_send'.
-            {
-                'path': (self.db_names['wechat'], self.db_names['wechat.message_send']),
-                'fields': [
-                    {
-                        'name': 'create_time',
-                        'type': 'datetime',
-                        'constraint': 'NOT NULL DEFAULT CURRENT_TIMESTAMP',
-                        'comment': 'Record create time.'
-                    },
-                    {
-                        'name': 'update_time',
-                        'type': 'datetime',
-                        'constraint': 'DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP',
-                        'comment': 'Record update time.'
-                    },
-                    {
-                        'name': 'plan_time',
-                        'type': 'datetime',
-                        'comment': 'Send plan time.'
-                    },
-                    {
-                        'name': 'send_id',
-                        'type': 'int unsigned',
-                        'constraint': 'NOT NULL AUTO_INCREMENT',
-                        'comment': 'Send ID.'
-                    },
-                    {
-                        'name': 'status',
-                        'type': 'tinyint unsigned',
-                        'constraint': 'NOT NULL',
-                        'comment': (
-                            'Send status, '
-                            '0 is not sent, '
-                            '1 is handling, '
-                            '2 is send success, '
-                            '3 is send fail, '
-                            '4 is send cancel.'
-                        )
-                    },
-                    {
-                        'name': 'type',
-                        'type': 'tinyint unsigned',
-                        'constraint': 'NOT NULL',
-                        'comment': (
-                            'Send type, '
-                            '0 is text message, '
-                            "1 is text message with \\'@\\', "
-                            '2 is file message, '
-                            '3 is image message, '
-                            '4 is emoticon message, '
-                            '5 is pat message, '
-                            '6 is public account message, '
-                            '7 is forward message.'
-                        )
-                    },
-                    {
-                        'name': 'receive_id',
-                        'type': 'varchar(31)',
-                        'constraint': 'NOT NULL',
-                        'comment': 'Receive to user ID or chat room ID.'
-                    },
-                    {
-                        'name': 'parameter',
-                        'type': 'json',
-                        'constraint': 'NOT NULL',
-                        'comment': 'Send parameters.'
-                    },
-                    {
-                        'name': 'file_id',
-                        'type': 'mediumint unsigned',
-                        'comment': 'Send file ID, from the file database.'
-                    }
-                ],
-                'primary': 'send_id',
-                'indexes': [
-                    {
-                        'name': 'n_create_time',
-                        'fields': 'create_time',
-                        'type': 'noraml',
-                        'comment': 'Record create time normal index.'
-                    },
-                    {
-                        'name': 'n_update_time',
-                        'fields': 'update_time',
-                        'type': 'noraml',
-                        'comment': 'Record update time normal index.'
-                    },
-                    {
-                        'name': 'n_receive_id',
-                        'fields': 'receive_id',
-                        'type': 'noraml',
-                        'comment': 'Receive to user ID or chat room ID normal index.'
-                    }
-                ],
-                'comment': 'Message send table.'
-            }
-
+            DatabaseTableContactUser,
+            DatabaseTableContactRoom,
+            DatabaseTableContactRoomUser,
+            DatabaseTableMessageReceive,
+            DatabaseTableMessageSend
         ]
 
         ## View stats.
         views_stats = [
-
-            ### 'stats'.
             {
-                'path': (self.db_names['wechat'], self.db_names['wechat.stats']),
+                'path': self.db_names['stats'],
                 'items': [
                     {
                         'name': 'receive_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_receive']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['message_receive']}`'
                         ),
                         'comment': 'Message receive count.'
                     },
@@ -531,7 +276,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'send_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_send']}`\n'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['message_send']}`\n'
                             'WHERE `status` = 2'
                         ),
                         'comment': 'Message send count.'
@@ -540,7 +285,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'user_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_user']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['contact_user']}`'
                         ),
                         'comment': 'Contact user count.'
                     },
@@ -548,7 +293,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'room_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['contact_room']}`'
                         ),
                         'comment': 'Contact room count.'
                     },
@@ -556,7 +301,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'room_user_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room_user']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['contact_room_user']}`'
                         ),
                         'comment': 'Contact room user count.'
                     },
@@ -564,7 +309,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'past_day_receive_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_receive']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['message_receive']}`'
                             'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) = 0'
                         ),
                         'comment': 'Message receive count in the past day.'
@@ -573,7 +318,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'past_day_send_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_send']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['message_send']}`'
                             'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) = 0'
                         ),
                         'comment': 'Message send count in the past day.'
@@ -582,7 +327,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'past_day_user_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_user']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['contact_user']}`'
                             'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) = 0'
                         ),
                         'comment': 'Contact user count in the past day.'
@@ -591,7 +336,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'past_day_room_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['contact_room']}`'
                             'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) = 0'
                         ),
                         'comment': 'Contact room count in the past day.'
@@ -600,7 +345,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'past_day_room_user_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room_user']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['contact_room_user']}`'
                             'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) = 0'
                         ),
                         'comment': 'Contact room user count in the past day.'
@@ -609,7 +354,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'past_week_receive_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_receive']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['message_receive']}`'
                             'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 6'
                         ),
                         'comment': 'Message receive count in the past week.'
@@ -618,7 +363,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'past_week_send_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_send']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['message_send']}`'
                             'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 6'
                         ),
                         'comment': 'Message send count in the past week.'
@@ -627,7 +372,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'past_week_user_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_user']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['contact_user']}`'
                             'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 6'
                         ),
                         'comment': 'Contact user count in the past week.'
@@ -636,7 +381,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'past_week_room_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['contact_room']}`'
                             'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 6'
                         ),
                         'comment': 'Contact room count in the past week.'
@@ -645,7 +390,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'past_week_room_user_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room_user']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['contact_room_user']}`'
                             'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 6'
                         ),
                         'comment': 'Contact room user count in the past week.'
@@ -654,7 +399,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'past_month_receive_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_receive']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['message_receive']}`'
                             'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 29'
                         ),
                         'comment': 'Message receive count in the past month.'
@@ -663,7 +408,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'past_month_send_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_send']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['message_send']}`'
                             'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 29'
                         ),
                         'comment': 'Message send count in the past month.'
@@ -672,7 +417,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'past_month_user_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_user']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['contact_user']}`'
                             'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 29'
                         ),
                         'comment': 'Contact user count in the past month.'
@@ -681,7 +426,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'past_month_room_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['contact_room']}`'
                             'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 29'
                         ),
                         'comment': 'Contact room count in the past month.'
@@ -690,7 +435,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'past_month_room_user_count',
                         'select': (
                             'SELECT COUNT(1)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room_user']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['contact_room_user']}`'
                             'WHERE TIMESTAMPDIFF(DAY, `create_time`, NOW()) <= 29'
                         ),
                         'comment': 'Contact room user count in the past month.'
@@ -699,7 +444,7 @@ class WeChatDatabase(WeChatBase):
                         'name': 'receive_last_time',
                         'select': (
                             'SELECT MAX(`message_time`)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_receive']}`'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['message_receive']}`'
                         ),
                         'comment': 'Message last receive time.'
                     },
@@ -707,24 +452,22 @@ class WeChatDatabase(WeChatBase):
                         'name': 'send_last_time',
                         'select': (
                             'SELECT MAX(`update_time`)\n'
-                            f'FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.message_send']}`\n'
+                            f'FROM `{self.db_wechat.database}`.`{self.db_names['message_send']}`\n'
                             'WHERE `status` = 2'
                         ),
                         'comment': 'Message last send time.'
                     }
                 ]
-
             }
-
         ]
 
         # Build.
 
         ## WeChat.
-        self.database_wechat.build.build(databases, tables, views_stats=views_stats)
+        self.db_wechat.build.build(tables=tables, views_stats=views_stats, skip=True)
 
         ## File.
-        self.database_file.file.build_db()
+        self.db_file.file.build_db()
 
         # Update.
         self.update_contact_user()
@@ -743,8 +486,7 @@ class WeChatDatabase(WeChatBase):
         user_data = [
             {
                 'user_id': row['id'],
-                'name': row['name'],
-                'contact': 1
+                'name': row['name']
             }
             for row in contact_table
         ]
@@ -754,12 +496,12 @@ class WeChatDatabase(WeChatBase):
         ]
 
         # Insert and update.
-        conn = self.database_wechat.connect()
+        conn = self.db_wechat.connect()
 
         ## Insert.
         if contact_table != []:
             conn.execute.insert(
-                self.db_names['wechat.contact_user'],
+                self.db_names['contact_user'],
                 user_data,
                 'update'
             )
@@ -767,12 +509,12 @@ class WeChatDatabase(WeChatBase):
         ## Update.
         if user_ids == []:
             sql = (
-                f'UPDATE `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_user']}`\n'
+                f'UPDATE `{self.db_wechat.database}`.`{self.db_names['contact_user']}`\n'
                 'SET `contact` = 0'
             )
         else:
             sql = (
-                f'UPDATE `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_user']}`\n'
+                f'UPDATE `{self.db_wechat.database}`.`{self.db_names['contact_user']}`\n'
                 'SET `contact` = 0\n'
                 'WHERE `user_id` NOT IN :user_ids'
             )
@@ -799,8 +541,7 @@ class WeChatDatabase(WeChatBase):
         room_data = [
             {
                 'room_id': row['id'],
-                'name': row['name'],
-                'contact': 1
+                'name': row['name']
             }
             for row in contact_table
         ]
@@ -810,12 +551,12 @@ class WeChatDatabase(WeChatBase):
         ]
 
         # Insert and update.
-        conn = self.database_wechat.connect()
+        conn = self.db_wechat.connect()
 
         ## Insert.
         if contact_table != []:
             conn.execute.insert(
-                self.db_names['wechat.contact_room'],
+                self.db_names['contact_room'],
                 room_data,
                 'update'
             )
@@ -823,12 +564,12 @@ class WeChatDatabase(WeChatBase):
         ## Update.
         if room_ids == []:
             sql = (
-                f'UPDATE `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room']}`\n'
+                f'UPDATE `{self.db_wechat.database}`.`{self.db_names['contact_room']}`\n'
                 'SET `contact` = 0'
             )
         else:
             sql = (
-                f'UPDATE `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room']}`\n'
+                f'UPDATE `{self.db_wechat.database}`.`{self.db_names['contact_room']}`\n'
                 'SET `contact` = 0\n'
                 'WHERE `room_id` NOT IN :room_ids'
             )
@@ -872,8 +613,7 @@ class WeChatDatabase(WeChatBase):
             {
                 'room_id': row['id'],
                 'user_id': user_id,
-                'name': name,
-                'contact': 1
+                'name': name
             }
             for row in contact_table
             for user_id, name
@@ -888,12 +628,12 @@ class WeChatDatabase(WeChatBase):
         ]
 
         # Insert and update.
-        conn = self.database_wechat.connect()
+        conn = self.db_wechat.connect()
 
         ## Insert.
         if room_user_data != []:
             conn.execute.insert(
-                self.db_names['wechat.contact_room_user'],
+                self.db_names['contact_room_user'],
                 room_user_data,
                 'update'
             )
@@ -901,18 +641,18 @@ class WeChatDatabase(WeChatBase):
         ## Update.
         if room_user_ids == []:
             sql = (
-                f'UPDATE `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room_user']}`\n'
+                f'UPDATE `{self.db_wechat.database}`.`{self.db_names['contact_room_user']}`\n'
                 'SET `contact` = 0'
             )
         elif room_id is None:
             sql = (
-                f'UPDATE `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room_user']}`\n'
+                f'UPDATE `{self.db_wechat.database}`.`{self.db_names['contact_room_user']}`\n'
                 'SET `contact` = 0\n'
                 "WHERE CONCAT(`room_id`, ',', `user_id`) NOT IN :room_user_ids"
             )
         else:
             sql = (
-                f'UPDATE `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room_user']}`\n'
+                f'UPDATE `{self.db_wechat.database}`.`{self.db_names['contact_room_user']}`\n'
                 'SET `contact` = 0\n'
                 'WHERE (\n'
                 '    `room_id` = :room_id\n'
@@ -955,13 +695,12 @@ class WeChatDatabase(WeChatBase):
                 name = self.wechat.client.get_contact_name(message.user)
                 data = {
                     'user_id': message.user,
-                    'name': name,
-                    'contact': 1
+                    'name': name
                 }
 
                 ## Insert.
-                self.database_wechat.execute.insert(
-                    self.db_names['wechat.contact_user'],
+                self.db_wechat.execute.insert(
+                    self.db_names['contact_user'],
                     data,
                     'update'
                 )
@@ -994,15 +733,14 @@ class WeChatDatabase(WeChatBase):
                 name = self.wechat.client.get_contact_name(message.room)
                 data = {
                     'room_id': message.room,
-                    'name': name,
-                    'contact': 1
+                    'name': name
                 }
 
                 ## Insert.
 
                 ### 'contact_room'.
-                self.database_wechat.execute.insert(
-                    self.db_names['wechat.contact_room'],
+                self.db_wechat.execute.insert(
+                    self.db_names['contact_room'],
                     data,
                     'update'
                 )
@@ -1023,8 +761,8 @@ class WeChatDatabase(WeChatBase):
                 }
 
                 ## Update.
-                self.database_wechat.execute.update(
-                    self.db_names['wechat.contact_room'],
+                self.db_wechat.execute.update(
+                    self.db_names['contact_room'],
                     data
                 )
 
@@ -1045,8 +783,8 @@ class WeChatDatabase(WeChatBase):
                 }
 
                 ## Update.
-                self.database_wechat.execute.update(
-                    self.db_names['wechat.contact_room'],
+                self.db_wechat.execute.update(
+                    self.db_names['contact_room'],
                     data
                 )
 
@@ -1105,7 +843,7 @@ class WeChatDatabase(WeChatBase):
             if message.file is None:
                 file_id = None
             else:
-                file_id = self.database_file.file.upload(
+                file_id = self.db_file.file.upload(
                     message.file['path'],
                     message.file['name'],
                     'WeChat'
@@ -1125,8 +863,8 @@ class WeChatDatabase(WeChatBase):
             }
 
             # Insert.
-            self.database_wechat.execute.insert(
-                self.db_names['wechat.message_receive'],
+            self.db_wechat.execute.insert(
+                self.db_names['message_receive'],
                 data,
                 'ignore'
             )
@@ -1168,8 +906,8 @@ class WeChatDatabase(WeChatBase):
             }
 
             # Update.
-            self.database_wechat.execute.update(
-                self.db_names['wechat.message_send'],
+            self.db_wechat.execute.update(
+                self.db_names['message_send'],
                 data
             )
 
@@ -1195,7 +933,7 @@ class WeChatDatabase(WeChatBase):
         """
 
         # Information.
-        file_info = self.database_file.file.query(file_id)
+        file_info = self.db_file.file.query(file_id)
         file_md5 = file_info['md5']
         file_name = file_info['name']
 
@@ -1204,7 +942,7 @@ class WeChatDatabase(WeChatBase):
 
         ## Download.
         if cache_path is None:
-            file_bytes = self.database_file.file.download(file_id)
+            file_bytes = self.db_file.file.download(file_id)
             cache_path = self.wechat.cache.store(file_bytes, file_name)
 
         return cache_path, file_name
@@ -1224,23 +962,15 @@ class WeChatDatabase(WeChatBase):
             """
 
             # Set parameter.
-            conn = self.database_wechat.connect()
+            conn = self.db_wechat.connect()
 
             # Read.
-            where = (
-                '(\n'
-                '    `status` = 0\n'
-                '    AND (\n'
-                '        `plan_time` IS NULL\n'
-                '        OR `plan_time` < NOW()\n'
-                '    )\n'
-                ')'
-            )
+            where = '`status` = 0'
             result = conn.execute.select(
-                self.db_names['wechat.message_send'],
+                self.db_names['message_send'],
                 ['send_id', 'type', 'receive_id', 'parameter', 'file_id'],
                 where,
-                order='`plan_time` DESC, `send_id`'
+                order='`send_id`'
             )
 
             # Convert.
@@ -1254,7 +984,7 @@ class WeChatDatabase(WeChatBase):
                 for row in table
             ]
             sql = (
-                f'UPDATE `{self.db_names['wechat']}`.`{self.db_names['wechat.message_send']}`\n'
+                f'UPDATE `{self.db_wechat.database}`.`{self.db_names['message_send']}`\n'
                 'SET `status` = 1\n'
                 'WHERE `send_id` IN :send_ids'
             )
@@ -1321,8 +1051,8 @@ class WeChatDatabase(WeChatBase):
 
         ## User.
         if message.room is None:
-            result = message.receiver.wechat.database.database_wechat.execute.select(
-                self.db_names['wechat.message_send'],
+            result = message.receiver.wechat.db.db_wechat.execute.select(
+                self.db_names['message_send'],
                 ['valid'],
                 '`user_id` = :user_id',
                 limit=1,
@@ -1331,8 +1061,8 @@ class WeChatDatabase(WeChatBase):
 
         ## Room.
         elif message.user is None:
-            result = message.receiver.wechat.database.database_wechat.execute.select(
-                self.db_names['wechat.message_send'],
+            result = message.receiver.wechat.db.db_wechat.execute.select(
+                self.db_names['message_send'],
                 ['valid'],
                 '`room_id` = :room_id',
                 limit=1,
@@ -1344,19 +1074,19 @@ class WeChatDatabase(WeChatBase):
             sql = (
             'SELECT (\n'
             '    SELECT `valid`\n'
-            f'    FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room_user']}`\n'
+            f'    FROM `{self.db_wechat.database}`.`{self.db_names['contact_room_user']}`\n'
             '    WHERE `room_id` = :room_id AND `user_id` = :user_id\n'
             '    LIMIT 1\n'
             ') AS `valid`\n'
             'FROM (\n'
             '    SELECT `valid`\n'
-            f'    FROM `{self.db_names['wechat']}`.`{self.db_names['wechat.contact_room']}`\n'
+            f'    FROM `{self.db_wechat.database}`.`{self.db_names['contact_room']}`\n'
             '    WHERE `room_id` = :room_id\n'
             '    LIMIT 1\n'
             ') AS `a`\n'
             'WHERE `valid` = 1'
             )
-            result = message.receiver.wechat.database.database_wechat.execute(
+            result = message.receiver.wechat.db.db_wechat.execute(
                 sql,
                 room_id=message.room,
                 user_id=message.user
@@ -1398,7 +1128,7 @@ class WeChatDatabase(WeChatBase):
             ## Cache.
             cache_path = self.wechat.cache.store(file_path, file_name)
 
-            file_id = self.database_file.file.upload(
+            file_id = self.db_file.file.upload(
                 cache_path,
                 file_name,
                 'WeChat'
@@ -1408,7 +1138,7 @@ class WeChatDatabase(WeChatBase):
         data['file_id'] = file_id
 
         # Insert.
-        self.database_wechat.execute.insert(
-            self.db_names['wechat.message_send'],
+        self.db_wechat.execute.insert(
+            self.db_names['message_send'],
             data
         )
