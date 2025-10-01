@@ -169,7 +169,7 @@ class WeChatMessage(WeChatBase):
         Parameters dictionary.
         """
 
-        # Handle parameter.
+        # Set parameter.
         params: MessageParameters = {
             'time': self.time,
             'id': self.id,
@@ -1496,7 +1496,7 @@ class WeChatMessage(WeChatBase):
             - When no match, then return `None`.
         """
 
-        # Handle parameter.
+        # Set parameter.
         text = text or self.data
 
         # Search.

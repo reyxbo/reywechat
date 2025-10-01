@@ -521,7 +521,7 @@ class WeChatSender(WeChatBase):
         params : Send parameters.
         """
 
-        # Handle parameter.
+        # Set parameter.
         send_params = WeChatSendParameters(
             self,
             send_type,
@@ -578,7 +578,7 @@ class WeChatSender(WeChatBase):
         Added text.
         """
 
-        # Handle parameter.
+        # Set parameter.
         member_dict = self.wechat.client.get_room_member_dict(room_id)
         login_id = self.wechat.client.login_info['id']
         if login_id in member_dict:
@@ -617,7 +617,7 @@ class WeChatSender(WeChatBase):
         Decorated function.
         """
 
-        # Handle parameter.
+        # Set parameter.
         if type(receive_id) == str:
             receive_ids = [receive_id]
         else:

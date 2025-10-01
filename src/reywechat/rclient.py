@@ -212,7 +212,7 @@ class WeChatClient(WeChatBase):
         Inject DLL file of start API into the WeChat client process.
         """
 
-        # Handle parameter.
+        # Set parameter.
         dll_file_relpath = './data/client_api.dll'
         dll_file_path = find_relpath(__file__, dll_file_relpath)
 
@@ -251,7 +251,7 @@ class WeChatClient(WeChatBase):
         Client response content dictionary.
         """
 
-        # Handle parameter.
+        # Set parameter.
         url = f'http://127.0.0.1:{self.client_api_port}/api/{api}'
         data = data or {}
         if type(success_code) == int:
@@ -299,7 +299,7 @@ class WeChatClient(WeChatBase):
         Check result.
         """
 
-        # Handle parameter.
+        # Set parameter.
         api = 'checkLogin'
 
         # Request.
@@ -352,7 +352,7 @@ class WeChatClient(WeChatBase):
             - `Key 'decrypt_key'`: Database decrypt key.
         """
 
-        # Handle parameter.
+        # Set parameter.
         api = 'userInfo'
 
         # Request.
@@ -402,7 +402,7 @@ class WeChatClient(WeChatBase):
         timeout : Request timeout seconds.
         """
 
-        # Handle parameter.
+        # Set parameter.
         api = 'hookSyncMsg'
         port = str(port)
         timeout_ms_str = str(int(timeout * 1000))
@@ -440,7 +440,7 @@ class WeChatClient(WeChatBase):
         Unhook the message.
         """
 
-        # Handle parameter.
+        # Set parameter.
         api = 'unhookSyncMsg'
 
         # Request.
@@ -462,7 +462,7 @@ class WeChatClient(WeChatBase):
         id\\_ : Message ID.
         """
 
-        # Handle parameter.
+        # Set parameter.
         api = 'downloadAttach'
         data = {'msgId': id_}
 
@@ -484,7 +484,7 @@ class WeChatClient(WeChatBase):
         dir\\_ : Save directory.
         """
 
-        # Handle parameter.
+        # Set parameter.
         api = 'getVoiceByMsgId'
         dir_ = os_abspath(dir_)
         data = {
@@ -517,7 +517,7 @@ class WeChatClient(WeChatBase):
             - `Key 'name'`: User nickname or chat room name.
         """
 
-        # Handle parameter.
+        # Set parameter.
         api = 'getContactList'
         filter_names = {
             'filehelper': '朋友推荐消息',
@@ -586,7 +586,7 @@ class WeChatClient(WeChatBase):
         User nickname or chat room name.
         """
 
-        # Handle parameter.
+        # Set parameter.
         api = 'getContactProfile'
         data = {'wxid': id_}
 
@@ -619,7 +619,7 @@ class WeChatClient(WeChatBase):
         List of chat room member user ID.
         """
 
-        # Handle parameter.
+        # Set parameter.
         api = 'getMemberFromChatRoom'
         data = {'chatRoomId': room_id}
 
@@ -683,7 +683,7 @@ class WeChatClient(WeChatBase):
         if text == '':
             throw(ValueError, text)
 
-        # Handle parameter.
+        # Set parameter.
         api = 'sendTextMsg'
         data = {
             'wxid': receive_id,
@@ -717,7 +717,7 @@ class WeChatClient(WeChatBase):
         if text == '':
             throw(ValueError, text)
 
-        # Handle parameter.
+        # Set parameter.
         api = 'sendAtText'
         if type(user_id) != str:
             user_id = ','.join(user_id)
@@ -745,7 +745,7 @@ class WeChatClient(WeChatBase):
         path : Message file path.
         """
 
-        # Handle parameter.
+        # Set parameter.
         api = 'sendFileMsg'
         data = {
             'wxid': receive_id,
@@ -770,7 +770,7 @@ class WeChatClient(WeChatBase):
         path : Message image file path.
         """
 
-        # Handle parameter.
+        # Set parameter.
         api = 'sendImagesMsg'
         data = {
             'wxid': receive_id,
@@ -795,7 +795,7 @@ class WeChatClient(WeChatBase):
         path : Message emotion file path.
         """
 
-        # Handle parameter.
+        # Set parameter.
         api = 'sendCustomEmotion'
         data = {
             'wxid': receive_id,
@@ -820,7 +820,7 @@ class WeChatClient(WeChatBase):
         user_id : User ID of pat.
         """
 
-        # Handle parameter.
+        # Set parameter.
         api = 'sendPatMsg'
         data = {
             'wxid': receive_id,
@@ -855,7 +855,7 @@ class WeChatClient(WeChatBase):
         public_id : Control public account ID.
         """
 
-        # Handle parameter.
+        # Set parameter.
         text = text or ''
         image_url = image_url or ''
         public_name = public_name or ''
@@ -889,7 +889,7 @@ class WeChatClient(WeChatBase):
         message_id : Forward message ID.
         """
 
-        # Handle parameter.
+        # Set parameter.
         api = 'sendImagesMsg'
         data = {
             'wxid': receive_id,
