@@ -39,6 +39,7 @@ class DatabaseTableContactUser(rorm.Model, table=True):
     Database `contact_user` table model.
     """
 
+    __name__ = 'contact_user'
     __comment__ = 'User contact table.'
     create_time: rorm.Datetime = rorm.Field(field_default=':create_time', not_null=True, index_n=True, comment='Record create time.')
     update_time: rorm.Datetime = rorm.Field(field_default=':update_time', index_n=True, comment='Record update time.')
@@ -53,6 +54,7 @@ class DatabaseTableContactRoom(rorm.Model, table=True):
     Database `contact_room` table model.
     """
 
+    __name__ = 'contact_room'
     __comment__ = 'Chat room contact table.'
     create_time: rorm.Datetime = rorm.Field(field_default=':create_time', not_null=True, index_n=True, comment='Record create time.')
     update_time: rorm.Datetime = rorm.Field(field_default=':update_time', index_n=True, comment='Record update time.')
@@ -67,6 +69,7 @@ class DatabaseTableContactRoomUser(rorm.Model, table=True):
     Database `contact_room_user` table model.
     """
 
+    __name__ = 'contact_room_user'
     __comment__ = 'Chat room user contact table.'
     create_time: rorm.Datetime = rorm.Field(field_default=':create_time', not_null=True, index_n=True, comment='Record create time.')
     update_time: rorm.Datetime = rorm.Field(field_default=':update_time', index_n=True, comment='Record update time.')
@@ -82,6 +85,7 @@ class DatabaseTableMessageReceive(rorm.Model, table=True):
     Database `message_receive` table model.
     """
 
+    __name__ = 'message_receive'
     __comment__ = 'Message receive table.'
     create_time: rorm.Datetime = rorm.Field(field_default=':create_time', not_null=True, index_n=True, comment='Record create time.')
     message_time: rorm.Datetime = rorm.Field(not_null=True, index_n=True, comment='Message time.')
@@ -138,6 +142,7 @@ class DatabaseTableMessageSend(rorm.Model, table=True):
     Database `message_send` table model.
     """
 
+    __name__ = 'message_send'
     __comment__ = 'Message send table.'
     create_time: rorm.Datetime = rorm.Field(field_default=':create_time', not_null=True, index_n=True, comment='Record create time.')
     update_time: rorm.Datetime = rorm.Field(field_default=':update_time', index_n=True, comment='Record update time.')
