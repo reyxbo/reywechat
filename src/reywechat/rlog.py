@@ -69,7 +69,7 @@ class WeChatLog(WeChatBase):
         Folder instance.
         """
 
-        # Set parameter.
+        # Parameter.
         dir_path = join_path(self.wechat.project_dir, 'log')
 
         # Make.
@@ -84,7 +84,7 @@ class WeChatLog(WeChatBase):
         Add log handler.
         """
 
-        # Set parameter.
+        # Parameter.
         format_ = (
             '%(format_time)s | '
             '%(format_levelname)s | '
@@ -118,7 +118,7 @@ class WeChatLog(WeChatBase):
         Result.
         """
 
-        # Set parameter.
+        # Parameter.
         result = self.rrlog.print_colour
 
         return result

@@ -144,7 +144,7 @@ class WeChat(WeChatBase):
         Result.
         """
 
-        # Set parameter.
+        # Parameter.
         result = self.error.rrlog.print_colour
 
         return result

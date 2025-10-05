@@ -135,7 +135,7 @@ class WeChatTrigger(WeChatBase):
         is_reply : Whehter is reply function, allow call `WeChatMessage.reply`, can only reply once function.
         """
 
-        # Set parameter.
+        # Parameter.
         rule: TriggerRule = {
             'level': level,
             'execute': execute,

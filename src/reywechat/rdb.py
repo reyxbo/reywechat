@@ -248,7 +248,7 @@ class WeChatDatabase(WeChatBase):
         if self.db_wechat is None:
             throw(ValueError, self.db_wechat)
 
-        # Set parameter.
+        # Parameter.
 
         ## Table.
         DatabaseTableContactUser._set_name(self.db_names['contact_user'])
@@ -899,7 +899,7 @@ class WeChatDatabase(WeChatBase):
             if send_params.status != WeChatSendStatusEnum.SENT:
                 return
 
-            # Set parameter.
+            # Parameter.
             if send_params.exc_reports == []:
                 status = 2
             else:
@@ -966,7 +966,7 @@ class WeChatDatabase(WeChatBase):
             Read record from table `message_send`, put send queue.
             """
 
-            # Set parameter.
+            # Parameter.
             conn = self.db_wechat.connect()
 
             # Read.
@@ -1112,7 +1112,7 @@ class WeChatDatabase(WeChatBase):
         send_params : `WeChatSendParameters` instance.
         """
 
-        # Set parameter.
+        # Parameter.
         params = send_params.params.copy()
         data = {
             'status': 0,

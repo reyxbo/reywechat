@@ -169,7 +169,7 @@ class WeChatMessage(WeChatBase):
         Parameters dictionary.
         """
 
-        # Set parameter.
+        # Parameter.
         params: MessageParameters = {
             'time': self.time,
             'id': self.id,
@@ -1496,7 +1496,7 @@ class WeChatMessage(WeChatBase):
             - When no match, then return `None`.
         """
 
-        # Set parameter.
+        # Parameter.
         text = text or self.data
 
         # Search.
@@ -1739,7 +1739,7 @@ class WechatReceiver(WeChatBase):
             message : `WeChatMessage` instance.
             """
 
-            # Set parameter.
+            # Parameter.
             handlers = [
                 self.__receiver_handler_file,
                 *self.handlers
@@ -1899,7 +1899,7 @@ class WechatReceiver(WeChatBase):
             file_name = file_name or f'{download_file.md5}.{file_name_suffix}'
             cache_path = self.wechat.cache.store(download_path, file_name, delete=True)
 
-        # Set parameter.
+        # Parameter.
         cache_file = File(cache_path)
         message_file: MessageParametersFile = {
             'path': cache_path,
