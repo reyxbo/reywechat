@@ -5,7 +5,7 @@
 @Time    : 2023-10-17 20:24:04
 @Author  : Rey
 @Contact : reyxbo@163.com
-@Explain : WeChat method set.
+@Explain : WeChat client control method set.
 
 Folders
 -------

@@ -1,6 +1,6 @@
 # reywechat
 
-> Rey's WeChat method set.
+> WeChat client control method set.
 
 ## Install
 
