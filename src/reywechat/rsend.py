@@ -34,43 +34,37 @@ __all__ = (
 class WeChatSendTypeEnum(WeChatBase, IntEnum):
     """
     WeChat send type enumeration type.
-
-    Attributes
-    ----------
-    TEXT : Send text message.
-    TEXT_AT : Send text message with @.
-    FILE : Send file message.
-    IMAGE : Send image message.
-    EMOTION : Send emotion message.
-    PAT : Send pat message.
-    PUBLIC : Send public account message.
-    FORWARD : Forward message.
     """
 
     TEXT = 0
+    'Send text message.'
     TEXT_AT = 1
+    'Send text message with @.'
     FILE = 2
+    'Send file message.'
     IMAGE = 3
+    'Send image message.'
     EMOTION = 4
+    'Send emotion message.'
     PAT = 5
+    'Send pat message.'
     PUBLIC = 6
+    'Send public account message.'
     FORWARD = 7
+    'Forward message.'
 
 
 class WeChatSendStatusEnum(WeChatBase, IntEnum):
     """
     WeChat send status enumeration type.
-
-    Attributes
-    ----------
-    INIT : After initialization, before inserting into the database queue.
-    WAIT : After get from database queue, before sending.
-    SENT : After sending.
     """
 
     INIT = 0
+    'After initialization, before inserting into the database queue.'
     WAIT = 1
+    'After get from database queue, before sending.'
     SENT = 2
+    'After sending.'
 
 
 class WeChatSendParameters(WeChatBase):

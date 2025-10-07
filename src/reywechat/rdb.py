@@ -25,18 +25,18 @@ from .rwechat import WeChat
 
 
 __all__ = (
-    'DatabaseTableContactUser',
-    'DatabaseTableContactRoom',
-    'DatabaseTableContactRoomUser',
-    'DatabaseTableMessageReceive',
-    'DatabaseTableMessageSend',
+    'DatabaseORMTableContactUser',
+    'DatabaseORMTableContactRoom',
+    'DatabaseORMTableContactRoomUser',
+    'DatabaseORMTableMessageReceive',
+    'DatabaseORMTableMessageSend',
     'WeChatDatabase'
 )
 
 
-class DatabaseTableContactUser(rorm.Model, table=True):
+class DatabaseORMTableContactUser(rorm.Model, table=True):
     """
-    Database `contact_user` table model.
+    Database `contact_user` table ORM model.
     """
 
     __name__ = 'contact_user'
@@ -49,9 +49,9 @@ class DatabaseTableContactUser(rorm.Model, table=True):
     valid: int = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid, 0 is invalid, 1 is valid.')
 
 
-class DatabaseTableContactRoom(rorm.Model, table=True):
+class DatabaseORMTableContactRoom(rorm.Model, table=True):
     """
-    Database `contact_room` table model.
+    Database `contact_room` table ORM model.
     """
 
     __name__ = 'contact_room'
@@ -64,9 +64,9 @@ class DatabaseTableContactRoom(rorm.Model, table=True):
     valid: int = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid, 0 is invalid, 1 is valid.')
 
 
-class DatabaseTableContactRoomUser(rorm.Model, table=True):
+class DatabaseORMTableContactRoomUser(rorm.Model, table=True):
     """
-    Database `contact_room_user` table model.
+    Database `contact_room_user` table ORM model.
     """
 
     __name__ = 'contact_room_user'
@@ -80,9 +80,9 @@ class DatabaseTableContactRoomUser(rorm.Model, table=True):
     valid: int = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid, 0 is invalid, 1 is valid.')
 
 
-class DatabaseTableMessageReceive(rorm.Model, table=True):
+class DatabaseORMTableMessageReceive(rorm.Model, table=True):
     """
-    Database `message_receive` table model.
+    Database `message_receive` table ORM model.
     """
 
     __name__ = 'message_receive'
@@ -137,9 +137,9 @@ class DatabaseTableMessageReceive(rorm.Model, table=True):
     file_id: int = rorm.Field(rorm.types_mysql.MEDIUMINT(unsigned=True), comment='Message file ID, from the file database.')
 
 
-class DatabaseTableMessageSend(rorm.Model, table=True):
+class DatabaseORMTableMessageSend(rorm.Model, table=True):
     """
-    Database `message_send` table model.
+    Database `message_send` table ORM model.
     """
 
     __name__ = 'message_send'
@@ -204,7 +204,7 @@ class WeChatDatabase(WeChatBase):
                 `Key 'file'`: `Database` instance used in file methods.
         """
 
-        # Set attribute.
+        # Build attribute.
         self.wechat = wechat
         match db:
             case Database():
@@ -214,6 +214,9 @@ class WeChatDatabase(WeChatBase):
                 self.db_file: Database = db.get('file')
             case _:
                 throw(TypeError, db)
+
+        # Build Database.
+        self.build_db()
 
         # Add handler.
         self.__add_receiver_handler_to_contact_user()
@@ -240,11 +243,11 @@ class WeChatDatabase(WeChatBase):
 
         ## Table.
         tables = [
-            DatabaseTableContactUser,
-            DatabaseTableContactRoom,
-            DatabaseTableContactRoomUser,
-            DatabaseTableMessageReceive,
-            DatabaseTableMessageSend
+            DatabaseORMTableContactUser,
+            DatabaseORMTableContactRoom,
+            DatabaseORMTableContactRoomUser,
+            DatabaseORMTableMessageReceive,
+            DatabaseORMTableMessageSend
         ]
 
         ## View stats.

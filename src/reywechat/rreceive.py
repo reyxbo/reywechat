@@ -113,10 +113,6 @@ class WeChatMessage(WeChatBase):
         display : Message description text.
         data : Message source data.
         window : Message sende window ID.
-
-        Attributes
-        ----------
-        is_test : Whether add test text to before reply text.
         """
 
         # Import.
@@ -138,6 +134,7 @@ class WeChatMessage(WeChatBase):
         self.trigger_break = self.receiver.trigger.break_
         self.exc_reports: list[str] = []
         self.is_test: bool = False
+        'Whether add test text to before reply text.'
 
         ## Room and user.
         if self.window.endswith('chatroom'):
