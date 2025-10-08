@@ -64,7 +64,6 @@ class WeChatTrigger(WeChatBase):
         """
 
 
-        # Define.
         def receiver_handler_trigger_by_rule(message: WeChatMessage) -> None:
             """
             Trigger message by rules.
@@ -181,7 +180,6 @@ class WeChatTrigger(WeChatBase):
         """
 
 
-        # Define.
         def trigger_valid(message: WeChatMessage) -> None:
             """
             Trigger rule judge valid.

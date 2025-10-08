@@ -1671,7 +1671,6 @@ class WechatReceiver(WeChatBase):
         """
 
 
-        # Define.
         def put_queue(data: bytes) -> None:
             """
             Put message data into receive queue.
@@ -1726,7 +1725,6 @@ class WechatReceiver(WeChatBase):
         """
 
 
-        # Define.
         def handles(message: WeChatMessage) -> None:
             """
             Use handlers to handle message.
@@ -1742,9 +1740,8 @@ class WechatReceiver(WeChatBase):
                 *self.handlers
             ]
 
-            # Handle.
 
-            ## Define.
+            # Handle.
             def handle_handler_exception(exc_text, *_) -> None:
                 """
                 Handle Handler exception.

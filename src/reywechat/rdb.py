@@ -667,7 +667,6 @@ class WeChatDatabase(WeChatBase):
         """
 
 
-        # Define.
         def receiver_handler_to_contact_user(message: WeChatMessage) -> None:
             """
             Write record to table `contact_user`.
@@ -705,7 +704,6 @@ class WeChatDatabase(WeChatBase):
         """
 
 
-        # Define.
         def receiver_handler_to_contact_room(message: WeChatMessage) -> None:
             """
             Write record to table `contact_room`.
@@ -788,7 +786,6 @@ class WeChatDatabase(WeChatBase):
         """
 
 
-        # Define.
         def receiver_handler_to_contact_room_user(message: WeChatMessage) -> None:
             """
             Write record to table `contact_room_user`.
@@ -818,7 +815,6 @@ class WeChatDatabase(WeChatBase):
         """
 
 
-        # Define.
         def receiver_handler_to_message_receive(message: WeChatMessage) -> None:
             """
             Write record to table `message_receive`.
@@ -869,7 +865,6 @@ class WeChatDatabase(WeChatBase):
         """
 
 
-        # Define.
         def sender_handler_update_send_status(send_params: WeChatSendParameters) -> None:
             """
             Update field `status` of table `message_send`.
@@ -944,7 +939,6 @@ class WeChatDatabase(WeChatBase):
         """
 
 
-        # Define.
         def __from_message_send() -> None:
             """
             Read record from table `message_send`, put send queue.

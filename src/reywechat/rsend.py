@@ -617,7 +617,7 @@ class WeChatSender(WeChatBase):
         else:
             receive_ids = receive_id
 
-        # Define.
+
         @functools_wraps(func)
         def wrap(
             *arg: Any,
