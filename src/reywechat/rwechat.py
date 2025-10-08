@@ -11,7 +11,7 @@
 
 from typing import Literal
 from os import getcwd as os_getcwd
-from reydb.rdb import Database
+from reydb import Database
 from reykit.rbase import block
 
 from .rbase import WeChatBase

@@ -11,8 +11,7 @@
 
 from typing import Literal
 from json import loads as json_loads
-from reydb import rorm
-from reydb.rdb import Database
+from reydb import rorm, Database
 from reykit.rbase import throw
 from reykit.ros import File
 from reykit.rtime import to_time, time_to, sleep
