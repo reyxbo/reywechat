@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-@Time    : 2023-10-19 11:33:45
+@Time    : 2023-10-19
 @Author  : Rey
 @Contact : reyxbo@163.com
 @Explain : Log methods.

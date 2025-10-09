@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-@Time    : 2024-01-03 22:53:18
+@Time    : 2024-01-03
 @Author  : Rey
 @Contact : reyxbo@163.com
 @Explain : Send methods.

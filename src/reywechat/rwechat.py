@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-@Time    : 2023-10-17 20:27:16
+@Time    : 2023-10-17
 @Author  : Rey
 @Contact : reyxbo@163.com
 @Explain : WeChat methods.
@@ -11,7 +11,7 @@
 
 from typing import Literal
 from os import getcwd as os_getcwd
-from reydb import Database
+from reydb import DatabaseEngine
 from reykit.rbase import block
 
 from .rbase import WeChatBase
@@ -40,7 +40,7 @@ class WeChat(WeChatBase):
 
     def __init__(
         self,
-        db: Database | dict[Literal['wechat', 'file'], Database] | None,
+        db_engine: DatabaseEngine | dict[Literal['wechat', 'file'], DatabaseEngine] | None,
         max_receiver: int = 2,
         call_name: str | None = None,
         project_dir: str | None = None
@@ -50,7 +50,7 @@ class WeChat(WeChatBase):
 
         Parameters
         ----------
-        db : `Database` instance of `reykit` package.
+        db_engine : Database engine.
             - `Database`, Set all `Database`: instances.
             - `dict`, Set each `Database`: instance, all item is required.
                 `Key 'wechat'`: `Database` instance used in WeChat methods.
@@ -81,7 +81,7 @@ class WeChat(WeChatBase):
         self.receiver = WechatReceiver(self, max_receiver, call_name)
         self.trigger = self.receiver.trigger
         self.sender = WeChatSender(self)
-        self.db = WeChatDatabase(self, db)
+        self.db = WeChatDatabase(self, db_engine)
 
         ## Client.
         self.client_version = self.client.client_version

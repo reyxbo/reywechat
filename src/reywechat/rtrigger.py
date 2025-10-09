@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-@Time    : 2024-07-16 16:20:34
+@Time    : 2024-07-16
 @Author  : Rey
 @Contact : reyxbo@163.com
 @Explain : Trigger methods.

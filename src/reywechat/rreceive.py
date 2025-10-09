@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-@Time    : 2023-10-26 11:18:58
+@Time    : 2023-10-26
 @Author  : Rey
 @Contact : reyxbo@163.com
 @Explain : Receive methods.

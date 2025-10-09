@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-@Time    : 2023-10-23 20:55:58
+@Time    : 2023-10-23
 @Author  : Rey
 @Contact : reyxbo@163.com
 @Explain : Database methods.
@@ -11,7 +11,7 @@
 
 from typing import Literal
 from json import loads as json_loads
-from reydb import rorm, Database
+from reydb import rorm, DatabaseEngine
 from reykit.rbase import throw
 from reykit.ros import File
 from reykit.rtime import to_time, time_to, sleep
@@ -188,7 +188,7 @@ class WeChatDatabase(WeChatBase):
     def __init__(
         self,
         wechat: WeChat,
-        db: Database | dict[Literal['wechat', 'file'], Database]
+        db_engine: DatabaseEngine | dict[Literal['wechat', 'file'], DatabaseEngine]
     ) -> None:
         """
         Build instance attributes.
@@ -205,14 +205,14 @@ class WeChatDatabase(WeChatBase):
 
         # Build attribute.
         self.wechat = wechat
-        match db:
-            case Database():
-                self.db_wechat = self.db_file = db
+        match db_engine:
+            case DatabaseEngine():
+                self.db_wechat = self.db_file = db_engine
             case dict():
-                self.db_wechat: Database = db.get('wechat')
-                self.db_file: Database = db.get('file')
+                self.db_wechat: DatabaseEngine = db_engine.get('wechat')
+                self.db_file: DatabaseEngine = db_engine.get('file')
             case _:
-                throw(TypeError, db)
+                throw(TypeError, db_engine)
 
         # Build Database.
         self.build_db()
