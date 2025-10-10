@@ -44,8 +44,8 @@ class DatabaseORMTableContactUser(rorm.Model, table=True):
     update_time: rorm.Datetime = rorm.Field(field_default=':update_time', index_n=True, comment='Record update time.')
     user_id: str = rorm.Field(rorm.types.VARCHAR(24), key=True, comment='User ID.')
     name: str = rorm.Field(rorm.types.VARCHAR(32), comment='User name.')
-    contact: int = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the contact, 0 is no contact, 1 is contact.')
-    valid: int = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid, 0 is invalid, 1 is valid.')
+    is_contact: bool = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the contact.')
+    is_valid: bool = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid.')
 
 
 class DatabaseORMTableContactRoom(rorm.Model, table=True):
@@ -59,8 +59,8 @@ class DatabaseORMTableContactRoom(rorm.Model, table=True):
     update_time: rorm.Datetime = rorm.Field(field_default=':update_time', index_n=True, comment='Record update time.')
     room_id: str = rorm.Field(rorm.types.VARCHAR(31), key=True, comment='Chat room ID.')
     name: str = rorm.Field(rorm.types.VARCHAR(32), comment='Chat room name.')
-    contact: int = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the contact, 0 is no contact, 1 is contact.')
-    valid: int = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid, 0 is invalid, 1 is valid.')
+    is_contact: bool = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the contact.')
+    is_valid: bool = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid.')
 
 
 class DatabaseORMTableContactRoomUser(rorm.Model, table=True):
@@ -75,8 +75,8 @@ class DatabaseORMTableContactRoomUser(rorm.Model, table=True):
     room_id: str = rorm.Field(rorm.types.VARCHAR(31), key=True, comment='Chat room ID.')
     user_id: str = rorm.Field(rorm.types.VARCHAR(24), key=True, comment='Chat room user ID.')
     name: str = rorm.Field(rorm.types.VARCHAR(32), comment='Chat room user name.')
-    contact: int = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the contact, 0 is no contact, 1 is contact.')
-    valid: int = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid, 0 is invalid, 1 is valid.')
+    is_contact: bool = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the contact.')
+    is_valid: bool = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid.')
 
 
 class DatabaseORMTableMessageReceive(rorm.Model, table=True):
@@ -499,12 +499,12 @@ class WeChatDatabase(WeChatBase):
         if user_ids == []:
             sql = (
                 f'UPDATE `{self.db_wechat.database}`.`contact_user`\n'
-                'SET `contact` = 0'
+                'SET `is_contact` = 0'
             )
         else:
             sql = (
                 f'UPDATE `{self.db_wechat.database}`.`contact_user`\n'
-                'SET `contact` = 0\n'
+                'SET `is_contact` = 0\n'
                 'WHERE `user_id` NOT IN :user_ids'
             )
         conn.execute(
@@ -554,12 +554,12 @@ class WeChatDatabase(WeChatBase):
         if room_ids == []:
             sql = (
                 f'UPDATE `{self.db_wechat.database}`.`contact_room`\n'
-                'SET `contact` = 0'
+                'SET `is_contact` = 0'
             )
         else:
             sql = (
                 f'UPDATE `{self.db_wechat.database}`.`contact_room`\n'
-                'SET `contact` = 0\n'
+                'SET `is_contact` = 0\n'
                 'WHERE `room_id` NOT IN :room_ids'
             )
         conn.execute(
@@ -631,18 +631,18 @@ class WeChatDatabase(WeChatBase):
         if room_user_ids == []:
             sql = (
                 f'UPDATE `{self.db_wechat.database}`.`contact_room_user`\n'
-                'SET `contact` = 0'
+                'SET `is_contact` = 0'
             )
         elif room_id is None:
             sql = (
                 f'UPDATE `{self.db_wechat.database}`.`contact_room_user`\n'
-                'SET `contact` = 0\n'
+                'SET `is_contact` = 0\n'
                 "WHERE CONCAT(`room_id`, ',', `user_id`) NOT IN :room_user_ids"
             )
         else:
             sql = (
                 f'UPDATE `{self.db_wechat.database}`.`contact_room_user`\n'
-                'SET `contact` = 0\n'
+                'SET `is_contact` = 0\n'
                 'WHERE (\n'
                 '    `room_id` = :room_id\n'
                 "    AND CONCAT(`room_id`, ',', `user_id`) NOT IN :room_user_ids\n"
@@ -765,7 +765,7 @@ class WeChatDatabase(WeChatBase):
                 ## Generate data.
                 data = {
                     'room_id': message.room,
-                    'contact': 0,
+                    'is_contact': 0,
                     'limit': 1
                 }
 
@@ -1036,7 +1036,7 @@ class WeChatDatabase(WeChatBase):
         if message.room is None:
             result = message.receiver.wechat.db.db_wechat.execute.select(
                 'message_send',
-                ['valid'],
+                ['is_valid'],
                 '`user_id` = :user_id',
                 limit=1,
                 user_id=message.user
@@ -1046,7 +1046,7 @@ class WeChatDatabase(WeChatBase):
         elif message.user is None:
             result = message.receiver.wechat.db.db_wechat.execute.select(
                 'message_send',
-                ['valid'],
+                ['is_valid'],
                 '`room_id` = :room_id',
                 limit=1,
                 room_id=message.room
@@ -1056,18 +1056,18 @@ class WeChatDatabase(WeChatBase):
         else:
             sql = (
             'SELECT (\n'
-            '    SELECT `valid`\n'
+            '    SELECT `is_valid`\n'
             f'    FROM `{self.db_wechat.database}`.`contact_room_user`\n'
             '    WHERE `room_id` = :room_id AND `user_id` = :user_id\n'
             '    LIMIT 1\n'
-            ') AS `valid`\n'
+            ') AS `is_valid`\n'
             'FROM (\n'
-            '    SELECT `valid`\n'
+            '    SELECT `is_valid`\n'
             f'    FROM `{self.db_wechat.database}`.`contact_room`\n'
             '    WHERE `room_id` = :room_id\n'
             '    LIMIT 1\n'
             ') AS `a`\n'
-            'WHERE `valid` = 1'
+            'WHERE `is_valid` = 1'
             )
             result = message.receiver.wechat.db.db_wechat.execute(
                 sql,
@@ -1075,8 +1075,8 @@ class WeChatDatabase(WeChatBase):
                 user_id=message.user
             )
 
-        valid = result.scalar()
-        judge = valid == 1
+        is_valid = result.scalar()
+        judge = is_valid == 1
 
         return judge
 
