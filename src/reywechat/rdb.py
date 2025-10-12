@@ -33,7 +33,7 @@ __all__ = (
 )
 
 
-class DatabaseORMTableContactUser(rorm.Model, table=True):
+class DatabaseORMTableContactUser(rorm.Table):
     """
     Database `contact_user` table ORM model.
     """
@@ -48,7 +48,7 @@ class DatabaseORMTableContactUser(rorm.Model, table=True):
     is_valid: bool = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid.')
 
 
-class DatabaseORMTableContactRoom(rorm.Model, table=True):
+class DatabaseORMTableContactRoom(rorm.Table):
     """
     Database `contact_room` table ORM model.
     """
@@ -63,7 +63,7 @@ class DatabaseORMTableContactRoom(rorm.Model, table=True):
     is_valid: bool = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid.')
 
 
-class DatabaseORMTableContactRoomUser(rorm.Model, table=True):
+class DatabaseORMTableContactRoomUser(rorm.Table):
     """
     Database `contact_room_user` table ORM model.
     """
@@ -79,7 +79,7 @@ class DatabaseORMTableContactRoomUser(rorm.Model, table=True):
     is_valid: bool = rorm.Field(rorm.types_mysql.TINYINT(unsigned=True), field_default='1', not_null=True, comment='Is the valid.')
 
 
-class DatabaseORMTableMessageReceive(rorm.Model, table=True):
+class DatabaseORMTableMessageReceive(rorm.Table):
     """
     Database `message_receive` table ORM model.
     """
@@ -136,7 +136,7 @@ class DatabaseORMTableMessageReceive(rorm.Model, table=True):
     file_id: int = rorm.Field(rorm.types_mysql.MEDIUMINT(unsigned=True), comment='Message file ID, from the file database.')
 
 
-class DatabaseORMTableMessageSend(rorm.Model, table=True):
+class DatabaseORMTableMessageSend(rorm.Table):
     """
     Database `message_send` table ORM model.
     """
