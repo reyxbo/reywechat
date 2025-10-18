@@ -134,7 +134,7 @@ class DatabaseORMTableMessageReceive(rorm.Table):
         )
     )
     data: str = rorm.Field(rorm.types.TEXT, not_null=True, comment='Message data.')
-    file_id: int = rorm.Field(rorm.types_mysql.MEDIUMINT(unsigned=True), comment='Message file ID, from the file database.')
+    file_id: int = rorm.Field(rorm.types_mysql.MEDIUMINT(unsigned=True), comment='Message file ID, from the file API.')
 
 
 class DatabaseORMTableMessageSend(rorm.Table):
@@ -176,7 +176,7 @@ class DatabaseORMTableMessageSend(rorm.Table):
     )
     receive_id: str = rorm.Field(rorm.types.VARCHAR(31), not_null=True, index_n=True, comment='Receive to user ID or chat room ID.')
     parameter: str = rorm.Field(rorm.types.JSON, not_null=True, comment='Send parameters.')
-    file_id: int = rorm.Field(rorm.types_mysql.MEDIUMINT(unsigned=True), comment='Message file ID, from the file database.')
+    file_id: int = rorm.Field(rorm.types_mysql.MEDIUMINT(unsigned=True), comment='Message file ID, from the file API.')
 
 
 class WeChatDatabase(WeChatBase):
@@ -948,6 +948,7 @@ class WeChatDatabase(WeChatBase):
 
             # Convert.
             if result.empty:
+                conn.close()
                 return
             table = result.to_table()
 
@@ -1025,7 +1026,7 @@ class WeChatDatabase(WeChatBase):
         ## User.
         if message.room is None:
             result = message.receiver.wechat.db.db.wechat.execute.select(
-                'message_send',
+                'contact_user',
                 ['is_valid'],
                 '`user_id` = :user_id',
                 limit=1,
@@ -1035,7 +1036,7 @@ class WeChatDatabase(WeChatBase):
         ## Room.
         elif message.user is None:
             result = message.receiver.wechat.db.db.wechat.execute.select(
-                'message_send',
+                'contact_room',
                 ['is_valid'],
                 '`room_id` = :room_id',
                 limit=1,

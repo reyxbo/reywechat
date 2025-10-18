@@ -34,15 +34,6 @@ __all__ = (
 )
 
 
-MessageParametersFile = TypedDict(
-    'MessageParametersFile',
-    {
-        'path': str,
-        'name': str,
-        'md5': str,
-        'size': int
-    }
-)
 MessageParameters = TypedDict(
     'MessageParameters',
     {
@@ -54,7 +45,7 @@ MessageParameters = TypedDict(
         'type': int,
         'display': str,
         'data': str,
-        'file': MessageParametersFile
+        'file': 'MessageParametersFile'
     }
 )
 MessageShareParameters = TypedDict(
@@ -76,6 +67,23 @@ MessageQuoteParameters = TypedDict(
         'quote_user': str,
         'quote_user_name': str,
         'quote_data': str
+    }
+)
+MessageParametersFile = TypedDict(
+    'MessageParametersFile',
+    {
+        'path': str,
+        'name': str,
+        'md5': str,
+        'size': int
+    }
+)
+MessageParametersFileUploading = TypedDict(
+    'MessageParametersFileUploading',
+    {
+        'name': str,
+        'md5': str,
+        'size': int
     }
 )
 
@@ -376,7 +384,7 @@ class WeChatMessage(WeChatBase):
 
                 ### File uploading.
                 elif self.is_file_uploading:
-                    self._cache['text'] = f'[文件"{self.file_name_uploading}"发送中]'
+                    self._cache['text'] = f'[文件"{self.file_params_uploading['name']}"发送中]'
 
                 ### Transfer money.
                 elif self.is_money:
@@ -600,27 +608,32 @@ class WeChatMessage(WeChatBase):
 
 
     @property
-    def file_name_uploading(self) -> str:
+    def file_params_uploading(self) -> MessageParametersFileUploading:
         """
-        Name of file uploading.
+        Parameters of file uploading.
 
         Returns
         -------
-        Text
+        Parameters.
         """
 
         # Cache.
-        if 'file_name_uploading' in self._cache:
-            return self._cache['file_name_uploading']
+        if 'file_params_uploading' in self._cache:
+            return self._cache['file_params_uploading']
 
         # Check.
         if not self.is_file_uploading:
             throw(AssertionError, self._cache['is_file_uploading'])
 
         # Get.
-        self._cache['file_name_uploading'] = search(r'<title><!\[CDATA\[([^<>]+)\]\]></title>', self.data)
+        params = {}
+        params['name'] = search(r'<title><!\[CDATA\[([^<>]+)\]\]></title>', self.data)
+        params['size'] = search(r'<totallen>(\d+)</totallen>', self.data)
+        params['size'] = int(params['size'])
+        params['md5'] = search(r'<md5><!\[CDATA\[([0-9a-f]{32})\]\]></md5>', self.data)
+        self._cache['file_params_uploading'] = params
 
-        return self._cache['file_name_uploading']
+        return self._cache['file_params_uploading']
 
 
     @property
@@ -955,7 +968,15 @@ class WeChatMessage(WeChatBase):
                 self.room is None
                 and self.user is not None
                 and (
-                    self.type in (1, 3, 34, 42, 43, 47, 48, 49, 50, 56, 10000)
+                    self.type in (1, 3, 34, 42, 43, 47, 48, 50, 56, 10000)
+                    or (
+                        self.type == 49
+                        and (
+                            self.is_file_uploaded
+                            or self.is_file_uploading
+                            and self.file_params_uploading['size'] > 10485760 # 10MB.
+                        )
+                    )
                     or self.is_pat
                     or self.is_recall
                 )
@@ -1862,6 +1883,8 @@ class WechatReceiver(WeChatBase):
             case 49 if message.is_file_uploaded:
                 pattern = r'<md5>([\da-f]{32})</md5>'
                 file_md5: str = search(pattern, message.data)
+                pattern = r'<title>([^<>]+?)</title>'
+                file_name: str = search(pattern, message.data)
                 cache_path = self.wechat.cache.index(file_md5, file_name, copy=True)
 
                 ### Download.
