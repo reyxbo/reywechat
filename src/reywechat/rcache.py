@@ -42,7 +42,7 @@ class WeChatCache(WeChatBase, FileStore):
 
         # Set attribute.
         self.wechat = wechat
-        self.folder = self.cache.folder
-        self.cache = FileStore(dir_path)
-        self.index = self.cache.index
-        self.store = self.cache.store
+        self.file_store = FileStore(dir_path)
+        self.folder = self.file_store.folder
+        self.index = self.file_store.index
+        self.store = self.file_store.store
