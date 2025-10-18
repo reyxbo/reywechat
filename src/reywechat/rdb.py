@@ -11,11 +11,12 @@
 
 from typing import Literal
 from json import loads as json_loads
-from reydb import rorm, DatabaseEngine
+from reydb import rorm, Database
 from reykit.rbase import throw
 from reykit.ros import File
 from reykit.rtime import to_time, time_to, sleep
 from reykit.rwrap import wrap_thread
+from reyserver.rclient import ServerClient
 
 from .rbase import WeChatBase
 from .rreceive import WeChatMessage
@@ -188,7 +189,8 @@ class WeChatDatabase(WeChatBase):
     def __init__(
         self,
         wechat: WeChat,
-        db_engine: DatabaseEngine | dict[Literal['wechat', 'file'], DatabaseEngine]
+        db: Database,
+        sclient: ServerClient
     ) -> None:
         """
         Build instance attributes.
@@ -196,23 +198,14 @@ class WeChatDatabase(WeChatBase):
         Parameters
         ----------
         wechat : `WeChatClient` instance.
-        db : `Database` instance of `reykit` package.
-            - `Database`, Set all `Database`: instances.
-            - `dict`, Set each `Database`: instance, all item is required.
-                `Key 'wechat'`: `Database` instance used in WeChat methods.
-                `Key 'file'`: `Database` instance used in file methods.
+        db : Database. Note: must include database engine of `wechat` name.
+        sclient : Server client.
         """
 
         # Build attribute.
         self.wechat = wechat
-        match db_engine:
-            case DatabaseEngine():
-                self.db_wechat = self.db_file = db_engine
-            case dict():
-                self.db_wechat: DatabaseEngine = db_engine.get('wechat')
-                self.db_file: DatabaseEngine = db_engine.get('file')
-            case _:
-                throw(TypeError, db_engine)
+        self.db = db
+        self.sclient = sclient
 
         # Build Database.
         self.build_db()
@@ -234,11 +227,11 @@ class WeChatDatabase(WeChatBase):
         """
 
         # Check.
-        if self.db_wechat is None:
-            throw(ValueError, self.db_wechat)
+        if 'wechat' not in self.db:
+            throw(ValueError, self.db)
 
         # Parameter.
-        database = self.db_wechat.database
+        database = self.db.wechat.database
 
         ## Table.
         tables = [
@@ -454,10 +447,7 @@ class WeChatDatabase(WeChatBase):
         # Build.
 
         ## WeChat.
-        self.db_wechat.build.build(tables=tables, views_stats=views_stats, skip=True)
-
-        ## File.
-        self.db_file.file.build_db()
+        self.db.wechat.build.build(tables=tables, views_stats=views_stats, skip=True)
 
         # Update.
         self.update_contact_user()
@@ -485,7 +475,7 @@ class WeChatDatabase(WeChatBase):
         ]
 
         # Insert and update.
-        conn = self.db_wechat.connect()
+        conn = self.db.wechat.connect()
 
         ## Insert.
         if contact_table != []:
@@ -498,12 +488,12 @@ class WeChatDatabase(WeChatBase):
         ## Update.
         if user_ids == []:
             sql = (
-                f'UPDATE `{self.db_wechat.database}`.`contact_user`\n'
+                f'UPDATE `{self.db.wechat.database}`.`contact_user`\n'
                 'SET `is_contact` = 0'
             )
         else:
             sql = (
-                f'UPDATE `{self.db_wechat.database}`.`contact_user`\n'
+                f'UPDATE `{self.db.wechat.database}`.`contact_user`\n'
                 'SET `is_contact` = 0\n'
                 'WHERE `user_id` NOT IN :user_ids'
             )
@@ -540,7 +530,7 @@ class WeChatDatabase(WeChatBase):
         ]
 
         # Insert and update.
-        conn = self.db_wechat.connect()
+        conn = self.db.wechat.connect()
 
         ## Insert.
         if contact_table != []:
@@ -553,12 +543,12 @@ class WeChatDatabase(WeChatBase):
         ## Update.
         if room_ids == []:
             sql = (
-                f'UPDATE `{self.db_wechat.database}`.`contact_room`\n'
+                f'UPDATE `{self.db.wechat.database}`.`contact_room`\n'
                 'SET `is_contact` = 0'
             )
         else:
             sql = (
-                f'UPDATE `{self.db_wechat.database}`.`contact_room`\n'
+                f'UPDATE `{self.db.wechat.database}`.`contact_room`\n'
                 'SET `is_contact` = 0\n'
                 'WHERE `room_id` NOT IN :room_ids'
             )
@@ -617,7 +607,7 @@ class WeChatDatabase(WeChatBase):
         ]
 
         # Insert and update.
-        conn = self.db_wechat.connect()
+        conn = self.db.wechat.connect()
 
         ## Insert.
         if room_user_data != []:
@@ -630,18 +620,18 @@ class WeChatDatabase(WeChatBase):
         ## Update.
         if room_user_ids == []:
             sql = (
-                f'UPDATE `{self.db_wechat.database}`.`contact_room_user`\n'
+                f'UPDATE `{self.db.wechat.database}`.`contact_room_user`\n'
                 'SET `is_contact` = 0'
             )
         elif room_id is None:
             sql = (
-                f'UPDATE `{self.db_wechat.database}`.`contact_room_user`\n'
+                f'UPDATE `{self.db.wechat.database}`.`contact_room_user`\n'
                 'SET `is_contact` = 0\n'
                 "WHERE CONCAT(`room_id`, ',', `user_id`) NOT IN :room_user_ids"
             )
         else:
             sql = (
-                f'UPDATE `{self.db_wechat.database}`.`contact_room_user`\n'
+                f'UPDATE `{self.db.wechat.database}`.`contact_room_user`\n'
                 'SET `is_contact` = 0\n'
                 'WHERE (\n'
                 '    `room_id` = :room_id\n'
@@ -687,7 +677,7 @@ class WeChatDatabase(WeChatBase):
                 }
 
                 ## Insert.
-                self.db_wechat.execute.insert(
+                self.db.wechat.execute.insert(
                     'contact_user',
                     data,
                     'update'
@@ -726,7 +716,7 @@ class WeChatDatabase(WeChatBase):
                 ## Insert.
 
                 ### 'contact_room'.
-                self.db_wechat.execute.insert(
+                self.db.wechat.execute.insert(
                     'contact_room',
                     data,
                     'update'
@@ -748,7 +738,7 @@ class WeChatDatabase(WeChatBase):
                 }
 
                 ## Update.
-                self.db_wechat.execute.update(
+                self.db.wechat.execute.update(
                     'contact_room',
                     data
                 )
@@ -770,7 +760,7 @@ class WeChatDatabase(WeChatBase):
                 }
 
                 ## Update.
-                self.db_wechat.execute.update(
+                self.db.wechat.execute.update(
                     'contact_room',
                     data
                 )
@@ -828,7 +818,7 @@ class WeChatDatabase(WeChatBase):
             if message.file is None:
                 file_id = None
             else:
-                file_id = self.db_file.file.upload(
+                file_id = self.sclient.upload_file(
                     message.file['path'],
                     message.file['name'],
                     'WeChat'
@@ -848,7 +838,7 @@ class WeChatDatabase(WeChatBase):
             }
 
             # Insert.
-            self.db_wechat.execute.insert(
+            self.db.wechat.execute.insert(
                 'message_receive',
                 data,
                 'ignore'
@@ -890,7 +880,7 @@ class WeChatDatabase(WeChatBase):
             }
 
             # Update.
-            self.db_wechat.execute.update(
+            self.db.wechat.execute.update(
                 'message_send',
                 data
             )
@@ -917,7 +907,7 @@ class WeChatDatabase(WeChatBase):
         """
 
         # Information.
-        file_info = self.db_file.file.query(file_id)
+        file_info = self.sclient.get_file_info(file_id)
         file_md5 = file_info['md5']
         file_name = file_info['name']
 
@@ -926,7 +916,7 @@ class WeChatDatabase(WeChatBase):
 
         ## Download.
         if cache_path is None:
-            file_bytes = self.db_file.file.download(file_id)
+            file_bytes = self.sclient.download_file(file_id)
             cache_path = self.wechat.cache.store(file_bytes, file_name)
 
         return cache_path, file_name
@@ -945,7 +935,7 @@ class WeChatDatabase(WeChatBase):
             """
 
             # Parameter.
-            conn = self.db_wechat.connect()
+            conn = self.db.wechat.connect()
 
             # Read.
             where = '`status` = 0'
@@ -967,7 +957,7 @@ class WeChatDatabase(WeChatBase):
                 for row in table
             ]
             sql = (
-                f'UPDATE `{self.db_wechat.database}`.`message_send`\n'
+                f'UPDATE `{self.db.wechat.database}`.`message_send`\n'
                 'SET `status` = 1\n'
                 'WHERE `send_id` IN :send_ids'
             )
@@ -1034,7 +1024,7 @@ class WeChatDatabase(WeChatBase):
 
         ## User.
         if message.room is None:
-            result = message.receiver.wechat.db.db_wechat.execute.select(
+            result = message.receiver.wechat.db.db.wechat.execute.select(
                 'message_send',
                 ['is_valid'],
                 '`user_id` = :user_id',
@@ -1044,7 +1034,7 @@ class WeChatDatabase(WeChatBase):
 
         ## Room.
         elif message.user is None:
-            result = message.receiver.wechat.db.db_wechat.execute.select(
+            result = message.receiver.wechat.db.db.wechat.execute.select(
                 'message_send',
                 ['is_valid'],
                 '`room_id` = :room_id',
@@ -1057,19 +1047,19 @@ class WeChatDatabase(WeChatBase):
             sql = (
             'SELECT (\n'
             '    SELECT `is_valid`\n'
-            f'    FROM `{self.db_wechat.database}`.`contact_room_user`\n'
+            f'    FROM `{self.db.wechat.database}`.`contact_room_user`\n'
             '    WHERE `room_id` = :room_id AND `user_id` = :user_id\n'
             '    LIMIT 1\n'
             ') AS `is_valid`\n'
             'FROM (\n'
             '    SELECT `is_valid`\n'
-            f'    FROM `{self.db_wechat.database}`.`contact_room`\n'
+            f'    FROM `{self.db.wechat.database}`.`contact_room`\n'
             '    WHERE `room_id` = :room_id\n'
             '    LIMIT 1\n'
             ') AS `a`\n'
             'WHERE `is_valid` = 1'
             )
-            result = message.receiver.wechat.db.db_wechat.execute(
+            result = message.receiver.wechat.db.db.wechat.execute(
                 sql,
                 room_id=message.room,
                 user_id=message.user
@@ -1111,7 +1101,7 @@ class WeChatDatabase(WeChatBase):
             ## Cache.
             cache_path = self.wechat.cache.store(file_path, file_name)
 
-            file_id = self.db_file.file.upload(
+            file_id = self.sclient.upload_file(
                 cache_path,
                 file_name,
                 'WeChat'
@@ -1121,7 +1111,7 @@ class WeChatDatabase(WeChatBase):
         data['file_id'] = file_id
 
         # Insert.
-        self.db_wechat.execute.insert(
+        self.db.wechat.execute.insert(
             'message_send',
             data
         )

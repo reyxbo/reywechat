@@ -9,10 +9,10 @@
 """
 
 
-from typing import Literal
 from os import getcwd as os_getcwd
-from reydb import DatabaseEngine
+from reydb import Database
 from reykit.rbase import block
+from reyserver.rclient import ServerClient
 
 from .rbase import WeChatBase
 
@@ -40,7 +40,8 @@ class WeChat(WeChatBase):
 
     def __init__(
         self,
-        db_engine: DatabaseEngine | dict[Literal['wechat', 'file'], DatabaseEngine] | None,
+        db: Database,
+        sclient: ServerClient,
         max_receiver: int = 2,
         call_name: str | None = None,
         project_dir: str | None = None
@@ -50,11 +51,8 @@ class WeChat(WeChatBase):
 
         Parameters
         ----------
-        db_engine : Database engine.
-            - `Database`, Set all `Database`: instances.
-            - `dict`, Set each `Database`: instance, all item is required.
-                `Key 'wechat'`: `Database` instance used in WeChat methods.
-                `Key 'file'`: `Database` instance used in file methods.
+        db : Database. Note: must include database engine of `wechat` name.
+        sclient : Server client.
         max_receiver : Maximum number of receivers.
         call_name : Trigger call name.
             - `None`: Use account nickname.
@@ -81,7 +79,7 @@ class WeChat(WeChatBase):
         self.receiver = WechatReceiver(self, max_receiver, call_name)
         self.trigger = self.receiver.trigger
         self.sender = WeChatSender(self)
-        self.db = WeChatDatabase(self, db_engine)
+        self.db = WeChatDatabase(self, db, sclient)
 
         ## Client.
         self.client_version = self.client.client_version
