@@ -31,7 +31,8 @@ class WeChatLog(WeChatBase):
 
     def __init__(
         self,
-        wechat: WeChat
+        wechat: WeChat,
+        dir_path: str
     ) -> None:
         """
         Build instance attributes.
@@ -39,10 +40,12 @@ class WeChatLog(WeChatBase):
         Parameters
         ----------
         wechat : `WeChatClient` instance.
+        dir_path : Log directory.
         """
 
         # Set attribute.
         self.wechat = wechat
+        self.dir_path = dir_path
 
         # Make directory.
         self.folder = self.__make_dir()
@@ -69,11 +72,8 @@ class WeChatLog(WeChatBase):
         Folder instance.
         """
 
-        # Parameter.
-        dir_path = join_path(self.wechat.project_dir, 'log')
-
         # Make.
-        folder = Folder(dir_path)
+        folder = Folder(self.dir_path)
         folder.make()
 
         return folder

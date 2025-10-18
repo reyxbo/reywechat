@@ -28,7 +28,8 @@ class WeChatCache(WeChatBase, FileStore):
 
     def __init__(
         self,
-        wechat: WeChat
+        wechat: WeChat,
+        dir_path: str
     ) -> None:
         """
         Build instance attributes.
@@ -36,12 +37,12 @@ class WeChatCache(WeChatBase, FileStore):
         Parameters
         ----------
         wechat : `WeChatClient` instance.
+        dir_path : Cache directory.
         """
 
         # Set attribute.
         self.wechat = wechat
-        path = join_path(self.wechat.project_dir, 'cache')
-        self.cache = FileStore(path)
         self.folder = self.cache.folder
+        self.cache = FileStore(dir_path)
         self.index = self.cache.index
         self.store = self.cache.store

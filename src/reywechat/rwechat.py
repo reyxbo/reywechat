@@ -44,7 +44,8 @@ class WeChat(WeChatBase):
         sclient: ServerClient,
         max_receiver: int = 2,
         call_name: str | None = None,
-        project_dir: str | None = None
+        dir_log: str = 'log',
+        dir_cache: str = 'cache'
     ) -> None:
         """
         Build instance attributes.
@@ -56,9 +57,8 @@ class WeChat(WeChatBase):
         max_receiver : Maximum number of receivers.
         call_name : Trigger call name.
             - `None`: Use account nickname.
-        project_dir: Project directory, will create sub folders.
-            - `None`: Use working directory.
-            - `str`: Use this directory.
+        dir_log : Log directory.
+        dir_cache : Cache directory.
         """
 
         # Import.
@@ -69,13 +69,12 @@ class WeChat(WeChatBase):
         from .rreceive import WechatReceiver
         from .rsend import WeChatSendTypeEnum, WeChatSendStatusEnum, WeChatSender
 
-        # Set attribute.
-        self.project_dir = project_dir or os_getcwd()
+        # Build.
 
         ## Instance.
         self.client = WeChatClient(self)
-        self.cache = WeChatCache(self)
-        self.error = WeChatLog(self)
+        self.cache = WeChatCache(self, dir_cache)
+        self.error = WeChatLog(self, dir_log)
         self.receiver = WechatReceiver(self, max_receiver, call_name)
         self.trigger = self.receiver.trigger
         self.sender = WeChatSender(self)
