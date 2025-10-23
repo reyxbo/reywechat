@@ -112,6 +112,17 @@ class WeChatSendParameters(WeChatBase):
     ) -> None: ...
 
     @overload
+    def send(
+        self,
+        sender: 'WeChatSender',
+        send_type: Literal[WeChatSendTypeEnum.FILE, WeChatSendTypeEnum.IMAGE, WeChatSendTypeEnum.EMOTION],
+        receive_id: str,
+        send_id: int | None = None,
+        *,
+        file_id: str
+    ) -> None: ...
+
+    @overload
     def __init__(
         self,
         sender: 'WeChatSender',
@@ -457,6 +468,15 @@ class WeChatSender(WeChatBase):
         *,
         file_path: str,
         file_name: str | None = None
+    ) -> None: ...
+
+    @overload
+    def send(
+        self,
+        send_type: Literal[WeChatSendTypeEnum.FILE, WeChatSendTypeEnum.IMAGE, WeChatSendTypeEnum.EMOTION],
+        receive_id: str,
+        *,
+        file_id: str
     ) -> None: ...
 
     @overload

@@ -1107,6 +1107,8 @@ class WeChatDatabase(WeChatBase):
                 file_name,
                 'WeChat'
             )
+        elif 'file_id' in params:
+            file_id = params['file_id']
         else:
             file_id = None
         data['file_id'] = file_id
