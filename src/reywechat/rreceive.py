@@ -972,9 +972,9 @@ class WeChatMessage(WeChatBase):
                     or (
                         self.type == 49
                         and (
-                            self.is_file_uploaded
-                            or self.is_file_uploading
+                            self.is_file_uploading
                             and self.file_params_uploading['size'] > 10485760 # 10MB.
+                            or not self.is_file_uploading
                         )
                     )
                     or self.is_pat
