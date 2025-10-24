@@ -149,6 +149,7 @@ class DatabaseORMTableMessageSend(rorm.Table):
     send_id: int = rorm.Field(rorm.types_mysql.INTEGER(unsigned=True), key_auto=True, comment='Send ID.')
     status: int = rorm.Field(
         field_type=rorm.types_mysql.TINYINT(unsigned=True),
+        field_default='0',
         not_null=True,
         comment=(
             'Send status, '
@@ -1084,7 +1085,6 @@ class WeChatDatabase(WeChatBase):
         # Parameter.
         params = send_params.params.copy()
         data = {
-            'status': 0,
             'type': send_params.send_type,
             'receive_id': send_params.receive_id,
             'parameter': params
