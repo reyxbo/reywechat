@@ -45,8 +45,8 @@ class DatabaseORMTableContactUser(rorm.Table):
     update_time: rorm.Datetime = rorm.Field(field_default=':update_time', index_n=True, comment='Record update time.')
     user_id: str = rorm.Field(rorm.types.VARCHAR(24), key=True, comment='User ID.')
     name: str = rorm.Field(rorm.types.VARCHAR(32), comment='User name.')
-    is_contact: bool = rorm.Field(rorm.types.BOOLEAN, field_default='TRUE', not_null=True, comment='Is the contact.')
-    is_valid: bool = rorm.Field(rorm.types.BOOLEAN, field_default='TRUE', not_null=True, comment='Is the valid.')
+    is_contact: bool = rorm.Field(field_default='TRUE', not_null=True, comment='Is the contact.')
+    is_valid: bool = rorm.Field(field_default='TRUE', not_null=True, comment='Is the valid.')
 
 
 class DatabaseORMTableContactRoom(rorm.Table):
@@ -60,8 +60,8 @@ class DatabaseORMTableContactRoom(rorm.Table):
     update_time: rorm.Datetime = rorm.Field(field_default=':update_time', index_n=True, comment='Record update time.')
     room_id: str = rorm.Field(rorm.types.VARCHAR(31), key=True, comment='Chat room ID.')
     name: str = rorm.Field(rorm.types.VARCHAR(32), comment='Chat room name.')
-    is_contact: bool = rorm.Field(rorm.types.BOOLEAN, field_default='TRUE', not_null=True, comment='Is the contact.')
-    is_valid: bool = rorm.Field(rorm.types.BOOLEAN, field_default='TRUE', not_null=True, comment='Is the valid.')
+    is_contact: bool = rorm.Field(field_default='TRUE', not_null=True, comment='Is the contact.')
+    is_valid: bool = rorm.Field(field_default='TRUE', not_null=True, comment='Is the valid.')
 
 
 class DatabaseORMTableContactRoomUser(rorm.Table):
@@ -76,8 +76,8 @@ class DatabaseORMTableContactRoomUser(rorm.Table):
     room_id: str = rorm.Field(rorm.types.VARCHAR(31), key=True, comment='Chat room ID.')
     user_id: str = rorm.Field(rorm.types.VARCHAR(24), key=True, comment='Chat room user ID.')
     name: str = rorm.Field(rorm.types.VARCHAR(32), comment='Chat room user name.')
-    is_contact: bool = rorm.Field(rorm.types.BOOLEAN, field_default='TRUE', not_null=True, comment='Is the contact.')
-    is_valid: bool = rorm.Field(rorm.types.BOOLEAN, field_default='TRUE', not_null=True, comment='Is the valid.')
+    is_contact: bool = rorm.Field(field_default='TRUE', not_null=True, comment='Is the contact.')
+    is_valid: bool = rorm.Field(field_default='TRUE', not_null=True, comment='Is the valid.')
 
 
 class DatabaseORMTableMessageReceive(rorm.Table):
@@ -134,7 +134,7 @@ class DatabaseORMTableMessageReceive(rorm.Table):
         )
     )
     data: str = rorm.Field(rorm.types.TEXT, not_null=True, comment='Message data.')
-    file_id: int = rorm.Field(rorm.types.INTEGER, comment='Message file ID, from the file API.')
+    file_id: int = rorm.Field(comment='Message file ID, from the file API.')
 
 
 class DatabaseORMTableMessageSend(rorm.Table):
@@ -146,7 +146,7 @@ class DatabaseORMTableMessageSend(rorm.Table):
     __comment__ = 'Message send table.'
     create_time: rorm.Datetime = rorm.Field(field_default=':create_time', not_null=True, index_n=True, comment='Record create time.')
     update_time: rorm.Datetime = rorm.Field(field_default=':update_time', index_n=True, comment='Record update time.')
-    send_id: int = rorm.Field(rorm.types.INTEGER, key_auto=True, comment='Send ID.')
+    send_id: int = rorm.Field(key_auto=True, comment='Send ID.')
     status: int = rorm.Field(
         field_type=rorm.types.SMALLINT,
         field_default='0',
@@ -177,7 +177,7 @@ class DatabaseORMTableMessageSend(rorm.Table):
     )
     receive_id: str = rorm.Field(rorm.types.VARCHAR(31), not_null=True, index_n=True, comment='Receive to user ID or chat room ID.')
     parameter: str = rorm.Field(rorm.types.JSON, not_null=True, comment='Send parameters.')
-    file_id: int = rorm.Field(rorm.types.INTEGER, comment='Message file ID, from the file API.')
+    file_id: int = rorm.Field(comment='Message file ID, from the file API.')
 
 
 class WeChatDatabase(WeChatBase):
@@ -482,6 +482,7 @@ class WeChatDatabase(WeChatBase):
             conn.execute.insert(
                 'contact_user',
                 user_data,
+                'user_id',
                 'update'
             )
 
@@ -537,6 +538,7 @@ class WeChatDatabase(WeChatBase):
             conn.execute.insert(
                 'contact_room',
                 room_data,
+                'room_id',
                 'update'
             )
 
@@ -614,6 +616,7 @@ class WeChatDatabase(WeChatBase):
             conn.execute.insert(
                 'contact_room_user',
                 room_user_data,
+                ('room_id', 'user_id'),
                 'update'
             )
 
@@ -680,6 +683,7 @@ class WeChatDatabase(WeChatBase):
                 self.db.wechat.execute.insert(
                     'contact_user',
                     data,
+                    'user_id',
                     'update'
                 )
 
@@ -719,6 +723,7 @@ class WeChatDatabase(WeChatBase):
                 self.db.wechat.execute.insert(
                     'contact_room',
                     data,
+                    'room_id',
                     'update'
                 )
 
@@ -841,7 +846,7 @@ class WeChatDatabase(WeChatBase):
             self.db.wechat.execute.insert(
                 'message_receive',
                 data,
-                'ignore'
+                'message_id'
             )
 
 
