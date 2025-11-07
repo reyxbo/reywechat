@@ -14,7 +14,7 @@ from json import loads as json_loads
 from reydb import rorm, Database
 from reykit.rbase import throw
 from reykit.ros import File
-from reykit.rtime import to_time, time_to, sleep
+from reykit.rtime import now, to_time, time_to, sleep
 from reykit.rwrap import wrap_thread
 from reyserver.rclient import ServerClient
 
@@ -41,8 +41,8 @@ class DatabaseORMTableContactUser(rorm.Table):
 
     __name__ = 'contact_user'
     __comment__ = 'User contact table.'
-    create_time: rorm.Datetime = rorm.Field(field_default=':create_time', not_null=True, index_n=True, comment='Record create time.')
-    update_time: rorm.Datetime = rorm.Field(field_default=':update_time', index_n=True, comment='Record update time.')
+    create_time: rorm.Datetime = rorm.Field(field_default=':time', not_null=True, index_n=True, comment='Record create time.')
+    update_time: rorm.Datetime = rorm.Field(field_default=':time', arg_default=now, index_n=True, comment='Record update time.')
     user_id: str = rorm.Field(rorm.types.VARCHAR(24), key=True, comment='User ID.')
     name: str = rorm.Field(rorm.types.VARCHAR(32), comment='User name.')
     is_contact: bool = rorm.Field(field_default='TRUE', not_null=True, comment='Is the contact.')
@@ -56,8 +56,8 @@ class DatabaseORMTableContactRoom(rorm.Table):
 
     __name__ = 'contact_room'
     __comment__ = 'Chat room contact table.'
-    create_time: rorm.Datetime = rorm.Field(field_default=':create_time', not_null=True, index_n=True, comment='Record create time.')
-    update_time: rorm.Datetime = rorm.Field(field_default=':update_time', index_n=True, comment='Record update time.')
+    create_time: rorm.Datetime = rorm.Field(field_default=':time', not_null=True, index_n=True, comment='Record create time.')
+    update_time: rorm.Datetime = rorm.Field(field_default=':time', arg_default=now, index_n=True, comment='Record update time.')
     room_id: str = rorm.Field(rorm.types.VARCHAR(31), key=True, comment='Chat room ID.')
     name: str = rorm.Field(rorm.types.VARCHAR(32), comment='Chat room name.')
     is_contact: bool = rorm.Field(field_default='TRUE', not_null=True, comment='Is the contact.')
@@ -71,8 +71,8 @@ class DatabaseORMTableContactRoomUser(rorm.Table):
 
     __name__ = 'contact_room_user'
     __comment__ = 'Chat room user contact table.'
-    create_time: rorm.Datetime = rorm.Field(field_default=':create_time', not_null=True, index_n=True, comment='Record create time.')
-    update_time: rorm.Datetime = rorm.Field(field_default=':update_time', index_n=True, comment='Record update time.')
+    create_time: rorm.Datetime = rorm.Field(field_default=':time', not_null=True, index_n=True, comment='Record create time.')
+    update_time: rorm.Datetime = rorm.Field(field_default=':time', arg_default=now, index_n=True, comment='Record update time.')
     room_id: str = rorm.Field(rorm.types.VARCHAR(31), key=True, comment='Chat room ID.')
     user_id: str = rorm.Field(rorm.types.VARCHAR(24), key=True, comment='Chat room user ID.')
     name: str = rorm.Field(rorm.types.VARCHAR(32), comment='Chat room user name.')
@@ -87,7 +87,7 @@ class DatabaseORMTableMessageReceive(rorm.Table):
 
     __name__ = 'message_receive'
     __comment__ = 'Message receive table.'
-    create_time: rorm.Datetime = rorm.Field(field_default=':create_time', not_null=True, index_n=True, comment='Record create time.')
+    create_time: rorm.Datetime = rorm.Field(field_default=':time', not_null=True, index_n=True, comment='Record create time.')
     message_time: rorm.Datetime = rorm.Field(not_null=True, index_n=True, comment='Message time.')
     message_id: int = rorm.Field(rorm.types.BIGINT, key=True, comment='Message UUID.')
     room_id: str = rorm.Field(rorm.types.VARCHAR(31), index_n=True, comment='Message chat room ID, null for private chat.')
@@ -144,8 +144,8 @@ class DatabaseORMTableMessageSend(rorm.Table):
 
     __name__ = 'message_send'
     __comment__ = 'Message send table.'
-    create_time: rorm.Datetime = rorm.Field(field_default=':create_time', not_null=True, index_n=True, comment='Record create time.')
-    update_time: rorm.Datetime = rorm.Field(field_default=':update_time', index_n=True, comment='Record update time.')
+    create_time: rorm.Datetime = rorm.Field(field_default=':time', not_null=True, index_n=True, comment='Record create time.')
+    update_time: rorm.Datetime = rorm.Field(field_default=':time', arg_default=now, index_n=True, comment='Record update time.')
     send_id: int = rorm.Field(key_auto=True, comment='Send ID.')
     status: int = rorm.Field(
         field_type=rorm.types.SMALLINT,
@@ -483,7 +483,8 @@ class WeChatDatabase(WeChatBase):
                 'contact_user',
                 user_data,
                 'user_id',
-                'update'
+                'update',
+                update_time=':NOW()'
             )
 
         ## Update.
@@ -539,7 +540,8 @@ class WeChatDatabase(WeChatBase):
                 'contact_room',
                 room_data,
                 'room_id',
-                'update'
+                'update',
+                update_time=':NOW()'
             )
 
         ## Update.
@@ -617,7 +619,8 @@ class WeChatDatabase(WeChatBase):
                 'contact_room_user',
                 room_user_data,
                 ('room_id', 'user_id'),
-                'update'
+                'update',
+                update_time=':NOW()'
             )
 
         ## Update.
@@ -684,7 +687,8 @@ class WeChatDatabase(WeChatBase):
                     'contact_user',
                     data,
                     'user_id',
-                    'update'
+                    'update',
+                    update_time=':NOW()'
                 )
 
 
@@ -724,7 +728,8 @@ class WeChatDatabase(WeChatBase):
                     'contact_room',
                     data,
                     'room_id',
-                    'update'
+                    'update',
+                    update_time=':NOW()'
                 )
 
                 ### 'contact_room_user'.
@@ -737,6 +742,7 @@ class WeChatDatabase(WeChatBase):
                 _, name = message.data.rsplit('“', 1)
                 name = name[:-1]
                 data = {
+                    'update_time': ':NOW()',
                     'room_id': message.room,
                     'name': name
                 }
@@ -759,6 +765,7 @@ class WeChatDatabase(WeChatBase):
 
                 ## Generate data.
                 data = {
+                    'update_time': ':NOW()',
                     'room_id': message.room,
                     'is_contact': False
                 }
@@ -879,6 +886,7 @@ class WeChatDatabase(WeChatBase):
             else:
                 status = 3
             data = {
+                'update_time': ':NOW()',
                 'send_id': send_params.send_id,
                 'status': status
             }
