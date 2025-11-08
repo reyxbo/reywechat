@@ -984,7 +984,6 @@ class WeChatDatabase(WeChatBase):
             for row in table:
                 send_id, type_, receive_id, parameter, file_id = row.values()
                 send_type = WeChatSendTypeEnum(type_)
-                parameter: dict = json_loads(parameter)
 
                 ## File.
                 if file_id is not None:
