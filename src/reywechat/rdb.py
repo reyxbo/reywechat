@@ -742,16 +742,15 @@ class WeChatDatabase(WeChatBase):
                 _, name = message.data.rsplit('“', 1)
                 name = name[:-1]
                 data = {
-                    'update_time': ':NOW()',
                     'room_id': message.room,
+                    'update_time': ':NOW()',
                     'name': name
                 }
 
                 ## Update.
                 self.db.wechat.execute.update(
                     'contact_room',
-                    data,
-                    limit=1
+                    data
                 )
 
             elif (
@@ -765,16 +764,15 @@ class WeChatDatabase(WeChatBase):
 
                 ## Generate data.
                 data = {
-                    'update_time': ':NOW()',
                     'room_id': message.room,
+                    'update_time': ':NOW()',
                     'is_contact': False
                 }
 
                 ## Update.
                 self.db.wechat.execute.update(
                     'contact_room',
-                    data,
-                    limit=1
+                    data
                 )
 
 
@@ -886,16 +884,15 @@ class WeChatDatabase(WeChatBase):
             else:
                 status = 3
             data = {
-                'update_time': ':NOW()',
                 'send_id': send_params.send_id,
+                'update_time': ':NOW()',
                 'status': status
             }
 
             # Update.
             self.db.wechat.execute.update(
                 'message_send',
-                data,
-                limit=1
+                data
             )
 
 
