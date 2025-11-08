@@ -324,7 +324,7 @@ class WeChatMessage(WeChatBase):
 
             ## Emoticon.
             case 47:
-                self._cache['text'] = f'[动画表情]'
+                self._cache['text'] = '[动画表情]'
 
             ## Position.
             case 48:
