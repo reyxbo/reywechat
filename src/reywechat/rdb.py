@@ -176,7 +176,7 @@ class DatabaseORMTableMessageSend(rorm.Table):
         )
     )
     receive_id: str = rorm.Field(rorm.types.VARCHAR(31), not_null=True, index_n=True, comment='Receive to user ID or chat room ID.')
-    parameter: str = rorm.Field(rorm.types.JSON, not_null=True, comment='Send parameters.')
+    parameter: str = rorm.Field(rorm.dialect.JSONB, not_null=True, comment='Send parameters.')
     file_id: int = rorm.Field(comment='Message file ID, from the file API.')
 
 
