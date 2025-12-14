@@ -9,14 +9,13 @@
 """
 
 
-from typing import Any, TypedDict, Literal, Final
-from os.path import abspath as os_abspath
+from typing import Any, TypedDict, NotRequired, Literal
+from os.path import dirname as os_dirname
 from reykit.rbase import throw
-from reykit.rdll import inject_dll
 from reykit.rnet import request as reykit_request
-from reykit.ros import find_relpath
-from reykit.rsys import run_cmd, search_process, memory_read, memory_write, popup_select
-from reykit.rtime import wait
+from reykit.ros import File, Folder
+from reykit.rsys import run_cmd, search_process, popup_select
+from reykit.rtime import now, wait
 
 from .rbase import WeChatBase, WeChatClientErorr
 from .rwechat import WeChat
@@ -29,7 +28,21 @@ __all__ = (
 )
 
 
-WeChatResponse = TypedDict('WeChatResponse', {'code': int, 'message': str, 'data': Any})
+SendLogChat = TypedDict(
+    'SendLogChat',
+    {
+        'id': str,
+        'name': NotRequired[str],
+        'time': NotRequired[str],
+        'text': str
+    }
+)
+"""
+Key "id" is user ID or chat room ID.
+Key "name" is user nickname.
+Key "time" is second unit timestamp.
+Key "text" is chat content.
+"""
 
 
 CLIENT_VERSION_MEMORY_OFFSETS = (
@@ -49,18 +62,11 @@ class WeChatClient(WeChatBase):
     """
 
 
-    # Environment.
-    client_version: Final[str] = '3.9.5.81'
-    client_version_int: Final[int] = 1661535569
-    client_version_simulate: Final[str] = '3.10.0.1'
-    client_version_simulate_int: Final[int] = 1661599745
-    client_api_port: Final[int] = 19088
-    message_callback_port: Final[int] = 19089
-
-
     def __init__(
         self,
-        wechat: WeChat
+        wechat: WeChat,
+        client_port: int,
+        callback_port: int
     ) -> None:
         """
         Build instance attributes.
@@ -68,57 +74,39 @@ class WeChatClient(WeChatBase):
         Parameters
         ----------
         wechat : `WeChat` instance.
+        client_port : Client control API port.
+        callback_port : Message callback port.
         """
 
-        # Start.
+        # Build.
         self.wechat = wechat
-        self.start_api()
+        self.client_port = client_port
+        self.callback_port = callback_port
 
-        # Set attribute.
+        # Start.
+        self.start()
         self.login_info = self.get_login_info()
 
 
-    def start_api(self) -> None:
+    def start(self) -> None:
         """
         Start client control API.
         """
 
-        # Check client started.
-        judge = self.check_client_started()
-
-        ## Start client.
-        if not judge:
-            wechat_path = popup_select(
-                title='请选择微信客户端',
-                filter_file=[('', ['*微信*.exe', '*WeChat*.exe'])]
-            )
-            if wechat_path is None:
-                raise WeChatClientErorr('WeChat client not started')
-            run_cmd(wechat_path)
-
-            ## Wait.
-            seconds = wait(
-                self.check_client_started,
-                _interval=0.2,
-                _timeout=10,
-                _raising=False
-            )
-            if seconds is None:
-                raise WeChatClientErorr('WeChat client not started')
-
-        # Check client version.
-        judge = self.check_client_version()
-        if not judge:
-            raise WeChatClientErorr(f'WeChat client version failed, must be "{self.client_version}"')
-
-        # Check API.
+        # Not started.
         judge = self.check_api()
         if not judge:
 
-            # Inject DLL.
-            self.inject_dll()
+            # Directory.
+            wechat_dir = self.popup_select_wechat_dir()
 
-            # Check api.
+            # Inject.
+            self.create_inject_file(wechat_dir)
+
+            # Start.
+            self.start_wechat(wechat_dir)
+
+            # Check API.
             judge = self.check_api()
             if not judge:
                 raise WeChatClientErorr('start WeChat client API failed')
@@ -132,59 +120,101 @@ class WeChatClient(WeChatBase):
             seconds = wait(
                 self.check_client_login,
                 _interval=0.5,
-                _timeout=30,
+                _timeout=60,
                 _raising=False
             )
             if seconds is None:
                 raise WeChatClientErorr('WeChat not logged in')
 
         # Report.
-        print('Start WeChat client API successfully, address is "127.0.0.1:19088".')
+        print(f'Start WeChat client API successfully, address is "127.0.0.1:{self.client_port}".')
 
 
-    def check_client_started(self) -> bool:
+    def popup_select_wechat_dir(self, default: str = 'C:/Program Files (x86)/Tencent/WeChat') -> str:
         """
-        Check if the client is started.
+        Pop up WeChat installation directory select box.
 
         Returns
         -------
-        Check result.
+        WeChat installation directory.
         """
 
-        # Search.
-        processes = search_process(name='WeChat.exe')
+        # Parameter.
+        client_file_name = 'WeChat.exe'
 
-        # Check.
-        if processes == []:
-            return False
-        else:
-            return True
+        # Default.
+        folder = Folder(default)
+        if (
+            Folder(default)
+            and client_file_name in folder
+        ):
+            return default
+
+        # Pop up.
+        wechat_dir = popup_select(
+            'folder',
+            '请选择微信安装目录',
+            default
+        )
+
+        # Judge.
+        if wechat_dir is None:
+            raise WeChatClientErorr('WeChat installation directory not selected')
+        folder = Folder(wechat_dir)
+        client_file_name = 'WeChat.exe'
+        if client_file_name not in folder:
+            raise WeChatClientErorr(f'WeChat installation directory has no client "{client_file_name}"')
+
+        return wechat_dir
 
 
-    def check_client_version(self) -> bool:
+    def create_inject_file(self, wechat_dir: str) -> None:
         """
-        Check if the client version.
+        Create injection files in the WeChat installation directory.
 
-        Returns
-        -------
-        Check result.
+        Parameters
+        ----------
+        wechat_dir : WeChat installation directory.
         """
 
-        # Check.
-        for offset in CLIENT_VERSION_MEMORY_OFFSETS:
-            value = memory_read(
-                'WeChat.exe',
-                'WeChatWin.dll',
-                offset
-            )
-            if value not in (
-                self.client_version_int,
-                self.client_version_simulate_int,
-                0
-            ):
-                return False
+        # Create.
 
-        return True
+        ## DLL.
+        dll_names = (
+            'version.dll',
+            'HPSocket4C.dll'
+        )
+        package_dir = os_dirname(__file__)
+        for name in dll_names:
+            dll_orig_path = f'{package_dir}/data/{name}'
+            dll_copy_path = f'{wechat_dir}/{name}'
+            if not File(dll_copy_path):
+                File(dll_orig_path).copy(dll_copy_path)
+
+        ## Config.
+        config_path = f'{wechat_dir}/config.json'
+        config_file = File(config_path)
+        config = {
+            'callBackUrl': f'http://127.0.0.1:{self.callback_port}/callback',
+            'port': self.client_port,
+            'timeOut': '3600000',
+            'decryptImg': '1',
+            'groupMemberEvent': '1',
+            'revokeMsgEvent': '1',
+            'hookSilk': '1',
+            'httpMode': '1'
+        }
+        config_file(config)
+
+
+    def start_wechat(self, wechat_dir: str) -> None:
+        """
+        Start
+        """
+
+        # Start.
+        wechat_path = f'{wechat_dir}/WeChat.exe'
+        run_cmd(wechat_path, True)
 
 
     def check_api(self) -> bool:
@@ -193,7 +223,7 @@ class WeChatClient(WeChatBase):
         """
 
         # Search.
-        processes = search_process(port=self.client_api_port)
+        processes = search_process(port=self.client_port)
 
         # Check.
         if processes == []:
@@ -207,31 +237,11 @@ class WeChatClient(WeChatBase):
         return True
 
 
-    def inject_dll(self) -> None:
-        """
-        Inject DLL file of start API into the WeChat client process.
-        """
-
-        # Parameter.
-        dll_file_relpath = './data/client_api.dll'
-        dll_file_path = find_relpath(__file__, dll_file_relpath)
-
-        # Inject.
-        processes = search_process(name='WeChat.exe')
-        process = processes[0]
-        inject_dll(
-            process.pid,
-            dll_file_path
-        )
-
-
     def request(
         self,
         api: str,
-        data: dict | None = None,
-        success_code: int | list[int] | None = None,
-        fail_code: int | list[int] | None = None
-    ) -> WeChatResponse:
+        data: dict | None = None
+    ) -> Any:
         """
         Request client API.
 
@@ -239,12 +249,6 @@ class WeChatClient(WeChatBase):
         ----------
         api : API name.
         data : Request data.
-        success_code : Suceess code, if not within the range, throw an exception.
-            - `None`: Not handle.
-            - `int | list[int]`: Handle.
-        fail_code : Fail code, if within the range, throw an exception.
-            - `None`: Not handle.
-            - `int | list[int]`: Handle.
 
         Returns
         -------
@@ -252,42 +256,31 @@ class WeChatClient(WeChatBase):
         """
 
         # Parameter.
-        url = f'http://127.0.0.1:{self.client_api_port}/api/{api}'
+        url = f'http://127.0.0.1:{self.client_port}/wechat/httpapi'
         data = data or {}
-        if type(success_code) == int:
-            success_code = [success_code]
-        if type(fail_code) == int:
-            fail_code = [fail_code]
+        json = {
+            'type': api,
+            'data': data
+        }
 
         # Request.
         response = reykit_request(
             url,
-            json=data,
+            json=json,
+            timeout=600,
             method='post',
             check=True
         )
 
         # Extract.
-        response_data = response.json()
-        response = {
-            'code': response_data['code'],
-            'message': response_data['msg'],
-            'data': response_data['data']
-        }
+        response_json = response.json(strict=False)
+        result = response_json['result']
 
         # Throw exception.
-        if (
-            (
-                success_code is not None
-                and response['code'] not in success_code
-            ) or (
-                fail_code is not None
-                and response['code'] in fail_code
-            )
-        ):
-            raise WeChatClientErorr(f'client API "{api}" request failed', data, response)
+        if response_json['code'] != 200:
+            raise WeChatClientErorr(f'client API "{api}" request failed', data, response_json)
 
-        return response
+        return result
 
 
     def check_client_login(self) -> bool:
@@ -300,22 +293,19 @@ class WeChatClient(WeChatBase):
         """
 
         # Parameter.
-        api = 'checkLogin'
+        api = 'getLoginStatus'
 
         # Request.
-        response = self.request(api)
+        result = self.request(api)
 
         # Check.
-        match response['code']:
-            case 1:
-                return True
-            case 0:
-                return False
+        status = result['status']
+        judge = status == 3
+
+        return judge
 
 
-    def get_login_info(
-        self
-    ) -> dict[
+    def get_login_info(self, cache: bool = True) -> dict[
         Literal[
             'id',
             'account',
@@ -326,14 +316,18 @@ class WeChatClient(WeChatBase):
             'province',
             'country',
             'head_image',
-            'account_data_path',
-            'wechat_data_path',
-            'decrypt_key'
+            'email',
+            'qq',
+            'device'
         ],
         str | None
     ]:
         """
         Get login account information.
+
+        Parameters
+        ----------
+        cache : Whether to use cache data.
 
         Returns
         -------
@@ -347,232 +341,122 @@ class WeChatClient(WeChatBase):
             - `Key 'province'`: Province.
             - `Key 'country'`: Country.
             - `Key 'head_image'`: Head image URL.
-            - `Key 'account_data_path'`: Current account data save path.
-            - `Key 'wechat_data_path'`: WeChat data save path.
-            - `Key 'decrypt_key'`: Database decrypt key.
+            - `Key 'email'`: Email address.
+            - `Key 'qq'`: QQ number.
+            - `Key 'device'`: Login device.
         """
 
         # Parameter.
-        api = 'userInfo'
+        api = 'getSelfInfo'
+        data_type = ['1', '2'][cache]
+        data = {'type': data_type}
 
         # Request.
-        response = self.request(api)
+        result = self.request(api, data)
 
         # Extract.
-        data = response['data']
         info = {
-            'id': data['wxid'],
-            'account': data['account'],
-            'name': data['name'],
-            'phone': data['mobile'],
-            'signature': data['signature'],
-            'city': data['city'],
-            'province': data['province'],
-            'country': data['country'],
-            'head_image': data['headImage'],
-            'account_data_path': data['currentDataPath'],
-            'wechat_data_path': data['dataSavePath'],
-            'decrypt_key': data['dbKey']
+            'id': result['wxid'],
+            'account': result['wxNum'],
+            'name': result['nick'],
+            'phone': result['phone'],
+            'signature': result['sign'],
+            'city': result['city'],
+            'province': result['province'],
+            'country': result['country'],
+            'head_image': result['avatarUrl'],
+            'email': result['email'],
+            'qq': result['qq'],
+            'device': result['device']
         }
-        info = {
-            key: (
-                None
-                if value == ''
-                else value
-            )
-            for key, value in info.items()
-        }
+        for key, value in info.items():
+            if value == '':
+                info[key] = None
 
         return info
 
 
-    def hook_message(
-        self,
-        host: str,
-        port: str | int,
-        timeout: float
-    ) -> None:
+    def get_contact_table_user(self, cache: bool = True) -> list[dict[Literal['id', 'account', 'name', 'remark'], str | None]]:
         """
-        Hook the message, and send the message to the TCP protocol request.
+        Get contact chat user table.
 
         Parameters
         ----------
-        host : Request host.
-        port : Request port.
-        timeout : Request timeout seconds.
-        """
-
-        # Parameter.
-        api = 'hookSyncMsg'
-        port = str(port)
-        timeout_ms_str = str(int(timeout * 1000))
-        data = {
-            'ip': host,
-            'port': port,
-            'timeout': timeout_ms_str,
-            'enableHttp': '0'
-        }
-
-        # Request.
-        response = self.request(api, data, [0, 2])
-
-        # Retry.
-        if response['code'] == 2:
-            self.unhook_message()
-            self.hook_message(
-                host,
-                port,
-                timeout
-            )
-
-        # Report.
-        else:
-            print(
-                'Hook message successfully, address is "%s:%s".' % (
-                    host,
-                    port
-                )
-            )
-
-
-    def unhook_message(self) -> None:
-        """
-        Unhook the message.
-        """
-
-        # Parameter.
-        api = 'unhookSyncMsg'
-
-        # Request.
-        self.request(api, success_code=0)
-
-        # Report.
-        print('Unhook message successfully.')
-
-
-    def download_file(
-        self,
-        id_: int
-    ) -> None:
-        """
-        Download image or video or other file.
-
-        Parameters
-        ----------
-        id\\_ : Message ID.
-        """
-
-        # Parameter.
-        api = 'downloadAttach'
-        data = {'msgId': id_}
-
-        # Request.
-        self.request(api, data, [0, 1000])
-
-
-    def download_voice(
-        self,
-        id_: int,
-        dir_: str
-    ) -> None:
-        """
-        Download voice.
-
-        Parameters
-        ----------
-        id\\_ : Message ID.
-        dir\\_ : Save directory.
-        """
-
-        # Parameter.
-        api = 'getVoiceByMsgId'
-        dir_ = os_abspath(dir_)
-        data = {
-            'msgId': id_,
-            'storeDir': dir_
-        }
-
-        # Request.
-        self.request(api, data, [0, 1])
-
-
-    def get_contact_table(
-        self,
-        type_: Literal['user', 'room'] | None = None
-    ) -> list[dict[Literal['id', 'name'], str]]:
-        """
-        Get contact table, include chat user and chat room.
-
-        Parameters
-        ----------
-        type\\_ : Return contact table type.
-            - `None`: Return all contact table.
-            - `Literal['user']`: Return user contact table.
-            - `Literal['room']`: Return chat room contact table.
+        cache : Whether to use cache data.
 
         Returns
         -------
         Contact table.
-            - `Key 'id'`: User ID or chat room ID.
-            - `Key 'name'`: User nickname or chat room name.
         """
 
         # Parameter.
-        api = 'getContactList'
-        filter_names = {
-            'filehelper': '朋友推荐消息',
-            'floatbottle': '语音记事本',
-            'fmessage': '漂流瓶',
-            'medianote': '文件传输助手'
-        }
+        api = 'getFriendList'
+        data_type = ['1', '2'][cache]
+        data = {'type': data_type}
 
         # Request.
-        response = self.request(api, success_code=1)
+        result = self.request(api, data)
 
         # Extract.
-        data: list[dict] = response['data']
-        table_user = []
-        table_room = []
-        for info in data:
-            id_: str = info['wxid']
-
-            # Filter system user.
-            if id_ in filter_names:
-                continue
-
-            # Split table.
-            row = {
-                'id': id_,
-                'name': info['nickname']
+        table = [
+            {
+                'id': item['wxid'],
+                'account': item['wxNum'],
+                'name': item['nick'],
+                'remark': item['remark']
             }
+            for item in result
+        ]
+        for item in table:
+            for key, value in item.items():
+                if value == '':
+                    item[key] = None
 
-            ## Chat room table.
-            if id_.endswith('chatroom'):
-                if (
-                    type_ in (None, 'room')
-                    and id_[-1] == 'm'
-                ):
-                    table_room.append(row)
+        return table
 
-            ## User table.
-            else:
-                if type_ in (None, 'user'):
-                    table_user.append(row)
 
-        # User no name.
-        for row in table_user[::-1]:
-            if row['name'] == '':
-                table_user.remove(row)
+    def get_contact_table_room(self, cache: bool = True) -> list[dict[Literal['id', 'name', 'remark'], str | None]]:
+        """
+        Get contact chat room table.
 
-        # Merge table.
-        table = table_user + table_room
+        Parameters
+        ----------
+        cache : Whether to use cache data.
+
+        Returns
+        -------
+        Contact table.
+        """
+
+        # Parameter.
+        api = 'getGroupList'
+        data_type = ['1', '2'][cache]
+        data = {'type': data_type}
+
+        # Request.
+        result = self.request(api, data)
+
+        # Extract.
+        table = [
+            {
+                'id': item['wxid'],
+                'name': item['nick'],
+                'remark': item['remark']
+            }
+            for item in result
+        ]
+        for item in table:
+            for key, value in item.items():
+                if value == '':
+                    item[key] = None
 
         return table
 
 
     def get_contact_name(
         self,
-        id_: str
+        id_: str,
+        cache: bool = True
     ) -> str:
         """
         Get contact name, can be friend and chat room and chat room member.
@@ -580,6 +464,7 @@ class WeChatClient(WeChatBase):
         Parameters
         ----------
         id\\_ : User ID or chat room ID.
+        cache : Whether to use cache data.
 
         Returns
         -------
@@ -587,60 +472,65 @@ class WeChatClient(WeChatBase):
         """
 
         # Parameter.
-        api = 'getContactProfile'
-        data = {'wxid': id_}
+        api = 'queryObj'
+        data_type = ['1', '2'][cache]
+        data = {
+            'wxid': id_,
+            'type': data_type
+        }
 
         # Request.
-        response = self.request(api, data, [0, 1])
+        result = self.request(api, data)
 
         # Extract.
-        data: dict | None = response['data']
-        if data is None:
-            name = None
-        else:
-            name = data['nickname']
+        name = result['nick']
 
         return name
 
 
-    def get_room_member_list(
+    def get_room_users(
         self,
-        room_id: str
+        room_id: str,
+        cache: bool = True
     ) -> list[str]:
         """
-        Get list of chat room member user ID.
+        Get list of chat room user ID.
 
         Parameters
         ----------
         room_id : Chat room ID.
+        cache : Whether to use cache data.
 
         Returns
         -------
-        List of chat room member user ID.
+        List ID.
         """
 
         # Parameter.
-        api = 'getMemberFromChatRoom'
-        data = {'chatRoomId': room_id}
+        api = 'getMemberList'
+        data_type = ['1', '2'][cache]
+        data = {
+            'wxid': room_id,
+            'type': data_type,
+            'getNick': '1'
+        }
 
         # Request.
-        response = self.request(api, data, [0, 1])
+        result = self.request(api, data)
 
         # Convert.
-        data: dict = response['data']
-        members: str = data['members']
-        members_list = members.split('^G')
-        members_list = list(filter(
-            lambda member: member != '',
-            members_list
-        ))
+        ids = [
+            item['wxid']
+            for item in result
+        ]
 
-        return members_list
+        return ids
 
 
-    def get_room_member_dict(
+    def get_room_user_dict(
         self,
-        room_id: str
+        room_id: str,
+        cache: bool = True
     ) -> dict[str, str]:
         """
         Get dictionary of chat room member user ID and user name.
@@ -651,25 +541,36 @@ class WeChatClient(WeChatBase):
 
         Returns
         -------
-        Table of chat room member user ID and user name.
+        Table.
         """
 
-        # Get member.
-        members = self.get_room_member_list(room_id)
+        # Parameter.
+        api = 'getMemberList'
+        data_type = ['1', '2'][cache]
+        data = {
+            'wxid': room_id,
+            'type': data_type,
+            'getNick': '2'
+        }
 
-        # Loop.
-        table = {}
-        for member in members:
-            table[member] = self.get_contact_name(member)
+        # Request.
+        result = self.request(api, data)
 
-        return table
+        # Convert.
+        user_dict = {
+            item['wxid']: item['groupNick']
+            for item in result
+        }
+
+        return user_dict
 
 
     def send_text(
         self,
         receive_id: str,
-        text: str
-    ) -> None:
+        text: str,
+        at_id: str | list[str] | Literal['all'] | None = None
+    ) -> str:
         """
         Send text message.
 
@@ -677,6 +578,14 @@ class WeChatClient(WeChatBase):
         ----------
         receive_id : User ID or chat room ID of receive message.
         text : Message text.
+        at_id : `@` user ID.
+            - `str`: User ID.
+            - `list[str]`: Multiple user IDs.
+            - `Literal['all']`: `@` all room users.
+
+        Returns
+        -------
+        Hook ID.
         """
 
         # Check.
@@ -684,33 +593,54 @@ class WeChatClient(WeChatBase):
             throw(ValueError, text)
 
         # Parameter.
-        api = 'sendTextMsg'
+        api = 'sendText2'
+        if type(at_id) == str:
+            at_id = [at_id]
+        if at_id is not None:
+            at_text = ''.join(
+                [
+                    f'[@,wxid={id_},nick=,isAuto=true]'
+                    for id_ in at_id
+                ]
+            )
+            text = at_text + text
         data = {
             'wxid': receive_id,
             'msg': text
         }
 
         # Request.
-        self.request(api, data, 1)
+        result = self.request(api, data)
+
+        # Extract.
+        hook_id = result['sendId']
+
+        return hook_id
 
 
-    def send_text_at(
+    def send_text_quote(
         self,
-        room_id: str,
-        user_id: str | list[str] | Literal['notify@all'],
-        text: str
-    ) -> None:
+        receive_id: str,
+        text: str,
+        message_id: str,
+        at_id: str | list[str] | Literal['all'] | None = None
+    ) -> str:
         """
-        Send text message with `@`.
+        Send text message with quote.
 
         Parameters
         ----------
-        room_id : Chat room ID of receive message.
-        user_id : User ID of `@`.
-            - `str`: @ one user.
-            - `list[str]`: @ multiple users.
-            - `Literal['notify@all']`: @ all users.
+        receive_id : User ID or chat room ID of receive message.
         text : Message text.
+        message_id : Quote message ID.
+        at_id : `@` user ID.
+            - `str`: User ID.
+            - `list[str]`: Multiple user IDs.
+            - `Literal['all']`: `@` all room users.
+
+        Returns
+        -------
+        Hook ID.
         """
 
         # Check.
@@ -718,24 +648,37 @@ class WeChatClient(WeChatBase):
             throw(ValueError, text)
 
         # Parameter.
-        api = 'sendAtText'
-        if type(user_id) != str:
-            user_id = ','.join(user_id)
+        api = 'sendReferText'
+        if type(at_id) == str:
+            at_id = [at_id]
+        if at_id is not None:
+            at_text = ''.join(
+                [
+                    f'[@,wxid={id_},nick=,isAuto=true]'
+                    for id_ in at_id
+                ]
+            )
+            text = at_text + text
         data = {
-            'chatRoomId': room_id,
-            'wxids': user_id,
-            'msg': text
+            'wxid': receive_id,
+            'msg': text,
+            'msgId': message_id
         }
 
         # Request.
-        self.request(api, data, fail_code=-1)
+        result = self.request(api, data)
+
+        # Extract.
+        hook_id = result['sendId']
+
+        return hook_id
 
 
     def send_file(
         self,
         receive_id: str,
         path: str
-    ) -> None:
+    ) -> str:
         """
         Send file message.
 
@@ -743,24 +686,33 @@ class WeChatClient(WeChatBase):
         ----------
         receive_id : User ID or chat room ID of receive message.
         path : Message file path.
+
+        Returns
+        -------
+        Hook ID.
         """
 
         # Parameter.
-        api = 'sendFileMsg'
+        api = 'sendFile'
         data = {
             'wxid': receive_id,
-            'filePath': path
+            'path': path
         }
 
         # Request.
-        self.request(api, data, fail_code=-1)
+        result = self.request(api, data)
+
+        # Extract.
+        hook_id = result['sendId']
+
+        return hook_id
 
 
     def send_image(
         self,
         receive_id: str,
         path: str
-    ) -> None:
+    ) -> str:
         """
         Send image message.
 
@@ -768,17 +720,26 @@ class WeChatClient(WeChatBase):
         ----------
         receive_id : User ID or chat room ID of receive message.
         path : Message image file path.
+
+        Returns
+        -------
+        Hook ID.
         """
 
         # Parameter.
-        api = 'sendImagesMsg'
+        api = 'sendImage'
         data = {
             'wxid': receive_id,
-            'imagePath': path
+            'path': path
         }
 
         # Request.
-        self.request(api, data, success_code=1)
+        result = self.request(api, data)
+
+        # Extract.
+        hook_id = result['sendId']
+
+        return hook_id
 
 
     def send_emotion(
@@ -796,53 +757,26 @@ class WeChatClient(WeChatBase):
         """
 
         # Parameter.
-        api = 'sendCustomEmotion'
+        api = 'sendGif'
         data = {
             'wxid': receive_id,
-            'filePath': path
+            'path': path
         }
 
         # Request.
-        self.request(api, data, success_code=1)
+        self.request(api, data)
 
 
-    def send_pat(
-        self,
-        receive_id: str,
-        user_id: str,
-    ) -> None:
-        """
-        Send pat message.
-
-        Parameters
-        ----------
-        receive_id : User ID or chat room ID of receive message.
-        user_id : User ID of pat.
-        """
-
-        # Parameter.
-        api = 'sendPatMsg'
-        data = {
-            'wxid': receive_id,
-            'receiver': user_id
-        }
-
-        # Request.
-        self.request(api, data, success_code=1)
-
-
-    def send_public(
+    def send_share(
         self,
         receive_id: str,
         page_url: str,
         title: str,
-        text: str | None = None,
-        image_url: str | None = None,
-        public_name: str | None = None,
-        public_id: str | None = None
-    ) -> None:
+        text: str,
+        image_url: str | None = None
+    ) -> str:
         """
-        Send public account message.
+        Send share link message.
 
         Parameters
         ----------
@@ -851,80 +785,78 @@ class WeChatClient(WeChatBase):
         title : Control title.
         text : Control text.
         image_url : Control image URL.
-        public_name : Control public account name.
-        public_id : Control public account ID.
+
+        Returns
+        -------
+        Hook ID.
         """
 
         # Parameter.
+        api = 'sendShareUrl'
         text = text or ''
-        image_url = image_url or ''
-        public_name = public_name or ''
-        public_id = public_id or ''
-        api = 'forwardPublicMsg'
         data = {
             'wxid': receive_id,
-            'url': page_url,
+            'jumpUrl': page_url,
             'title': title,
-            'digest': text,
-            'thumbUrl': image_url,
-            'appName': public_name,
-            'userName': public_id
+            'content': text
         }
+        if image_url is not None:
+            data['path'] = image_url
 
         # Request.
-        self.request(api, data, success_code=1)
+        result = self.request(api, data)
+
+        # Extract.
+        hook_id = result['sendId']
+
+        return hook_id
 
 
-    def send_forward(
+    def send_log(
         self,
         receive_id: str,
-        message_id: str
-    ) -> None:
+        chats: list[SendLogChat],
+        title: str = '聊天记录'
+    ) -> str:
         """
-        Forward message.
+        Send chat log.
 
         Parameters
         ----------
         receive_id : User ID or chat room ID of receive message.
-        message_id : Forward message ID.
+        chats : Chat log table.
+        title : Chat log title.
+
+        Returns
+        -------
+        Hook ID.
         """
 
         # Parameter.
-        api = 'sendImagesMsg'
+        api = 'sendChatLog'
+        timestamp = str(now('timestamp_s'))
+        for chat in chats:
+            chat.setdefault('name', chat['id'])
+            chat.setdefault('time', timestamp)
+        chat_table = [
+            {
+                'wxid': chat['id'],
+                'nickName': chat['name'],
+                'timestamp': chat['time'],
+                'msg': chat['text']
+            }
+            for chat in chats
+        ]
         data = {
             'wxid': receive_id,
-            'forwardMsg': message_id
+            'title': title,
+            'dataList': chat_table
         }
 
         # Request.
-        self.request(api, data, success_code=1)
+        result = self.request(api, data)
 
+        # Extract.
+        hook_id = result['sendId']
 
-def simulate_client_version() -> None:
-    """
-    Simulate WeChat client version.
-    """
-
-    # Check.
-
-    ## Check client.
-    judge = WeChatClient.check_client_started(WeChatClient)
-    if not judge:
-        raise WeChatClientErorr('WeChat client not started')
-
-    ## Check client version.
-    judge = WeChatClient.check_client_version(WeChatClient)
-    if not judge:
-        raise WeChatClientErorr(f'WeChat client version failed, must be "{WeChatClient.client_version}"')
-
-    # Simulate.
-    for offset in CLIENT_VERSION_MEMORY_OFFSETS:
-        memory_write(
-            'WeChat.exe',
-            'WeChatWin.dll',
-            offset,
-            WeChatClient.client_version_simulate_int
-        )
-
-    # Report.
-    print(f'WeChat client version simulated be "{WeChatClient.client_version_simulate}"')
+        return hook_id

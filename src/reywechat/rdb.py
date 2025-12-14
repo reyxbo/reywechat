@@ -9,8 +9,7 @@
 """
 
 
-from typing import Literal
-from json import loads as json_loads
+from enum import StrEnum
 from reydb import rorm, Database
 from reykit.rbase import throw
 from reykit.ros import File
@@ -20,11 +19,12 @@ from reyserver.rclient import ServerClient
 
 from .rbase import WeChatBase
 from .rreceive import WeChatMessage
-from .rsend import WeChatSendTypeEnum, WeChatSendStatusEnum, WeChatSendParameters
+from .rsend import WeChatSendTypeEnum, WeChatSenderStatusEnum, WeChatSendParameters
 from .rwechat import WeChat
 
 
 __all__ = (
+    'WeChatDatabaseSendStatusEnum',
     'DatabaseORMTableContactUser',
     'DatabaseORMTableContactRoom',
     'DatabaseORMTableContactRoomUser',
@@ -32,6 +32,23 @@ __all__ = (
     'DatabaseORMTableMessageSend',
     'WeChatDatabase'
 )
+
+
+class WeChatDatabaseSendStatusEnum(StrEnum):
+    """
+    WeChat database send status enumeration type.
+    """
+
+    WAIT = 'wait'
+    'Wait send.'
+    START = 'start'
+    'Send stated.'
+    SUCCESS = 'success'
+    'Send successded.'
+    FAIL = 'fail'
+    'Send failed.'
+    CANCEL = 'cancel'
+    'Send cancelled.'
 
 
 class DatabaseORMTableContactUser(rorm.Table):
@@ -44,7 +61,7 @@ class DatabaseORMTableContactUser(rorm.Table):
     create_time: rorm.Datetime = rorm.Field(field_default=':time', not_null=True, index_n=True, comment='Record create time.')
     update_time: rorm.Datetime = rorm.Field(field_default=':time', arg_default=now, index_n=True, comment='Record update time.')
     user_id: str = rorm.Field(rorm.types.VARCHAR(24), key=True, comment='User ID.')
-    name: str = rorm.Field(rorm.types.VARCHAR(32), comment='User name.')
+    name: str = rorm.Field(rorm.types.TEXT, comment='User name.')
     is_contact: bool = rorm.Field(field_default='TRUE', not_null=True, comment='Is the contact.')
     is_valid: bool = rorm.Field(field_default='TRUE', not_null=True, comment='Is the valid.')
 
@@ -59,7 +76,7 @@ class DatabaseORMTableContactRoom(rorm.Table):
     create_time: rorm.Datetime = rorm.Field(field_default=':time', not_null=True, index_n=True, comment='Record create time.')
     update_time: rorm.Datetime = rorm.Field(field_default=':time', arg_default=now, index_n=True, comment='Record update time.')
     room_id: str = rorm.Field(rorm.types.VARCHAR(31), key=True, comment='Chat room ID.')
-    name: str = rorm.Field(rorm.types.VARCHAR(32), comment='Chat room name.')
+    name: str = rorm.Field(rorm.types.TEXT, comment='Chat room name.')
     is_contact: bool = rorm.Field(field_default='TRUE', not_null=True, comment='Is the contact.')
     is_valid: bool = rorm.Field(field_default='TRUE', not_null=True, comment='Is the valid.')
 
@@ -75,7 +92,7 @@ class DatabaseORMTableContactRoomUser(rorm.Table):
     update_time: rorm.Datetime = rorm.Field(field_default=':time', arg_default=now, index_n=True, comment='Record update time.')
     room_id: str = rorm.Field(rorm.types.VARCHAR(31), key=True, comment='Chat room ID.')
     user_id: str = rorm.Field(rorm.types.VARCHAR(24), key=True, comment='Chat room user ID.')
-    name: str = rorm.Field(rorm.types.VARCHAR(32), comment='Chat room user name.')
+    name: str = rorm.Field(rorm.types.TEXT, comment='Chat room user name.')
     is_contact: bool = rorm.Field(field_default='TRUE', not_null=True, comment='Is the contact.')
     is_valid: bool = rorm.Field(field_default='TRUE', not_null=True, comment='Is the valid.')
 
@@ -89,11 +106,11 @@ class DatabaseORMTableMessageReceive(rorm.Table):
     __comment__ = 'Message receive table.'
     create_time: rorm.Datetime = rorm.Field(field_default=':time', not_null=True, index_n=True, comment='Record create time.')
     message_time: rorm.Datetime = rorm.Field(not_null=True, index_n=True, comment='Message time.')
-    message_id: int = rorm.Field(rorm.types.BIGINT, key=True, comment='Message UUID.')
+    message_id: int = rorm.Field(rorm.types.BIGINT, key=True, comment='Message ID.')
     room_id: str = rorm.Field(rorm.types.VARCHAR(31), index_n=True, comment='Message chat room ID, null for private chat.')
     user_id: str = rorm.Field(rorm.types.VARCHAR(24), index_n=True, comment='Message sender user ID, null for system message.')
     type: int = rorm.Field(
-        field_type=rorm.types.SMALLINT,
+        rorm.types.SMALLINT,
         not_null=True,
         comment=(
             'Message type, '
@@ -147,36 +164,12 @@ class DatabaseORMTableMessageSend(rorm.Table):
     create_time: rorm.Datetime = rorm.Field(field_default=':time', not_null=True, index_n=True, comment='Record create time.')
     update_time: rorm.Datetime = rorm.Field(field_default=':time', arg_default=now, index_n=True, comment='Record update time.')
     send_id: int = rorm.Field(key_auto=True, comment='Send ID.')
-    status: int = rorm.Field(
-        field_type=rorm.types.SMALLINT,
-        field_default='0',
-        not_null=True,
-        comment=(
-            'Send status, '
-            '0 is not sent, '
-            '1 is handling, '
-            '2 is send success, '
-            '3 is send fail, '
-            '4 is send cancel.'
-        )
-    )
-    type: int = rorm.Field(
-        field_type=rorm.types.SMALLINT,
-        not_null=True,
-        comment=(
-            'Send type, '
-            '0 is text message, '
-            "1 is text message with \\'@\\', "
-            '2 is file message, '
-            '3 is image message, '
-            '4 is emoticon message, '
-            '5 is pat message, '
-            '6 is public account message, '
-            '7 is forward message.'
-        )
-    )
+    hook_id: int = rorm.Field(rorm.types.CHAR(32), unique=True, comment='Hook UUID.')
+    message_id: int = rorm.Field(rorm.types.BIGINT, comment='Message UUID.')
+    status: int = rorm.Field(rorm.ENUM(WeChatDatabaseSendStatusEnum), field_default=WeChatDatabaseSendStatusEnum.WAIT, not_null=True, comment='Send status.')
+    type: int = rorm.Field(rorm.ENUM(WeChatSendTypeEnum), not_null=True, comment='Message type.')
     receive_id: str = rorm.Field(rorm.types.VARCHAR(31), not_null=True, index_n=True, comment='Receive to user ID or chat room ID.')
-    parameter: str = rorm.Field(rorm.dialect.JSONB, not_null=True, comment='Send parameters.')
+    parameter: str = rorm.Field(rorm.JSONB, not_null=True, comment='Send parameters.')
     file_id: int = rorm.Field(comment='Message file ID, from the file API.')
 
 
@@ -260,7 +253,7 @@ class WeChatDatabase(WeChatBase):
                         'select': (
                             'SELECT COUNT(1)\n'
                             'FROM "message_send"\n'
-                            'WHERE "status" = 2'
+                            f'WHERE "status" = \'{WeChatDatabaseSendStatusEnum.SUCCESS}\''
                         ),
                         'comment': 'Message send count.'
                     },
@@ -436,7 +429,7 @@ class WeChatDatabase(WeChatBase):
                         'select': (
                             'SELECT MAX("update_time")\n'
                             'FROM "message_send"\n'
-                            'WHERE "status" = 2'
+                            f'WHERE "status" = \'{WeChatDatabaseSendStatusEnum.SUCCESS}\''
                         ),
                         'comment': 'Message last send time.'
                     }
@@ -461,7 +454,7 @@ class WeChatDatabase(WeChatBase):
         """
 
         # Get data.
-        contact_table = self.wechat.client.get_contact_table('user')
+        contact_table = self.wechat.client.get_contact_table_user()
         user_data = [
             {
                 'user_id': row['id'],
@@ -517,8 +510,7 @@ class WeChatDatabase(WeChatBase):
         """
 
         # Get data.
-        contact_table = self.wechat.client.get_contact_table('room')
-
+        contact_table = self.wechat.client.get_contact_table_room()
         room_data = [
             {
                 'room_id': row['id'],
@@ -586,7 +578,7 @@ class WeChatDatabase(WeChatBase):
 
         ## All.
         if room_id is None:
-            contact_table = self.wechat.client.get_contact_table('room')
+            contact_table = self.wechat.client.get_contact_table_room()
 
         ## Given.
         else:
@@ -600,7 +592,7 @@ class WeChatDatabase(WeChatBase):
             }
             for row in contact_table
             for user_id, name
-            in self.wechat.client.get_room_member_dict(row['id']).items()
+            in self.wechat.client.get_room_user_dict(row['id']).items()
         ]
         room_user_ids = [
             '%s,%s' % (
@@ -655,6 +647,35 @@ class WeChatDatabase(WeChatBase):
 
         ## Close.
         conn.close()
+
+
+    def update_message_send(
+        self,
+        hook_id: str,
+        message_id: int
+    ) -> None:
+        """
+        Update table "message_send" by hook ID.
+
+        Parameters
+        ----------
+        hook_id : Hook ID.
+        message_id : Message ID.
+        """
+
+        # Check.
+        if not hook_id:
+            throw(ValueError, hook_id)
+
+        # Update.
+        data = {
+            'hook_id': hook_id,
+            'message_id': message_id
+        }
+        self.db.wechat.execute.update(
+            'message_send',
+            data
+        )
 
 
     def __add_receiver_handler_to_contact_user(self) -> None:
@@ -875,17 +896,18 @@ class WeChatDatabase(WeChatBase):
             """
 
             # Check.
-            if send_params.status != WeChatSendStatusEnum.SENT:
+            if send_params.status != WeChatSenderStatusEnum.SENT:
                 return
 
             # Parameter.
             if send_params.exc_reports == []:
-                status = 2
+                status = WeChatDatabaseSendStatusEnum.SUCCESS
             else:
-                status = 3
+                status = WeChatDatabaseSendStatusEnum.FAIL
             data = {
                 'send_id': send_params.send_id,
                 'update_time': ':NOW()',
+                'hook_id': send_params.hook_id,
                 'status': status
             }
 
@@ -948,7 +970,7 @@ class WeChatDatabase(WeChatBase):
             conn = self.db.wechat.connect()
 
             # Read.
-            where = '"status" = 0'
+            where = f'"status" = \'{WeChatDatabaseSendStatusEnum.WAIT}\''
             result = conn.execute.select(
                 'message_send',
                 ['send_id', 'type', 'receive_id', 'parameter', 'file_id'],
@@ -969,7 +991,7 @@ class WeChatDatabase(WeChatBase):
             ]
             sql = (
                 'UPDATE "message_send"\n'
-                'SET "status" = 1\n'
+                f'SET "status" = \'{WeChatDatabaseSendStatusEnum.START}\'\n'
                 'WHERE "send_id" IN :send_ids'
             )
             conn.execute(
@@ -995,7 +1017,7 @@ class WeChatDatabase(WeChatBase):
                     send_id,
                     **parameter
                 )
-                send_params.status = WeChatSendStatusEnum.WAIT
+                send_params.status = WeChatSenderStatusEnum.WAIT
                 self.wechat.sender.queue.put(send_params)
 
             # Commit.

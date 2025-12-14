@@ -9,7 +9,7 @@
 """
 
 
-from typing import Any, TypedDict, Literal, overload
+from typing import Any, TypedDict, NotRequired, Literal, overload
 from collections.abc import Callable
 from queue import Queue
 from json import loads as json_loads
@@ -24,7 +24,8 @@ from reykit.rtime import now, sleep, wait, to_time, time_to
 from reykit.rwrap import wrap_thread, wrap_exc
 
 from .rbase import WeChatBase, WeChatTriggerError
-from .rsend import WeChatSendTypeEnum, WeChatSendStatusEnum
+from .rclient import SendLogChat
+from .rsend import WeChatSendTypeEnum, WeChatSenderStatusEnum
 from .rwechat import WeChat
 
 
@@ -39,11 +40,9 @@ MessageParameters = TypedDict(
     {
         'time': int,
         'id': int,
-        'number': int,
         'room': str | None,
         'user': str | None,
         'type': int,
-        'display': str,
         'data': str,
         'file': 'MessageParametersFile'
     }
@@ -73,9 +72,9 @@ MessageParametersFile = TypedDict(
     'MessageParametersFile',
     {
         'path': str,
-        'name': str,
-        'md5': str,
-        'size': int
+        'name': NotRequired[str],
+        'md5': NotRequired[str],
+        'size': NotRequired[int]
     }
 )
 MessageParametersFileUploading = TypedDict(
@@ -94,7 +93,7 @@ class WeChatMessage(WeChatBase):
     """
 
     SendTypeEnum = WeChatSendTypeEnum
-    SendStatusEnum = WeChatSendStatusEnum
+    SendStatusEnum = WeChatSenderStatusEnum
 
 
     def __init__(
@@ -102,11 +101,12 @@ class WeChatMessage(WeChatBase):
         receiver: 'WechatReceiver',
         time: int,
         id_: int,
-        number: int,
         type_: int,
-        display: str,
         data: str,
-        window: str
+        window: str,
+        room: str | None = None,
+        user: str | None = None,
+        file: MessageParametersFile | None = None
     ) -> None:
         """
         Build instance attributes.
@@ -116,11 +116,12 @@ class WeChatMessage(WeChatBase):
         receiver : `WechatReceiver` instance.
         time : Message timestamp.
         id : Message ID.
-        number : Message local number.
         type : Message type.
-        display : Message description text.
         data : Message source data.
         window : Message sende window ID.
+        room : Message chat room ID.
+        user : Message chat user ID.
+        file : Message file parameters.
         """
 
         # Import.
@@ -130,12 +131,12 @@ class WeChatMessage(WeChatBase):
         self.receiver = receiver
         self.time = time
         self.id = id_
-        self.number = number
         self.type = type_
-        self.display = display
         self.data = data
         self.window = window
-        self.file: MessageParametersFile | None = None
+        self.room = room
+        self.user = user
+        self.file: MessageParametersFile | None = file
         self.triggering_rule: TriggerRule | None = None
         self.replied_rule: TriggerRule | None = None
         self.trigger_continue = self.receiver.trigger.continue_
@@ -143,19 +144,6 @@ class WeChatMessage(WeChatBase):
         self.exc_reports: list[str] = []
         self.is_test: bool = False
         'Whether add test text to before reply text.'
-
-        ## Room and user.
-        if self.window.endswith('chatroom'):
-            self.room = self.window
-            if ':\n' in self.data:
-                self.user, self.data = self.data.split(':\n', 1)
-                if self.user == self.room:
-                    self.user = None
-            else:
-                self.user = None
-        else:
-            self.room = None
-            self.user = self.window
 
         ## Cache.
         self._cache: dict[str, Any] = {}
@@ -178,11 +166,9 @@ class WeChatMessage(WeChatBase):
         params: MessageParameters = {
             'time': self.time,
             'id': self.id,
-            'number': self.number,
             'room': self.room,
             'user': self.user,
             'type': self.type,
-            'display': self.display,
             'data': self.data,
             'file': self.file
         }
@@ -1532,16 +1518,18 @@ class WeChatMessage(WeChatBase):
         self,
         send_type: Literal[WeChatSendTypeEnum.TEXT],
         *,
-        text: str
+        text: str,
+        at_id: str | list[str] | Literal['all'] | None = None
     ) -> None: ...
 
     @overload
     def reply(
         self,
-        send_type: Literal[WeChatSendTypeEnum.TEXT_AT],
+        send_type: Literal[WeChatSendTypeEnum.TEXT_QUOTE],
         *,
-        user_id: str | list[str] | Literal['notify@all'],
-        text: str
+        text: str,
+        message_id: str,
+        at_id: str | list[str] | Literal['all'] | None = None
     ) -> None: ...
 
     @overload
@@ -1554,10 +1542,9 @@ class WeChatMessage(WeChatBase):
     ) -> None: ...
 
     @overload
-    def send(
+    def reply(
         self,
         send_type: Literal[WeChatSendTypeEnum.FILE, WeChatSendTypeEnum.IMAGE, WeChatSendTypeEnum.EMOTION],
-        receive_id: str,
         *,
         file_id: str
     ) -> None: ...
@@ -1565,30 +1552,21 @@ class WeChatMessage(WeChatBase):
     @overload
     def reply(
         self,
-        send_type: Literal[WeChatSendTypeEnum.PAT],
-        *,
-        user_id: str
-    ) -> None: ...
-
-    @overload
-    def reply(
-        self,
-        send_type: Literal[WeChatSendTypeEnum.PUBLIC],
+        send_type: Literal[WeChatSendTypeEnum.SHARE],
         *,
         page_url: str,
         title: str,
-        text: str | None = None,
-        image_url: str | None = None,
-        public_name: str | None = None,
-        public_id: str | None = None
+        text: str,
+        image_url: str | None = None
     ) -> None: ...
 
     @overload
     def reply(
         self,
-        send_type: Literal[WeChatSendTypeEnum.FORWARD],
+        send_type: Literal[WeChatSendTypeEnum.LOG],
         *,
-        message_id: str
+        chats: list[SendLogChat],
+        title: str = '聊天记录'
     ) -> None: ...
 
     def reply(
@@ -1602,14 +1580,6 @@ class WeChatMessage(WeChatBase):
         Parameters
         ----------
         send_type : Send type.
-            - `Literal[WeChatSendTypeEnum.TEXT]`: Send text message, use `WeChatClient.send_text`: method.
-            - `Literal[WeChatSendTypeEnum.TEXT_AT]`: Send text message with `@`, use `WeChatClient.send_text_at`: method.
-            - `Literal[WeChatSendTypeEnum.FILE]`: Send file message, use `WeChatClient.send_file`: method.
-            - `Literal[WeChatSendTypeEnum.IMAGE]`: Send image message, use `WeChatClient.send_image`: method.
-            - `Literal[WeChatSendTypeEnum.EMOTION]`: Send emotion message, use `WeChatClient.send_emotion`: method.
-            - `Literal[WeChatSendTypeEnum.PAT]`: Send pat message, use `WeChatClient.send_pat`: method.
-            - `Literal[WeChatSendTypeEnum.PUBLIC]`: Send public account message, use `WeChatClient.send_public`: method.
-            - `Literal[WeChatSendTypeEnum.FORWARD]`: Forward message, use `WeChatClient.send_forward`: method.
         params : Send parameters.
         """
 
@@ -1624,7 +1594,7 @@ class WeChatMessage(WeChatBase):
         # Test.
         if (
             self.is_test
-            and send_type in (WeChatSendTypeEnum.TEXT, WeChatSendTypeEnum.TEXT_AT)
+            and send_type in (WeChatSendTypeEnum.TEXT, WeChatSendTypeEnum.TEXT_QUOTE)
         ):
             message_time = time_to(to_time(self.time).time())
             receive_time = now('time_str')
@@ -1687,11 +1657,6 @@ class WechatReceiver(WeChatBase):
         # Start.
         self.__start_callback()
         self.__start_receiver(self.max_receiver)
-        self.wechat.client.hook_message(
-            '127.0.0.1',
-            self.wechat.client.message_callback_port,
-            60
-        )
 
 
     @wrap_thread
@@ -1710,33 +1675,69 @@ class WechatReceiver(WeChatBase):
             data : Socket receive data.
             """
 
-            # Decode.
-            data: dict = json_loads(data)
+            # Extract.
+            try:
+                _, data_body = data.split(b'\r\n\r\n', 1)
+                if data_body == b'':
+                    return
+                data_json: dict = json_loads(data_body)
+            except:
+                throw(AssertionError, data)
 
             # Break.
-            if 'msgId' not in data:
+            if data_json['type'] != 'recvMsg':
+                return
+            params: dict = data_json['data']
+            if not params.get('msgId'):
+                return
+            if params['msgSource'] == 1:
+                if params.get('sendId'):
+                    self.wechat.db.update_message_send(params['sendId'], params['msgId'])
                 return
 
             # Extract.
-            message = WeChatMessage(
-                self,
-                data['createTime'],
-                data['msgId'],
-                data['msgSequence'],
-                data['type'],
-                data['displayFullContent'],
-                data['content'],
-                data['fromUser']
-            )
+
+            ## Window.
+            if params['fromType'] == 2:
+                room = params['fromWxid']
+                user = params['finalFromWxid']
+            else:
+                room = None
+                user = params['fromWxid']
+
+            ## Data.
+            if params['msgXml'] == '':
+                data = params['msg']
+            else:
+                data = params['msgXml']
+
+            ## File.
+            file = None
+            if params['msgXml'] != '':
+                pattern = r'^\[(?:file|pic)=(.+?)(?:,isDecrypt=[01])?\]$'
+                path = search(pattern, params['msg'])
+                if path is not None:
+                    file = {'path': path}
 
             # Put.
+            message = WeChatMessage(
+                self,
+                int(params['timeStamp']),
+                params['msgId'],
+                params['msgType'],
+                data,
+                params['fromWxid'],
+                room,
+                user,
+                file
+            )
             self.queue.put(message)
 
 
         # Listen socket.
         listen_socket(
             '127.0.0.1',
-            self.wechat.client.message_callback_port,
+            self.wechat.client.callback_port,
             put_queue
         )
 
@@ -1842,6 +1843,10 @@ class WechatReceiver(WeChatBase):
         Handle file message.
         """
 
+        # Check.
+        if type(message.file) != dict:
+            return
+
         # Download.
         match message.type:
 
@@ -1850,43 +1855,12 @@ class WechatReceiver(WeChatBase):
                 pattern = r' md5="([\da-f]{32})"'
                 file_md5: str = search(pattern, message.data)
                 file_name = f'{file_md5}.jpg'
-                cache_path = self.wechat.cache.index(file_md5, file_name, copy=True)
-
-                ### Download.
-                if cache_path is None:
-                    self.wechat.client.download_file(message.id)
-                    download_path = '%swxhelper/image/%s.dat' % (
-                        self.wechat.client.login_info['account_data_path'],
-                        message.id
-                    )
-
-            ## Voice.
-            case 34:
-                file_name = None
-                file_name_suffix = 'amr'
-                cache_path = None
-
-                ### Download.
-                self.wechat.client.download_voice(
-                    message.id,
-                    self.wechat.cache.folder.path
-                )
-                download_path = self.wechat.cache.folder + f'{message.id}.amr'
 
             ## Video.
             case 43:
                 pattern = r' md5="([\da-f]{32})"'
                 file_md5: str = search(pattern, message.data)
                 file_name = f'{file_md5}.mp4'
-                cache_path = self.wechat.cache.index(file_md5, file_name, copy=True)
-
-                ### Download.
-                if cache_path is None:
-                    self.wechat.client.download_file(message.id)
-                    download_path = '%swxhelper/video/%s.mp4' % (
-                        self.wechat.client.login_info['account_data_path'],
-                        message.id
-                    )
 
             ## Other.
             case 49 if message.is_file_uploaded:
@@ -1894,36 +1868,25 @@ class WechatReceiver(WeChatBase):
                 file_md5: str = search(pattern, message.data)
                 pattern = r'<title>([^<>]+?)</title>'
                 file_name: str = search(pattern, message.data)
-                cache_path = self.wechat.cache.index(file_md5, file_name, copy=True)
-
-                ### Download.
-                if cache_path is None:
-                    self.wechat.client.download_file(message.id)
-                    download_path = '%swxhelper/file/%s_%s' % (
-                        self.wechat.client.login_info['account_data_path'],
-                        message.id,
-                        file_name
-                    )
 
             ## Break.
             case _:
                 return
 
+        # Cache.
+        cache_path = self.wechat.cache.index(file_md5, file_name, copy=True)
         if cache_path is None:
 
             ## Wait.
             wait(
                 os_exists,
-                download_path,
+                message.file['path'],
                 _interval = 0.05,
                 _timeout=3600
             )
             sleep(0.2)
 
-            ## Cache.
-            download_file = File(download_path)
-            file_name = file_name or f'{download_file.md5}.{file_name_suffix}'
-            cache_path = self.wechat.cache.store(download_path, file_name, delete=True)
+            cache_path = self.wechat.cache.store(message.file['path'], file_name, delete=True)
 
         # Parameter.
         cache_file = File(cache_path)

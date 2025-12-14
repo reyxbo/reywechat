@@ -26,15 +26,9 @@ class WeChat(WeChatBase):
     """
     WeChat type.
 
-    Will start client API service with port `19088` and message callback service with port '19089'.
+    Warnings, only applicable to WeChat clients with version `3.9.12.56`.
 
-    Warnings, only applicable to WeChat clients with version `3.9.5.81`.
-
-    Warnings, must close file automatic download.
-
-    Warnings, the operating system version cannot be lower than `Windows 10 version 1709` or `Windows Server 2016 version 1709`.
-
-    Warnings, need support “Microsoft Visual C++2015”.
+    Warnings, must enabled file automatic download.
     """
 
 
@@ -44,8 +38,10 @@ class WeChat(WeChatBase):
         sclient: ServerClient,
         max_receiver: int = 2,
         call_name: str | None = None,
-        dir_log: str = 'log',
-        dir_cache: str = 'cache'
+        log_dir: str = 'log',
+        cache_dir: str = 'cache',
+        client_port: int = 1024,
+        callback_port: int = 1025
     ) -> None:
         """
         Build instance attributes.
@@ -57,8 +53,10 @@ class WeChat(WeChatBase):
         max_receiver : Maximum number of receivers.
         call_name : Trigger call name.
             - `None`: Use account nickname.
-        dir_log : Log directory.
-        dir_cache : Cache directory.
+        log_dir : Log directory.
+        cache_dir : Cache directory.
+        client_port : Client control API port.
+        callback_port : Message callback port.
         """
 
         # Import.
@@ -67,26 +65,18 @@ class WeChat(WeChatBase):
         from .rdb import WeChatDatabase
         from .rlog import WeChatLog
         from .rreceive import WechatReceiver
-        from .rsend import WeChatSendTypeEnum, WeChatSendStatusEnum, WeChatSender
+        from .rsend import WeChatSendTypeEnum, WeChatSenderStatusEnum, WeChatSender
 
         # Build.
 
         ## Instance.
-        self.client = WeChatClient(self)
-        self.cache = WeChatCache(self, dir_cache)
-        self.error = WeChatLog(self, dir_log)
+        self.client = WeChatClient(self, client_port, callback_port)
+        self.cache = WeChatCache(self, cache_dir)
+        self.error = WeChatLog(self, log_dir)
         self.receiver = WechatReceiver(self, max_receiver, call_name)
         self.trigger = self.receiver.trigger
         self.sender = WeChatSender(self)
         self.db = WeChatDatabase(self, db, sclient)
-
-        ## Client.
-        self.client_version = self.client.client_version
-        self.client_version_int = self.client.client_version_int
-        self.client_version_simulate = self.client.client_version_simulate
-        self.client_version_simulate_int = self.client.client_version_simulate_int
-        self.client_api_port = self.client.client_api_port
-        self.message_callback_port = self.client.message_callback_port
 
         ## Receive.
         self.receive_add_handler = self.receiver.add_handler
@@ -98,7 +88,7 @@ class WeChat(WeChatBase):
 
         ## Send.
         self.SendTypeEnum = WeChatSendTypeEnum
-        self.SendstatusEnum = WeChatSendStatusEnum
+        self.SendstatusEnum = WeChatSenderStatusEnum
         self.send_add_handler = self.sender.add_handler
         self.send = self.sender.send
         self.send_start = self.sender.start
