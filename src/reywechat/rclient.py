@@ -677,7 +677,7 @@ class WeChatClient(WeChatBase):
     def send_file(
         self,
         receive_id: str,
-        path: str
+        file_path: str
     ) -> str:
         """
         Send file message.
@@ -685,7 +685,7 @@ class WeChatClient(WeChatBase):
         Parameters
         ----------
         receive_id : User ID or chat room ID of receive message.
-        path : Message file path.
+        file_path : Message file path.
 
         Returns
         -------
@@ -696,7 +696,7 @@ class WeChatClient(WeChatBase):
         api = 'sendFile'
         data = {
             'wxid': receive_id,
-            'path': path
+            'path': file_path
         }
 
         # Request.
@@ -711,7 +711,7 @@ class WeChatClient(WeChatBase):
     def send_image(
         self,
         receive_id: str,
-        path: str
+        file_path: str
     ) -> str:
         """
         Send image message.
@@ -719,7 +719,7 @@ class WeChatClient(WeChatBase):
         Parameters
         ----------
         receive_id : User ID or chat room ID of receive message.
-        path : Message image file path.
+        file_path : Message image file path.
 
         Returns
         -------
@@ -730,7 +730,7 @@ class WeChatClient(WeChatBase):
         api = 'sendImage'
         data = {
             'wxid': receive_id,
-            'path': path
+            'path': file_path
         }
 
         # Request.
@@ -745,7 +745,7 @@ class WeChatClient(WeChatBase):
     def send_emotion(
         self,
         receive_id: str,
-        path: str
+        file_path: str
     ) -> None:
         """
         Send emotion message.
@@ -753,14 +753,14 @@ class WeChatClient(WeChatBase):
         Parameters
         ----------
         receive_id : User ID or chat room ID of receive message.
-        path : Message emotion file path.
+        file_path : Message emotion file path.
         """
 
         # Parameter.
         api = 'sendGif'
         data = {
             'wxid': receive_id,
-            'path': path
+            'path': file_path
         }
 
         # Request.

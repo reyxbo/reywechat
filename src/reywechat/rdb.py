@@ -11,7 +11,7 @@
 
 from enum import StrEnum
 from reydb import rorm, Database
-from reykit.rbase import throw
+from reykit.rbase import throw, catch_exc
 from reykit.ros import File
 from reykit.rtime import now, to_time, time_to, sleep
 from reykit.rwrap import wrap_thread
@@ -1006,7 +1006,12 @@ class WeChatDatabase(WeChatBase):
 
                 ## File.
                 if file_id is not None:
-                    file_path, file_name = self.__download_file(file_id)
+                    try:
+                        file_path, file_name = self.__download_file(file_id)
+                    except:
+                        exc_text, *_ = catch_exc()
+                        print(exc_text)
+                        continue
                     parameter['file_path'] = file_path
                     parameter['file_name'] = file_name
 

@@ -1855,12 +1855,18 @@ class WechatReceiver(WeChatBase):
                 pattern = r' md5="([\da-f]{32})"'
                 file_md5: str = search(pattern, message.data)
                 file_name = f'{file_md5}.jpg'
+                pattern = r' length="(\d+)"'
+                file_size: str = search(pattern, message.data)
+                file_size = int(file_size)
 
             ## Video.
             case 43:
                 pattern = r' md5="([\da-f]{32})"'
                 file_md5: str = search(pattern, message.data)
                 file_name = f'{file_md5}.mp4'
+                pattern = r' length="(\d+)"'
+                file_size: str = search(pattern, message.data)
+                file_size = int(file_size)
 
             ## Other.
             case 49 if message.is_file_uploaded:
@@ -1868,10 +1874,17 @@ class WechatReceiver(WeChatBase):
                 file_md5: str = search(pattern, message.data)
                 pattern = r'<title>([^<>]+?)</title>'
                 file_name: str = search(pattern, message.data)
+                pattern = r'<totallen>(\d+)</totallen>'
+                file_size: str = search(pattern, message.data)
+                file_size = int(file_size)
 
             ## Break.
             case _:
                 return
+
+        # Cannot exceed 200MB.
+        if file_size > 209715200:
+            throw(AssertionError, file_size)
 
         # Cache.
         cache_path = self.wechat.cache.index(file_md5, file_name, copy=True)
