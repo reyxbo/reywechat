@@ -594,6 +594,11 @@ class WeChatClient(WeChatBase):
 
         # Parameter.
         api = 'sendText2'
+        if (
+            at_id is not None
+            and receive_id[-9:] != '@chatroom'
+        ):
+            at_id = None
         if type(at_id) == str:
             at_id = [at_id]
         if at_id is not None:
@@ -650,6 +655,11 @@ class WeChatClient(WeChatBase):
 
         # Parameter.
         api = 'sendReferText'
+        if (
+            at_id is not None
+            and receive_id[-9:] != '@chatroom'
+        ):
+            at_id = None
         if type(at_id) == str:
             at_id = [at_id]
         if at_id is not None:

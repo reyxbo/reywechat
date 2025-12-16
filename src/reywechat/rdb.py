@@ -909,7 +909,7 @@ class WeChatDatabase(WeChatBase):
             data = {
                 'send_id': send_params.send_id,
                 'update_time': ':NOW()',
-                'hook_id': send_params.hook_id,
+                'hook_id': tuple(send_params.hook_id),
                 'status': status
             }
 
