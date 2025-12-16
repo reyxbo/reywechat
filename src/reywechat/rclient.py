@@ -570,7 +570,7 @@ class WeChatClient(WeChatBase):
         receive_id: str,
         text: str,
         at_id: str | list[str] | Literal['all'] | None = None
-    ) -> str:
+    ) -> list[str]:
         """
         Send text message.
 
@@ -585,7 +585,7 @@ class WeChatClient(WeChatBase):
 
         Returns
         -------
-        Hook ID.
+        Hook ID list.
         """
 
         # Check.
@@ -613,9 +613,10 @@ class WeChatClient(WeChatBase):
         result = self.request(api, data)
 
         # Extract.
-        hook_id = result['sendId']
+        hook_id: str = result['sendId']
+        hook_ids = hook_id.split(',')
 
-        return hook_id
+        return hook_ids
 
 
     def send_text_quote(
@@ -624,7 +625,7 @@ class WeChatClient(WeChatBase):
         text: str,
         message_id: str,
         at_id: str | list[str] | Literal['all'] | None = None
-    ) -> str:
+    ) -> list[str]:
         """
         Send text message with quote.
 
@@ -640,7 +641,7 @@ class WeChatClient(WeChatBase):
 
         Returns
         -------
-        Hook ID.
+        Hook ID list.
         """
 
         # Check.
@@ -669,16 +670,17 @@ class WeChatClient(WeChatBase):
         result = self.request(api, data)
 
         # Extract.
-        hook_id = result['sendId']
+        hook_id: str = result['sendId']
+        hook_ids = hook_id.split(',')
 
-        return hook_id
+        return hook_ids
 
 
     def send_file(
         self,
         receive_id: str,
         file_path: str
-    ) -> str:
+    ) -> list[str]:
         """
         Send file message.
 
@@ -689,7 +691,7 @@ class WeChatClient(WeChatBase):
 
         Returns
         -------
-        Hook ID.
+        Hook ID list.
         """
 
         # Parameter.
@@ -703,16 +705,17 @@ class WeChatClient(WeChatBase):
         result = self.request(api, data)
 
         # Extract.
-        hook_id = result['sendId']
+        hook_id: str = result['sendId']
+        hook_ids = hook_id.split(',')
 
-        return hook_id
+        return hook_ids
 
 
     def send_image(
         self,
         receive_id: str,
         file_path: str
-    ) -> str:
+    ) -> list[str]:
         """
         Send image message.
 
@@ -723,7 +726,7 @@ class WeChatClient(WeChatBase):
 
         Returns
         -------
-        Hook ID.
+        Hook ID list.
         """
 
         # Parameter.
@@ -737,9 +740,10 @@ class WeChatClient(WeChatBase):
         result = self.request(api, data)
 
         # Extract.
-        hook_id = result['sendId']
+        hook_id: str = result['sendId']
+        hook_ids = hook_id.split(',')
 
-        return hook_id
+        return hook_ids
 
 
     def send_emotion(
@@ -774,7 +778,7 @@ class WeChatClient(WeChatBase):
         title: str,
         text: str,
         image_url: str | None = None
-    ) -> str:
+    ) -> list[str]:
         """
         Send share link message.
 
@@ -788,7 +792,7 @@ class WeChatClient(WeChatBase):
 
         Returns
         -------
-        Hook ID.
+        Hook ID list.
         """
 
         # Parameter.
@@ -807,9 +811,10 @@ class WeChatClient(WeChatBase):
         result = self.request(api, data)
 
         # Extract.
-        hook_id = result['sendId']
+        hook_id: str = result['sendId']
+        hook_ids = hook_id.split(',')
 
-        return hook_id
+        return hook_ids
 
 
     def send_log(
@@ -817,7 +822,7 @@ class WeChatClient(WeChatBase):
         receive_id: str,
         chats: list[SendLogChat],
         title: str = '聊天记录'
-    ) -> str:
+    ) -> list[str]:
         """
         Send chat log.
 
@@ -829,7 +834,7 @@ class WeChatClient(WeChatBase):
 
         Returns
         -------
-        Hook ID.
+        Hook ID list.
         """
 
         # Parameter.
@@ -857,6 +862,7 @@ class WeChatClient(WeChatBase):
         result = self.request(api, data)
 
         # Extract.
-        hook_id = result['sendId']
+        hook_id: str = result['sendId']
+        hook_ids = hook_id.split(',')
 
-        return hook_id
+        return hook_ids

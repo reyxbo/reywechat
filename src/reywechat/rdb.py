@@ -164,7 +164,7 @@ class DatabaseORMTableMessageSend(rorm.Table):
     create_time: rorm.Datetime = rorm.Field(field_default=':time', not_null=True, index_n=True, comment='Record create time.')
     update_time: rorm.Datetime = rorm.Field(field_default=':time', arg_default=now, index_n=True, comment='Record update time.')
     send_id: int = rorm.Field(key_auto=True, comment='Send ID.')
-    hook_id: int = rorm.Field(rorm.types.CHAR(32), unique=True, comment='Hook UUID.')
+    hook_id: int = rorm.Field(rorm.types.ARRAY(rorm.types.CHAR(32)), comment='Multiple hook UUID (multiple messages may be sent).')
     message_id: int = rorm.Field(rorm.types.BIGINT, comment='Message UUID.')
     status: int = rorm.Field(rorm.ENUM(WeChatDatabaseSendStatusEnum), field_default=WeChatDatabaseSendStatusEnum.WAIT, not_null=True, comment='Send status.')
     type: int = rorm.Field(rorm.ENUM(WeChatSendTypeEnum), not_null=True, comment='Message type.')
@@ -651,7 +651,7 @@ class WeChatDatabase(WeChatBase):
 
     def update_message_send(
         self,
-        hook_id: str,
+        hook_id: list[str],
         message_id: int
     ) -> None:
         """
@@ -668,13 +668,15 @@ class WeChatDatabase(WeChatBase):
             throw(ValueError, hook_id)
 
         # Update.
-        data = {
-            'hook_id': hook_id,
-            'message_id': message_id
-        }
-        self.db.wechat.execute.update(
-            'message_send',
-            data
+        sql = (
+            'UPDATE "message_send"\n'
+            'SET "message_id" = :message_id\n'
+            'WHERE :hook_id = ANY("hook_id")'
+        )
+        self.db.wechat.execute(
+            sql,
+            message_id=message_id,
+            hook_id=hook_id
         )
 
 

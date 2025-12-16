@@ -176,7 +176,7 @@ class WeChatSendParameters(WeChatBase):
         self.params = params
         self.exc_reports: list[str] = []
         self.status: WeChatSenderStatusEnum
-        self.hook_id: str | None = None
+        self.hook_id: list[str] | None = None
 
         ## Cache.
         self._text: str | None = None
@@ -311,7 +311,7 @@ class WeChatSender(WeChatBase):
     def __send(
         self,
         send_params: WeChatSendParameters
-    ) -> str | None:
+    ) -> list[str] | None:
         """
         Send message.
 
@@ -321,7 +321,7 @@ class WeChatSender(WeChatBase):
 
         Returns
         -------
-        Hook ID.
+        Hook ID list.
         """
 
         # Test.
